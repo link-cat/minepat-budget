@@ -97,7 +97,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.core.files.storage import default_storage
 
-from setting.utils import import_excel_file
+from setting.imports import import_excel_file
 
 
 class ExcelImportViewSet(viewsets.ViewSet):

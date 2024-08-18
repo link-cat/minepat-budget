@@ -6,6 +6,9 @@ from .models import (
     NatureDepense,
     ModeGestion,
     Exercice,
+    GroupeDepense,
+    EtapeContractualisation,
+    EtapeExecution,
     EtapeExecutionGlob,
     Chapitre,
     Programme,
@@ -17,7 +20,6 @@ from .models import (
     Region,
     Departement,
     Arrondissement,
-    Commune,
 )
 
 
@@ -26,16 +28,27 @@ class TypeRessourceAdmin(SimpleHistoryAdmin):
 
 
 class NatureDepenseAdmin(SimpleHistoryAdmin):
-    list_display = ("title",)
-    filter_horizontal = ("type_ressources",)
+    list_display = ("title", "mode",)
+    list_filter = ("mode",)
 
 
 class ModeGestionAdmin(SimpleHistoryAdmin):
-    list_display = ("title",)
+    list_display = ("title", "type_ressource")
 
 
 class ExerciceAdmin(SimpleHistoryAdmin):
-    list_display = ("annee", "dateimport")
+    list_display = ("annee",)
+
+class GroupeDepenseAdmin(SimpleHistoryAdmin):
+    list_display = ("annee",)
+
+
+class EtapeContractualisationAdmin(SimpleHistoryAdmin):
+    list_display = ("title",)
+
+
+class EtapeExecutionAdmin(SimpleHistoryAdmin):
+    list_display = ("title",)
 
 
 class EtapeExecutionGlobAdmin(SimpleHistoryAdmin):
@@ -43,36 +56,36 @@ class EtapeExecutionGlobAdmin(SimpleHistoryAdmin):
 
 
 class ChapitreAdmin(SimpleHistoryAdmin):
-    list_display = ("code", "title")
+    list_display = ("code", "title_fr", "title_en")
 
 
 class ProgrammeAdmin(SimpleHistoryAdmin):
-    list_display = ("code", "title", "chapitre")
+    list_display = ("code", "title_fr", "title_en", "chapitre")
 
 
 class ActionAdmin(SimpleHistoryAdmin):
-    list_display = ("code", "title", "programme")
+    list_display = ("code", "title_fr", "title_en", "programme")
 
 
 class ActiviteAdmin(SimpleHistoryAdmin):
-    list_display = ("code", "title", "action")
+    list_display = ("code", "title_fr", "title_en", "action")
 
 
 class TacheAdmin(SimpleHistoryAdmin):
-    list_display = ("code", "title", "activite", "cout_tot")
+    list_display = ("code", "title_fr", "title_en", "activite", "cout_tot")
+
+
+class OperationAdmin(SimpleHistoryAdmin):
+    list_display = ("title_fr", "title_en")
 
 
 class GroupeDepenseAdmin(SimpleHistoryAdmin):
     list_display = ("title",)
 
 
-class OperationAdmin(SimpleHistoryAdmin):
-    list_display = ("title",)
-
-
 class RegionAdmin(SimpleHistoryAdmin):
-    list_display = ("name",)
-    search_fields = ("name",)
+    list_display = ("name_fr", "name_en")
+    search_fields = ("name_fr", "name_en")
 
 
 class DepartementAdmin(SimpleHistoryAdmin):
@@ -87,16 +100,11 @@ class ArrondissementAdmin(SimpleHistoryAdmin):
     list_filter = ("departement",)
 
 
-class CommuneAdmin(SimpleHistoryAdmin):
-    list_display = ("name", "arrondissement")
-    search_fields = ("name",)
-    list_filter = ("arrondissement",)
-
-
 admin.site.register(TypeRessource, TypeRessourceAdmin)
 admin.site.register(NatureDepense, NatureDepenseAdmin)
 admin.site.register(ModeGestion, ModeGestionAdmin)
 admin.site.register(Exercice, ExerciceAdmin)
+admin.site.register(EtapeContractualisation, EtapeContractualisationAdmin)
 admin.site.register(EtapeExecutionGlob, EtapeExecutionGlobAdmin)
 admin.site.register(Chapitre, ChapitreAdmin)
 admin.site.register(Programme, ProgrammeAdmin)
@@ -108,4 +116,3 @@ admin.site.register(Operation, OperationAdmin)
 admin.site.register(Region, RegionAdmin)
 admin.site.register(Departement, DepartementAdmin)
 admin.site.register(Arrondissement, ArrondissementAdmin)
-admin.site.register(Commune, CommuneAdmin)
