@@ -1,4 +1,5 @@
 import pandas as pd
+import re
 
 
 from setting.models import (
@@ -17,6 +18,7 @@ from setting.models import (
     GroupeDepense,
     Exercice,
 )
+from execution.models import EstExecuteeAction,EstExecuteeFCPDR
 
 
 # Variables pour stocker le nombre d'instances créées
@@ -38,6 +40,24 @@ logs = {
 }
 
 
+def determine_line_type(row):
+    text = row.iloc[0]
+    if pd.isna(text):
+        return None
+    elif "Total" in text:
+        return "Total"
+    elif "Chapitre :" in text:
+        return "Chapitre"
+    elif "Programme :" in text:
+        return "Programme"
+    elif "Action :" in text:
+        return "Action"
+    elif "Projet/Activite :" in text:
+        return "Activite"
+    else:
+        return "Autre"
+
+
 def import_excel_file(file_path):
     # Lire toutes les feuilles du fichier Excel
     excel_data = pd.read_excel(file_path, sheet_name=None)
@@ -46,14 +66,128 @@ def import_excel_file(file_path):
         match sheet_name:
             case "22":
                 import_bip(sheet_data)
-            case "TabOp_FCPDR":
-                import_op_fcpdr(sheet_data)
+            # case "TabOp_FCPDR":
+            #     import_op_fcpdr(sheet_data)
+            # case "TabExe-Prog":
+            #     import_ExeProg(sheet_data)
+            case "GC_FCPDR":
+                import_GC_FCPDR(sheet_data)
         # Vous pouvez ajouter le traitement des données ici
 
 
 def import_op_fcpdr(sheet_data):
     for _, row in sheet_data.iterrows():
         print(row.iloc[1])
+
+
+def import_ExeProg(sheet_data):
+    for _, row in sheet_data.iterrows():
+        match determine_line_type(row):
+            case "Chapitre":
+                numero_chapitre = int(
+                    re.search(r"Chapitre\s*:\s*(\d+)", row.iloc[0]).group(1)
+                )
+                chapitre = Chapitre.objects.get(code=numero_chapitre)
+            case "Programme":
+                numero_programme = int(
+                    re.search(r"Programme\s*:\s*(\d+)", row.iloc[0]).group(1)
+                )
+                programme = Programme.objects.get(
+                    chapitre=chapitre,
+                    code=numero_programme,
+                )
+            case "Action":
+                numero_action = int(
+                    re.search(r"Action\s*:\s*(\d+)", row.iloc[0]).group(1)
+                )
+                action = Action.objects.get(
+                    programme=programme,
+                    code=numero_action,
+                )
+                exercice = Exercice.objects.get(annee=2024)
+                execution = EstExecuteeAction.objects.create(
+                    action=action,
+                    exercice=exercice,
+                    montant_ae_init=int(row.iloc[1]) * 1000,
+                    montant_cp_init=int(row.iloc[2]) * 1000,
+                    montant_ae_rev=int(row.iloc[3]) * 1000,
+                    montant_cp_rev=int(row.iloc[4]) * 1000,
+                    montant_ae_eng=int(row.iloc[5]) * 1000,
+                    montant_cp_eng=int(row.iloc[6]) * 1000,
+                    montant_liq=int(row.iloc[7]) * 1000,
+                    liquidation=int(row.iloc[7]) * 1000,
+                    ordonancement=int(row.iloc[8]) * 1000,
+                    pourcentage_ae_eng=row.iloc[9],
+                    pourcentage_cp_eng=row.iloc[10],
+                    pourcentage_liq=row.iloc[11],
+                    pourcentage_ord=row.iloc[12],
+                    pourcentage_RPHY_cp=row.iloc[13],
+                )
+
+
+def import_GC_FCPDR(sheet_data):
+    can_save = False
+    for _, row in sheet_data.iterrows():
+        match determine_line_type(row):
+            case "Chapitre":
+                numero_chapitre = int(
+                    re.search(r"Chapitre\s*:\s*(\d+)", row.iloc[0]).group(1)
+                )
+                chapitre = Chapitre.objects.get(code=numero_chapitre)
+            case "Programme":
+                numero_programme = int(
+                    re.search(r"Programme\s*:\s*(\d+)", row.iloc[0]).group(1)
+                )
+                programme = Programme.objects.get(
+                    chapitre=chapitre,
+                    code=numero_programme,
+                )
+            case "Action":
+                numero_action = int(
+                    re.search(r"Action\s*:\s*(\d+)", row.iloc[0]).group(1)
+                )
+                action = Action.objects.get(
+                    programme=programme,
+                    code=numero_action,
+                )
+            case "Activite":
+                nom_activite = (
+                    re.search(r"Projet/Activite\s*:\s*(.*)", row.iloc[0])
+                    .group(1)
+                    .replace('"-U', '" -U')
+                )
+                activite = Activite.objects.filter(
+                    action=action,
+                    title_fr__icontains=nom_activite,
+                ).first()
+                can_save = True
+            case "Autre":
+                if can_save:
+                    tache = Tache.objects.filter(
+                        activite=activite, title_fr__icontains=row.iloc[0]
+                    ).first()
+                    exercice = Exercice.objects.get(annee=2024)
+                    execution = EstExecuteeFCPDR.objects.create(
+                        tache=tache,
+                        exercice=exercice,
+                        montant_ae_init=int(row.iloc[1]) * 1000,
+                        montant_cp_init=int(row.iloc[2]) * 1000,
+                        montant_ae_rev=int(row.iloc[3]) * 1000,
+                        montant_cp_rev=int(row.iloc[4]) * 1000,
+                        montant_ae_eng=int(row.iloc[5]) * 1000,
+                        montant_cp_eng=int(row.iloc[6]) * 1000,
+                        montant_liq=int(row.iloc[7]) * 1000,
+                        liquidation=int(row.iloc[7]) * 1000,
+                        ordonancement=int(row.iloc[8]) * 1000,
+                        pourcentage_ae_eng=row.iloc[9],
+                        pourcentage_cp_eng=row.iloc[10],
+                        pourcentage_liq=row.iloc[11],
+                        pourcentage_ord=row.iloc[12],
+                        pourcentage_RPHY_cp=row.iloc[13],
+                    )
+            case "Total":
+                can_save = False
+
 
 def import_bip(sheet_data):
     for _, row in sheet_data.iterrows():

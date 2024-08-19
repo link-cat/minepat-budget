@@ -32,6 +32,8 @@ ALLOWED_HOSTS = []
 
 # Application definition
 INSTALLED_APPS = [
+    "admin_interface",
+    "colorfield",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -41,6 +43,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "setting",
+    "execution",
     "simple_history",
 ]
 
@@ -74,6 +77,8 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'projet.wsgi.application'
+
+X_FRAME_OPTIONS = "SAMEORIGIN"
 
 
 # Database
@@ -144,4 +149,3 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
-

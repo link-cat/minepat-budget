@@ -28,7 +28,10 @@ class TypeRessourceAdmin(SimpleHistoryAdmin):
 
 
 class NatureDepenseAdmin(SimpleHistoryAdmin):
-    list_display = ("title", "mode",)
+    list_display = (
+        "title",
+        "mode",
+    )
     list_filter = ("mode",)
 
 
@@ -38,6 +41,7 @@ class ModeGestionAdmin(SimpleHistoryAdmin):
 
 class ExerciceAdmin(SimpleHistoryAdmin):
     list_display = ("annee",)
+
 
 class GroupeDepenseAdmin(SimpleHistoryAdmin):
     list_display = ("annee",)
@@ -57,22 +61,27 @@ class EtapeExecutionGlobAdmin(SimpleHistoryAdmin):
 
 class ChapitreAdmin(SimpleHistoryAdmin):
     list_display = ("code", "title_fr", "title_en")
+    search_fields = ("title_fr", "title_en")
 
 
 class ProgrammeAdmin(SimpleHistoryAdmin):
     list_display = ("code", "title_fr", "title_en", "chapitre")
+    search_fields = ("title_fr", "title_en")
 
 
 class ActionAdmin(SimpleHistoryAdmin):
     list_display = ("code", "title_fr", "title_en", "programme")
+    search_fields = ("title_fr", "title_en")
 
 
 class ActiviteAdmin(SimpleHistoryAdmin):
     list_display = ("code", "title_fr", "title_en", "action")
+    search_fields = ("title_fr", "title_en")
 
 
 class TacheAdmin(SimpleHistoryAdmin):
     list_display = ("code", "title_fr", "title_en", "activite", "cout_tot")
+    search_fields = ("title_fr", "title_en")
 
 
 class OperationAdmin(SimpleHistoryAdmin):
@@ -105,6 +114,7 @@ admin.site.register(NatureDepense, NatureDepenseAdmin)
 admin.site.register(ModeGestion, ModeGestionAdmin)
 admin.site.register(Exercice, ExerciceAdmin)
 admin.site.register(EtapeContractualisation, EtapeContractualisationAdmin)
+admin.site.register(EtapeExecution, EtapeExecutionAdmin)
 admin.site.register(EtapeExecutionGlob, EtapeExecutionGlobAdmin)
 admin.site.register(Chapitre, ChapitreAdmin)
 admin.site.register(Programme, ProgrammeAdmin)
