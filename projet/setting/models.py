@@ -48,6 +48,7 @@ class ModeGestion(models.Model):
 
 
 class NatureDepense(models.Model):
+    code = models.CharField(max_length=50)
     title = models.CharField(max_length=255)
     mode = models.ForeignKey(ModeGestion, on_delete=models.CASCADE)
     history = HistoricalRecords()
