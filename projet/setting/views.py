@@ -123,3 +123,34 @@ class ExcelImportViewSet(viewsets.ViewSet):
         finally:
             # Supprimer le fichier après traitement
             default_storage.delete(file_path)
+
+
+# for auth
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view
+from rest_framework import generics
+
+from setting.serializers import ProfileSerializer
+
+
+@api_view(["GET"])
+def getProfile(request):
+
+    permission_classes = [IsAuthenticated]
+
+    user = request.user
+    serializer = ProfileSerializer(user, many=False)
+    return Response(serializer.data)
+
+
+@api_view(["PUT"])
+def updateProfile(request):
+
+    permission_classes = [IsAuthenticated]
+
+    user = request.user
+    serializer = ProfileSerializer(user, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+    return Response(serializer.data)

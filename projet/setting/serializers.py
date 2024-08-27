@@ -92,3 +92,13 @@ class UploadSerializer(serializers.Serializer):
 
     class Meta:
         fields = ["file_uploaded"]
+
+
+# for auth
+from django.contrib.auth.models import User
+
+class ProfileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        exclude = ("password",)
