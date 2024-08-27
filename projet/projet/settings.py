@@ -85,15 +85,19 @@ X_FRAME_OPTIONS = "SAMEORIGIN"
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'projet',
-        'USER': 'postgres',
-        'PASSWORD': 'link2024',
-        'HOST': 'localhost',
-        'PORT': '5432'
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("DB_NAME"),
+        "USER": os.getenv("DB_USER"),
+        "PASSWORD": os.getenv("DB_USER_PASSWORD"),
+        "HOST": os.getenv("DB_HOST"),
+        "PORT": os.getenv("DB_PORT"),
     }
 }
 
