@@ -31,6 +31,15 @@ class Arrondissement(models.Model):
 
 
 class TypeRessource(models.Model):
+    code = models.CharField(max_length=50)
+    title = models.CharField(max_length=255)
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return self.title
+
+
+class GroupeDepense(models.Model):
     title = models.CharField(max_length=255)
     history = HistoricalRecords()
 
@@ -39,7 +48,9 @@ class TypeRessource(models.Model):
 
 
 class ModeGestion(models.Model):
+    code = models.CharField(max_length=50)
     title = models.CharField(max_length=255)
+    source = models.CharField(max_length=255)
     type_ressource = models.ForeignKey(TypeRessource, on_delete=models.CASCADE)
     history = HistoricalRecords()
 
@@ -50,7 +61,7 @@ class ModeGestion(models.Model):
 class NatureDepense(models.Model):
     code = models.CharField(max_length=50)
     title = models.CharField(max_length=255)
-    mode = models.ForeignKey(ModeGestion, on_delete=models.CASCADE)
+    groupe = models.ForeignKey(GroupeDepense, on_delete=models.CASCADE)
     history = HistoricalRecords()
 
     def __str__(self):
@@ -135,11 +146,6 @@ class Operation(models.Model):
     title_fr = models.CharField(max_length=255)
     title_en = models.CharField(max_length=255)
     tache = models.ForeignKey(Tache, on_delete=models.CASCADE)
-    history = HistoricalRecords()
-
-
-class GroupeDepense(models.Model):
-    title = models.CharField(max_length=255)
     history = HistoricalRecords()
 
 

@@ -97,7 +97,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.core.files.storage import default_storage
 
-from setting.imports import import_excel_file
+from setting.imports import import_bip_excel_file
 
 
 class ExcelImportViewSet(viewsets.ViewSet):
@@ -115,7 +115,7 @@ class ExcelImportViewSet(viewsets.ViewSet):
 
         try:
             # Importer le fichier Excel
-            import_excel_file(file_path)
+            import_bip_excel_file(file_path)
             return Response(
                 {"message": "Fichier Excel importé avec succès"},
                 status=status.HTTP_200_OK,

@@ -18,7 +18,7 @@ from setting.models import (
     GroupeDepense,
     Exercice,
 )
-from execution.models import EstExecuteeAction,EstExecuteeFCPDR
+from execution.models import EstExecuteeAction, EstExecuteeFCPDR
 
 
 # Variables pour stocker le nombre d'instances créées
@@ -73,6 +73,14 @@ def import_excel_file(file_path):
             case "GC_FCPDR":
                 import_GC_FCPDR(sheet_data)
         # Vous pouvez ajouter le traitement des données ici
+
+
+def import_bip_excel_file(file_path):
+    # Lire toutes les feuilles du fichier Excel
+    excel_data = pd.read_excel(file_path, sheet_name=None)
+    # Traiter chaque feuille
+    for sheet_name, sheet_data in excel_data.items():
+        import_bip(sheet_data)
 
 
 def import_op_fcpdr(sheet_data):
@@ -288,30 +296,36 @@ def import_bip(sheet_data):
             logs["Operation"] += 1
 
         typeRessource, created = TypeRessource.objects.get_or_create(
-            title=row["Source Fin."],
+            code=row["Lib. Source Fin."].split(" - ")[0],
+            defaults={
+                "title": row["Lib. Source Fin."].split(" - ")[1],
+            },
         )
         if created:
             logs["TypeRessource"] += 1
 
         mode, created = ModeGestion.objects.get_or_create(
-            title=row["Mode Gestion"],
+            code=row["Mode Gestion"],
+            title=row["Lib. Mode de gestion"].split(" - ")[1],
+            source=row["Source Fin."],
             type_ressource=typeRessource,
         )
         if created:
             logs["ModeGestion"] += 1
 
-        nature, created = NatureDepense.objects.get_or_create(
-            title=row["Grandes Masses"],
-            mode=mode,
-        )
-        if created:
-            logs["NatureDepense"] += 1
-
         groupe, created = GroupeDepense.objects.get_or_create(
-            title=row["TITRE"],
+            title=row["Titre"],
         )
         if created:
             logs["GroupeDepense"] += 1
+
+        nature, created = NatureDepense.objects.get_or_create(
+            code=row["Paragraphe"],
+            title=row["Lib. Nature depense"],
+            groupe=groupe
+        )
+        if created:
+            logs["NatureDepense"] += 1
 
         exercice, created = Exercice.objects.get_or_create(
             annee=row["Année Dem."],

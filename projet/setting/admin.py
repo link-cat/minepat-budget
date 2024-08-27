@@ -29,14 +29,15 @@ class TypeRessourceAdmin(SimpleHistoryAdmin):
 
 class NatureDepenseAdmin(SimpleHistoryAdmin):
     list_display = (
+        "code",
         "title",
-        "mode",
+        "groupe",
     )
-    list_filter = ("mode",)
+    list_filter = ("groupe",)
 
 
 class ModeGestionAdmin(SimpleHistoryAdmin):
-    list_display = ("title", "type_ressource")
+    list_display = ("title", "source", "type_ressource")
 
 
 class ExerciceAdmin(SimpleHistoryAdmin):
