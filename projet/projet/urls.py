@@ -36,7 +36,7 @@ schema_view = get_schema_view(
 )
 
 viewsets = [
-    ("upload", ExcelImportViewSet, "upload"),
+    ("upload-bip", ExcelImportViewSet, "upload-bip"),
     ("tache", TacheViewSet, "tache"),
     ("type-ressource", TypeRessourceViewSet, "type-ressource"),
     ("nature-depense", NatureDepenseViewSet, "nature-depense"),
