@@ -186,7 +186,7 @@ class ExcelImportViewSet(viewsets.ViewSet):
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import IsAuthenticated
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework import generics
 
 from setting.serializers import ProfileSerializer
@@ -219,9 +219,8 @@ from setting.serializers import ProfileSerializer
     security=[{"Bearer": []}],
 )
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def getProfile(request):
-
-    permission_classes = [IsAuthenticated]
 
     user = request.user
     serializer = ProfileSerializer(user, many=False)
