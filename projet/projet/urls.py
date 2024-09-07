@@ -20,6 +20,11 @@ from setting.views import (
     ActiviteViewSet,
     GroupeDepenseViewSet,
     OperationViewSet,
+    EtapeContractualisationViewSet,
+    EtapeExecutionViewSet,
+    RegionViewSet,
+    DepartementViewSet,
+    ArrondissementViewSet,
     getProfile,
 )
 
@@ -42,13 +47,22 @@ viewsets = [
     ("nature-depense", NatureDepenseViewSet, "nature-depense"),
     ("mode-gestion", ModeGestionViewSet, "mode-gestion"),
     ("exercice", ExerciceViewSet, "exercice"),
-    ("etape-execution", EtapeExecutionGlobViewSet, "etape-execution"),
+    ("etape-execution-gobale", EtapeExecutionGlobViewSet, "etape-execution-globale"),
     ("chapitre", ChapitreViewSet, "chapitre"),
     ("programme", ProgrammeViewSet, "programme"),
     ("action", ActionViewSet, "action"),
     ("activite", ActiviteViewSet, "activite"),
     ("groupe-depense", GroupeDepenseViewSet, "groupe-depense"),
     ("operation", OperationViewSet, "operation"),
+    ("region", RegionViewSet, "region"),
+    ("departement", DepartementViewSet, "departement"),
+    ("arrondissement", ArrondissementViewSet, "arrondissement"),
+    (
+        "etape-contractualisation",
+        EtapeContractualisationViewSet,
+        "etape-contractualisation",
+    ),
+    ("etape-execution", EtapeExecutionViewSet, "etape-execution"),
 ]
 router = routers.DefaultRouter()
 for prefix, viewset, basename in viewsets:

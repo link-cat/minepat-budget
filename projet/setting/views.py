@@ -26,6 +26,11 @@ from setting.serializers import (
     TacheSerializer,
     GroupeDepenseSerializer,
     OperationSerializer,
+    RegionSerializer,
+    DepartementSerializer,
+    ArrondissementSerializer,
+    EtapeContractualisationSerializer,
+    EtapeExecutionSerializer,
     UploadSerializer,
 )
 
@@ -88,6 +93,31 @@ class GroupeDepenseViewSet(viewsets.ModelViewSet):
 class OperationViewSet(viewsets.ModelViewSet):
     queryset = Operation.objects.all()
     serializer_class = OperationSerializer
+
+
+class RegionViewSet(viewsets.ModelViewSet):
+    queryset = Operation.objects.all()
+    serializer_class = RegionSerializer
+
+
+class DepartementViewSet(viewsets.ModelViewSet):
+    queryset = Operation.objects.all()
+    serializer_class = DepartementSerializer
+
+
+class ArrondissementViewSet(viewsets.ModelViewSet):
+    queryset = Operation.objects.all()
+    serializer_class = ArrondissementSerializer
+
+
+class EtapeContractualisationViewSet(viewsets.ModelViewSet):
+    queryset = Operation.objects.all()
+    serializer_class = EtapeContractualisationSerializer
+
+
+class EtapeExecutionViewSet(viewsets.ModelViewSet):
+    queryset = Operation.objects.all()
+    serializer_class = EtapeExecutionSerializer
 
 
 # import excel file
@@ -186,9 +216,7 @@ from setting.serializers import ProfileSerializer
             },
         ),
     },
-    security=[
-        {"Bearer": []}
-    ],
+    security=[{"Bearer": []}],
 )
 @api_view(["GET"])
 def getProfile(request):

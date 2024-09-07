@@ -12,6 +12,11 @@ from setting.models import (
     Tache,
     GroupeDepense,
     Operation,
+    Region,
+    Departement,
+    Arrondissement,
+    EtapeContractualisation,
+    EtapeExecution
 )
 
 
@@ -86,6 +91,27 @@ class OperationSerializer(serializers.ModelSerializer):
         model = Operation
         fields = "__all__"
 
+class RegionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Region
+        fields = "__all__"
+
+class DepartementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Departement
+        fields = "__all__"
+class ArrondissementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Arrondissement
+        fields = "__all__"
+class EtapeContractualisationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EtapeContractualisation
+        fields = "__all__"
+class EtapeExecutionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EtapeExecution
+        fields = "__all__"
 
 class UploadSerializer(serializers.Serializer):
     file_uploaded = serializers.FileField()
