@@ -9,36 +9,38 @@ logger = logging.getLogger("django")
 
 def custom_exception_handler(exc, context):
     """
-    The function `custom_exception_handler` handles custom exceptions by mapping them to specific
-    handlers and returning a response with the appropriate status code and message.
-
-    :param exc: The `exc` parameter is the exception object that was raised. It contains information
-    about the exception, such as its type, message, and traceback
-    :param context: The `context` parameter in the `custom_exception_handler` function is a dictionary
-    that contains information about the current request and view that raised the exception. It typically
-    includes the following keys:
-    :return: a response object.
+    Custom exception handler that wraps the response in a consistent format.
     """
-    try:
+    # Utilise le handler par défaut pour obtenir la réponse de base.
+    response = exception_handler(exc, context)
+
+    if response is not None:
         exception_class = exc.__class__.__name__
         handlers = {
             "NotAuthenticated": _handler_authentication_error,
             "InvalidToken": _handler_invalid_token_error,
             "ValidationError": _handler_validation_error,
-            "ParseError": _handler_parse_error,  # Nouveau handler pour les erreurs de parsing
-            "UnsupportedMediaType": _handler_unsupported_media_type_error,  # Nouveau handler pour les fichiers non supportés
-            # Ajoute d'autres handlers ici
+            "ParseError": _handler_parse_error,
+            "UnsupportedMediaType": _handler_unsupported_media_type_error,
         }
-        res = exception_handler(exc, context)
+
+        # Cherche un handler spécifique pour l'exception actuelle.
         if exception_class in handlers:
-            message = handlers[exception_class](exc, context, res)
+            message = handlers[exception_class](exc, context, response)
         else:
             message = str(exc)
 
-        return Response(data={}, status=res.status_code, message=message)
-    except Exception as e:
-        logger.error(str(e))
-        return Response({"message": "An internal error occurred"}, status=500)
+        # Met à jour le contenu de la réponse.
+        response.data["ErrorDetail"] = message
+    else:
+        # Si aucune réponse n'est trouvée, retourne une réponse d'erreur générale.
+        logger.error(f"Unhandled exception: {str(exc)}")
+        response = Response(
+            {"ErrorDetail": str(exc)},
+            status=500,
+        )
+
+    return response
 
 
 def _handler_authentication_error(exc, context, response):
