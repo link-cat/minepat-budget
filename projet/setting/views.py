@@ -19,7 +19,7 @@ from setting.models import (
     Departement,
     Arrondissement,
     EtapeContractualisation,
-    EtapeExecution
+    EtapeExecution,
 )
 from setting.serializers import (
     TypeRessourceSerializer,
@@ -46,87 +46,104 @@ from setting.serializers import (
 class TypeRessourceViewSet(viewsets.ModelViewSet):
     queryset = TypeRessource.objects.all()
     serializer_class = TypeRessourceSerializer
-    permission_classes = [DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+
 
 class NatureDepenseViewSet(viewsets.ModelViewSet):
     queryset = NatureDepense.objects.all()
     serializer_class = NatureDepenseSerializer
-    permission_classes = [DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+
 
 class ModeGestionViewSet(viewsets.ModelViewSet):
     queryset = ModeGestion.objects.all()
     serializer_class = ModeGestionSerializer
-    permission_classes = [DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+
 
 class ExerciceViewSet(viewsets.ModelViewSet):
     queryset = Exercice.objects.all()
     serializer_class = ExerciceSerializer
-    permission_classes = [DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+
 
 class EtapeExecutionGlobViewSet(viewsets.ModelViewSet):
     queryset = EtapeExecutionGlob.objects.all()
     serializer_class = EtapeExecutionGlobSerializer
-    permission_classes = [DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+
 
 class ChapitreViewSet(viewsets.ModelViewSet):
     queryset = Chapitre.objects.all()
     serializer_class = ChapitreSerializer
-    permission_classes = [DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+
 
 class ProgrammeViewSet(viewsets.ModelViewSet):
     queryset = Programme.objects.all()
     serializer_class = ProgrammeSerializer
-    permission_classes = [DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+
 
 class ActionViewSet(viewsets.ModelViewSet):
     queryset = Action.objects.all()
     serializer_class = ActionSerializer
-    permission_classes = [DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+
 
 class ActiviteViewSet(viewsets.ModelViewSet):
     queryset = Activite.objects.all()
     serializer_class = ActiviteSerializer
-    permission_classes = [DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+
 
 class TacheViewSet(viewsets.ModelViewSet):
     queryset = Tache.objects.all()
     serializer_class = TacheSerializer
-    permission_classes = [DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+
 
 class GroupeDepenseViewSet(viewsets.ModelViewSet):
     queryset = GroupeDepense.objects.all()
     serializer_class = GroupeDepenseSerializer
-    permission_classes = [DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+
 
 class OperationViewSet(viewsets.ModelViewSet):
     queryset = Operation.objects.all()
     serializer_class = OperationSerializer
-    permission_classes = [DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+
 
 class RegionViewSet(viewsets.ModelViewSet):
     queryset = Region.objects.all()
     serializer_class = RegionSerializer
-    permission_classes = [DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+
 
 class DepartementViewSet(viewsets.ModelViewSet):
     queryset = Departement.objects.all()
     serializer_class = DepartementSerializer
-    permission_classes = [DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+
 
 class ArrondissementViewSet(viewsets.ModelViewSet):
     queryset = Arrondissement.objects.all()
     serializer_class = ArrondissementSerializer
-    permission_classes = [DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+
 
 class EtapeContractualisationViewSet(viewsets.ModelViewSet):
     queryset = EtapeContractualisation.objects.all()
     serializer_class = EtapeContractualisationSerializer
-    permission_classes = [DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+
 
 class EtapeExecutionViewSet(viewsets.ModelViewSet):
     queryset = EtapeExecution.objects.all()
     serializer_class = EtapeExecutionSerializer
-    permission_classes = [DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+
 
 # import excel file
 from rest_framework.decorators import action
@@ -143,7 +160,7 @@ from setting.imports import import_bip_excel_file
 class ExcelImportViewSet(viewsets.ViewSet):
     parser_classes = [MultiPartParser]
     serializer_class = UploadSerializer
-    permission_classes = [DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
     @swagger_auto_schema(
         operation_summary="Importer un fichier Excel pour le BIP",
