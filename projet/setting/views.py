@@ -43,103 +43,125 @@ from setting.serializers import (
 )
 
 
-class TypeRessourceViewSet(viewsets.ModelViewSet):
+class BaseModelViewSet(viewsets.ModelViewSet):
+    """
+    Un ModelViewSet de base qui surcharge la méthode destroy pour
+    retourner l'ID de l'élément supprimé dans la réponse.
+    """
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        resource_id = instance.id
+        self.perform_destroy(instance)
+        return Response(
+            data={"message": "Deleted successfully", "deleted_id": resource_id},
+        )
+
+    def perform_destroy(self, instance):
+        """
+        Cette méthode exécute la suppression de l'instance.
+        Elle est appelée dans `destroy()`.
+        """
+        instance.delete()
+
+
+class TypeRessourceViewSet(BaseModelViewSet):
     queryset = TypeRessource.objects.all()
     serializer_class = TypeRessourceSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
 
-class NatureDepenseViewSet(viewsets.ModelViewSet):
+class NatureDepenseViewSet(BaseModelViewSet):
     queryset = NatureDepense.objects.all()
     serializer_class = NatureDepenseSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
 
-class ModeGestionViewSet(viewsets.ModelViewSet):
+class ModeGestionViewSet(BaseModelViewSet):
     queryset = ModeGestion.objects.all()
     serializer_class = ModeGestionSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
 
-class ExerciceViewSet(viewsets.ModelViewSet):
+class ExerciceViewSet(BaseModelViewSet):
     queryset = Exercice.objects.all()
     serializer_class = ExerciceSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
 
-class EtapeExecutionGlobViewSet(viewsets.ModelViewSet):
+class EtapeExecutionGlobViewSet(BaseModelViewSet):
     queryset = EtapeExecutionGlob.objects.all()
     serializer_class = EtapeExecutionGlobSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
 
-class ChapitreViewSet(viewsets.ModelViewSet):
+class ChapitreViewSet(BaseModelViewSet):
     queryset = Chapitre.objects.all()
     serializer_class = ChapitreSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
 
-class ProgrammeViewSet(viewsets.ModelViewSet):
+class ProgrammeViewSet(BaseModelViewSet):
     queryset = Programme.objects.all()
     serializer_class = ProgrammeSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
 
-class ActionViewSet(viewsets.ModelViewSet):
+class ActionViewSet(BaseModelViewSet):
     queryset = Action.objects.all()
     serializer_class = ActionSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
 
-class ActiviteViewSet(viewsets.ModelViewSet):
+class ActiviteViewSet(BaseModelViewSet):
     queryset = Activite.objects.all()
     serializer_class = ActiviteSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
 
-class TacheViewSet(viewsets.ModelViewSet):
+class TacheViewSet(BaseModelViewSet):
     queryset = Tache.objects.all()
     serializer_class = TacheSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
 
-class GroupeDepenseViewSet(viewsets.ModelViewSet):
+class GroupeDepenseViewSet(BaseModelViewSet):
     queryset = GroupeDepense.objects.all()
     serializer_class = GroupeDepenseSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
 
-class OperationViewSet(viewsets.ModelViewSet):
+class OperationViewSet(BaseModelViewSet):
     queryset = Operation.objects.all()
     serializer_class = OperationSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
 
-class RegionViewSet(viewsets.ModelViewSet):
+class RegionViewSet(BaseModelViewSet):
     queryset = Region.objects.all()
     serializer_class = RegionSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
 
-class DepartementViewSet(viewsets.ModelViewSet):
+class DepartementViewSet(BaseModelViewSet):
     queryset = Departement.objects.all()
     serializer_class = DepartementSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
 
-class ArrondissementViewSet(viewsets.ModelViewSet):
+class ArrondissementViewSet(BaseModelViewSet):
     queryset = Arrondissement.objects.all()
     serializer_class = ArrondissementSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
 
-class EtapeContractualisationViewSet(viewsets.ModelViewSet):
+class EtapeContractualisationViewSet(BaseModelViewSet):
     queryset = EtapeContractualisation.objects.all()
     serializer_class = EtapeContractualisationSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
 
-class EtapeExecutionViewSet(viewsets.ModelViewSet):
+class EtapeExecutionViewSet(BaseModelViewSet):
     queryset = EtapeExecution.objects.all()
     serializer_class = EtapeExecutionSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
