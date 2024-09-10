@@ -182,7 +182,7 @@ from setting.imports import import_bip_excel_file
 class ExcelImportViewSet(viewsets.ViewSet):
     parser_classes = [MultiPartParser]
     serializer_class = UploadSerializer
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
         operation_summary="Importer un fichier Excel pour le BIP",
