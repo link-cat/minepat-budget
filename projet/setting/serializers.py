@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from setting.models import (
+from .models import (
     TypeRessource,
     NatureDepense,
     ModeGestion,

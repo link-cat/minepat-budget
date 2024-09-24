@@ -28,6 +28,18 @@ from setting.views import (
     getProfile,
 )
 
+from execution.views import (
+    EstExecuteeActionViewSet,
+    EstExecuteeFCPDRViewSet,
+    EstExecuteeFCPTDDViewSet,
+    EstExecuteeGCAUTRESViewSet,
+    EstExecuteeGCSUBViewSet,
+    EstExecuteeModeGestionViewSet,
+    EstExecuteeOperationFDCDRViewSet,
+    EstExecuteeSurViewSet,
+    EstProgrammeViewSet,
+)
+
 schema_view = get_schema_view(
     openapi.Info(
         title="Projet API",
@@ -40,7 +52,8 @@ schema_view = get_schema_view(
     permission_classes=(permissions.AllowAny,),
 )
 
-viewsets = [
+# Routes pour le module 'setting'
+setting_viewsets = [
     ("upload-bip", ExcelImportViewSet, "upload-bip"),
     ("tache", TacheViewSet, "tache"),
     ("type-ressource", TypeRessourceViewSet, "type-ressource"),
@@ -64,13 +77,39 @@ viewsets = [
     ),
     ("etape-execution", EtapeExecutionViewSet, "etape-execution"),
 ]
-router = routers.DefaultRouter()
-for prefix, viewset, basename in viewsets:
-    router.register(rf"{prefix}", viewset, basename=basename)
+router_setting = routers.DefaultRouter()
+for prefix, viewset, basename in setting_viewsets:
+    router_setting.register(rf"{prefix}", viewset, basename=basename)
 
+# Routes pour le module 'execution'
+execution_viewsets = [
+    ("est-executee-action", EstExecuteeActionViewSet, "est-executee-action"),
+    ("est-executee-fcpdr", EstExecuteeFCPDRViewSet, "est-executee-fcpdr"),
+    ("est-executee-fcptdd", EstExecuteeFCPTDDViewSet, "est-executee-fcptdd"),
+    ("est-executee-gcautres", EstExecuteeGCAUTRESViewSet, "est-executee-gcautres"),
+    ("est-executee-gcsub", EstExecuteeGCSUBViewSet, "est-executee-gcsub"),
+    (
+        "est-executee-mode-gestion",
+        EstExecuteeModeGestionViewSet,
+        "est-executee-mode-gestion",
+    ),
+    (
+        "est-executee-operation-fdcdr",
+        EstExecuteeOperationFDCDRViewSet,
+        "est-executee-operation-fdcdr",
+    ),
+    ("est-executee-sur", EstExecuteeSurViewSet, "est-executee-sur"),
+    ("est-programme", EstProgrammeViewSet, "est-programme"),
+]
+router_execution = routers.DefaultRouter()
+for prefix, viewset, basename in execution_viewsets:
+    router_execution.register(rf"{prefix}", viewset, basename=basename)
+
+# URLs globales
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("setting/", include(router.urls)),
+    path("setting/", include(router_setting.urls)),
+    path("execution/", include(router_execution.urls)),
     path("api/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/login/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("profile/", getProfile, name="profile"),
