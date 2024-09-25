@@ -1,4 +1,5 @@
 from rest_framework import viewsets
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
@@ -26,6 +27,7 @@ from .serializers import (
     EstExecuteeSurSerializer,
     EstProgrammeSerializer,
 )
+from .filters import EstExecuteeGCSUBFilter,EstExecuteeGCAutresFilter
 
 
 class BaseModelViewSet(viewsets.ModelViewSet):
@@ -69,11 +71,15 @@ class EstExecuteeFCPTDDViewSet(BaseModelViewSet):
 class EstExecuteeGCAUTRESViewSet(BaseModelViewSet):
     queryset = EstExecuteeGCAUTRES.objects.all()
     serializer_class = EstExecuteeGCAUTRESSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = EstExecuteeGCAutresFilter
 
 
 class EstExecuteeGCSUBViewSet(BaseModelViewSet):
     queryset = EstExecuteeGCSUB.objects.all()
     serializer_class = EstExecuteeGCSUBSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = EstExecuteeGCSUBFilter
 
 
 class EstExecuteeModeGestionViewSet(BaseModelViewSet):
