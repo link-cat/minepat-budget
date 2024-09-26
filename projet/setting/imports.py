@@ -75,12 +75,12 @@ def import_excel_file(file_path):
             #     import_op_fcpdr(sheet_data)
             # case "TabExe-Prog":
             #     import_ExeProg(sheet_data)
-            # case "GC_FCPDR":
-            #     import_GC_FCPDR(sheet_data)
+            case "GC_FCPDR":
+                import_GC_FCPDR(sheet_data)
             case "GC_AUTRES":
                 import_GC_AUTRES(sheet_data)
-            # case "GC_SUBV-TRANSF":
-            #     import_GC_SUB(sheet_data)
+            case "GC_SUBV-TRANSF":
+                import_GC_SUB(sheet_data)
         # Vous pouvez ajouter le traitement des données ici
 
 
