@@ -15,6 +15,8 @@ from .models import (
     Action,
     Activite,
     Tache,
+    Groupe,
+    SUBGroupe,
     GroupeDepense,
     Operation,
     Region,
@@ -83,6 +85,12 @@ class ActiviteAdmin(SimpleHistoryAdmin):
 class TacheAdmin(SimpleHistoryAdmin):
     list_display = ("code", "title_fr", "title_en", "activite", "cout_tot")
     search_fields = ("title_fr", "title_en")
+class GroupeAdmin(SimpleHistoryAdmin):
+    list_display = ("code", "title_fr", "title_en")
+    search_fields = ("title_fr", "title_en")
+class SUBGroupeAdmin(SimpleHistoryAdmin):
+    list_display = ("groupe", "title_fr", "title_en")
+    search_fields = ("title_fr", "title_en")
 
 
 class OperationAdmin(SimpleHistoryAdmin):
@@ -122,6 +130,8 @@ admin.site.register(Programme, ProgrammeAdmin)
 admin.site.register(Action, ActionAdmin)
 admin.site.register(Activite, ActiviteAdmin)
 admin.site.register(Tache, TacheAdmin)
+admin.site.register(Groupe, GroupeAdmin)
+admin.site.register(SUBGroupe, SUBGroupeAdmin)
 admin.site.register(GroupeDepense, GroupeDepenseAdmin)
 admin.site.register(Operation, OperationAdmin)
 admin.site.register(Region, RegionAdmin)

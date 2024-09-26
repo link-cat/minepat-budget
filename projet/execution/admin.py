@@ -58,18 +58,24 @@ class EstExecuteeModeGestionAdmin(BaseEstExecuteeAdmin):
 
 
 @admin.register(EstExecuteeOperationFDCDR)
-class EstExecuteeOperationFDCDRAdmin(BaseEstExecuteeAdmin):
-    list_display = BaseEstExecuteeAdmin.list_display + (
-        "operation",
-        "groupe_depense",
+class EstExecuteeOperationFDCDRAdmin(SimpleHistoryAdmin):
+    list_display = (
+        "groupe",
+        "exercice",
+        "dateimport",
+        "montant_ae",
+        "montant_cp",
     )
-    search_fields = BaseEstExecuteeAdmin.search_fields + (
-        "operation__nom",
-        "groupe_depense__nom",
+    search_fields = (
+        "exercice",
+        "dateimport",
+        "groupe__title_fr",
+        "groupe_activite__title_fr",
+        "groupe_activite__title_en",
     )
-    list_filter = BaseEstExecuteeAdmin.list_filter + (
-        "operation",
-        "groupe_depense",
+    list_filter = (
+        "groupe",
+        "groupe__activite",
     )
 
 

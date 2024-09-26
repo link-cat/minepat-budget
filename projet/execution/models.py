@@ -2,7 +2,7 @@ from django.db import models
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
 
-from setting.models import Action,Exercice,EtapeExecutionGlob,Tache,Operation,NatureDepense,GroupeDepense,EtapeExecution
+from setting.models import Action,Exercice,EtapeExecutionGlob,Tache,Operation,NatureDepense,GroupeDepense,EtapeExecution,SUBGroupe
 
 CONTRAT_SITUATION_CHOICES = [
     ("BC:Non executé", "BC:Non executé"),
@@ -217,25 +217,11 @@ class EstExecuteeModeGestion(models.Model):
 
 
 class EstExecuteeOperationFDCDR(models.Model):
-    operation = models.ForeignKey(Operation, on_delete=models.CASCADE)
+    groupe = models.ForeignKey(SUBGroupe, on_delete=models.CASCADE)
     exercice = models.ForeignKey(Exercice, on_delete=models.CASCADE)
-    groupe_depense = models.ForeignKey(GroupeDepense, on_delete=models.CASCADE)
-    montant_ae_init = models.FloatField()
-    montant_cp_init = models.FloatField()
-    montant_ae_rev = models.FloatField()
-    montant_cp_rev = models.FloatField()
+    montant_ae = models.FloatField()
+    montant_cp = models.FloatField()
     dateimport = models.DateField(default=timezone.now)
-    montant_ae_eng = models.FloatField()
-    montant_cp_eng = models.FloatField()
-    montant_liq = models.FloatField()
-    pourcentage_ae_eng = models.DecimalField(max_digits=4, decimal_places=2)
-    pourcentage_cp_eng = models.DecimalField(max_digits=4, decimal_places=2)
-    liquidation = models.FloatField()
-    ordonancement = models.FloatField()
-    pourcentage_liq = models.DecimalField(max_digits=4, decimal_places=2)
-    pourcentage_ord = models.DecimalField(max_digits=4, decimal_places=2)
-    pourcentage_RPHY_cp = models.DecimalField(max_digits=4, decimal_places=2)
-    gc_category_ressource = models.CharField(max_length=45)
     contrat_situation_actuelle = models.CharField(
         max_length=100, choices=CONTRAT_SITUATION_CHOICES, default="BC:Non executé"
     )
@@ -245,6 +231,7 @@ class EstExecuteeOperationFDCDR(models.Model):
     observation = models.TextField()
     difficultes = models.TextField()
     montant_engage = models.FloatField()
+    pourcentage_execution_physique_au_demarrage = models.FloatField()
     pourcentage_execution_physique_a_date = models.DecimalField(
         max_digits=4, decimal_places=2
     )

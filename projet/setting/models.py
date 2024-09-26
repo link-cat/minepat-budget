@@ -143,6 +143,7 @@ class Tache(models.Model):
 
 
 class Operation(models.Model):
+    code = models.CharField(max_length=255)
     title_fr = models.CharField(max_length=255)
     title_en = models.CharField(max_length=255)
     tache = models.ForeignKey(Tache, on_delete=models.CASCADE)
@@ -163,3 +164,25 @@ class EtapeExecution(models.Model):
 class EtapeExecutionGlob(models.Model):
     title = models.CharField(max_length=255)
     history = HistoricalRecords()
+
+
+class Groupe(models.Model):
+    code = models.CharField(max_length=255)
+    title_fr = models.CharField(max_length=255)
+    title_en = models.CharField(max_length=255)
+    objectif = models.TextField()
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return self.title_fr
+
+class SUBGroupe(models.Model):
+    groupe = models.ForeignKey(Groupe, on_delete=models.CASCADE)
+    activite = models.ForeignKey(Activite, on_delete=models.CASCADE)
+    title_fr = models.CharField(max_length=255)
+    title_en = models.CharField(max_length=255)
+    objectif = models.TextField()
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return self.title_fr

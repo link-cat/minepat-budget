@@ -18,14 +18,17 @@ from setting.models import (
     NatureDepense,
     GroupeDepense,
     Exercice,
+    Groupe,
+    SUBGroupe,
 )
 from execution.models import (
     EstExecuteeAction,
     EstExecuteeFCPDR,
     EstExecuteeGCAUTRES,
     EstExecuteeGCSUB,
+    EstExecuteeOperationFDCDR,
 )
-from .utils import parse_date_or_default
+from .utils import parse_date
 
 
 # Variables pour stocker le nombre d'instances créées
@@ -59,8 +62,10 @@ def determine_line_type(row):
         return "Programme"
     elif "Action :" in text:
         return "Action"
-    elif "Projet/Activite :" in text:
+    elif "Projet/Activite :" in text or "Programme / Projet :" in text:
         return "Activite"
+    elif "Groupe :" in text:
+        return "Groupe"
     else:
         return "Autre"
 
@@ -81,6 +86,8 @@ def import_excel_file(file_path):
                 import_GC_AUTRES(sheet_data)
             case "GC_SUBV-TRANSF":
                 import_GC_SUB(sheet_data)
+            case "TabOp_FCPDR":
+                import_TabOp_FCPDR(sheet_data)
         # Vous pouvez ajouter le traitement des données ici
 
 
@@ -142,6 +149,65 @@ def import_ExeProg(sheet_data):
                 )
 
 
+def import_TabOp_FCPDR(sheet_data):
+    sheet_data.iloc[:, 6] = sheet_data.iloc[:, 6].fillna("0").astype(str)
+    can_save = False
+    for _, row in sheet_data.iterrows():
+        match determine_line_type(row):
+            case "Chapitre":
+                numero_chapitre = int(
+                    re.search(r"Chapitre\s*:\s*(\d+)", row.iloc[0]).group(1)
+                )
+                chapitre = Chapitre.objects.get(code=numero_chapitre)
+            case "Activite":
+                nom_activite = row.iloc[0].replace("Programme / Projet : ", "")
+                activite = Activite.objects.filter(
+                    title_fr__icontains=nom_activite,
+                ).first()
+            case "Groupe":
+                numero_groupe = int(
+                    re.search(r"Groupe\s*:\s*(\d+)", row.iloc[0]).group(1)
+                )
+                groupe, created = Groupe.objects.get_or_create(
+                    code=numero_groupe,
+                    defaults={
+                        "title_fr": row.iloc[0].replace("Groupe :", ""),
+                    },
+                )
+                can_save = True
+            case "Autre":
+                if can_save:
+                    try:
+                        subgroupe, created = SUBGroupe.objects.get_or_create(
+                            groupe=groupe,
+                            activite=activite,
+                            title_fr=row.iloc[0],
+                        )
+                        exercice = Exercice.objects.get(annee=2024)
+                        execution = EstExecuteeOperationFDCDR.objects.create(
+                            groupe=subgroupe,
+                            exercice=exercice,
+                            montant_ae=float(row.iloc[1]) * 1000,
+                            montant_cp=float(row.iloc[2]) * 1000,
+                            contrat_situation_actuelle=row.iloc[3],
+                            montant_contrat=float(row.iloc[4]) * 1000,
+                            date_demarrage_travaux=parse_date(row.iloc[5]),
+                            delai_execution_contrat=int(row.iloc[6]),
+                            montant_engage=float(row.iloc[7]) * 1000,
+                            pourcentage_execution_physique_au_demarrage=float(
+                                row.iloc[8]
+                            ),
+                            pourcentage_execution_physique_a_date=float(row.iloc[9]),
+                            observation=row.iloc[10],
+                        )
+                    except Exception as e:
+                        # Imprimer le type d'erreur et son message
+                        print(f"Erreur : {e}")  # Message d'erreur
+                        print(f"Type d'erreur : {type(e).__name__}")  # Type de l'erreur
+            case "Total":
+                can_save = False
+
+
 def import_GC_FCPDR(sheet_data):
     sheet_data.iloc[:, 7] = sheet_data.iloc[:, 7].fillna("1/01/2024").astype(str)
     sheet_data.iloc[:, 8] = sheet_data.iloc[:, 8].fillna("0").astype(str)
@@ -182,38 +248,43 @@ def import_GC_FCPDR(sheet_data):
                 can_save = True
             case "Autre":
                 if can_save:
-                    tache = Tache.objects.filter(
+                    try: 
+                        tache = Tache.objects.filter(
                         activite=activite, title_fr__icontains=row.iloc[0]
-                    ).first()
-                    exercice = Exercice.objects.get(annee=2024)
-                    execution = EstExecuteeFCPDR.objects.create(
-                        tache=tache,
-                        exercice=exercice,
-                        montant_ae_init=float(row.iloc[1]) * 1000,
-                        montant_cp_init=float(row.iloc[2]) * 1000,
-                        montant_ae_rev=float(row.iloc[3]) * 1000,
-                        montant_cp_rev=float(row.iloc[4]) * 1000,
-                        contrat_situation_actuelle=row.iloc[5],
-                        montant_contrat=float(row.iloc[6]) * 1000,
-                        date_demarrage_travaux=parse_date_or_default(
-                            row.iloc[7], "%d/%m/%Y", default_date=(2024, 1, 1)
-                        ),
-                        delai_execution_contrat=int(row.iloc[8]),
-                        montant_ae_eng=float(row.iloc[9]) * 1000,
-                        montant_cp_eng=float(row.iloc[10]) * 1000,
-                        montant_liq=float(row.iloc[11]) * 1000,
-                        liquidation=float(row.iloc[11]) * 1000,
-                        ordonancement=float(row.iloc[12]) * 1000,
-                        pourcentage_ae_eng=float(row.iloc[13]),
-                        pourcentage_cp_eng=float(row.iloc[14]),
-                        pourcentage_liq=float(row.iloc[15]),
-                        pourcentage_ord=float(row.iloc[16]),
-                        prise_en_charge_TTC=float(row.iloc[17]),
-                        paiement_net_HT=float(row.iloc[18]),
-                        pourcentage_execution_physique_au_demarrage=float(row.iloc[19]),
-                        pourcentage_execution_physique_a_date=float(row.iloc[20]),
-                        observations=row.iloc[21],
-                    )
+                        ).first()
+                        exercice = Exercice.objects.get(annee=2024)
+                        execution = EstExecuteeFCPDR.objects.create(
+                            tache=tache,
+                            exercice=exercice,
+                            montant_ae_init=float(row.iloc[1]) * 1000,
+                            montant_cp_init=float(row.iloc[2]) * 1000,
+                            montant_ae_rev=float(row.iloc[3]) * 1000,
+                            montant_cp_rev=float(row.iloc[4]) * 1000,
+                            contrat_situation_actuelle=row.iloc[5],
+                            montant_contrat=float(row.iloc[6]) * 1000,
+                            date_demarrage_travaux=parse_date(
+                                row.iloc[7], "%d/%m/%Y", default_date=(2024, 1, 1)
+                            ),
+                            delai_execution_contrat=int(row.iloc[8]),
+                            montant_ae_eng=float(row.iloc[9]) * 1000,
+                            montant_cp_eng=float(row.iloc[10]) * 1000,
+                            montant_liq=float(row.iloc[11]) * 1000,
+                            liquidation=float(row.iloc[11]) * 1000,
+                            ordonancement=float(row.iloc[12]) * 1000,
+                            pourcentage_ae_eng=float(row.iloc[13]),
+                            pourcentage_cp_eng=float(row.iloc[14]),
+                            pourcentage_liq=float(row.iloc[15]),
+                            pourcentage_ord=float(row.iloc[16]),
+                            prise_en_charge_TTC=float(row.iloc[17]),
+                            paiement_net_HT=float(row.iloc[18]),
+                            pourcentage_execution_physique_au_demarrage=float(row.iloc[19]),
+                            pourcentage_execution_physique_a_date=float(row.iloc[20]),
+                            observations=row.iloc[21],
+                        )
+                    except Exception as e:
+                        # Imprimer le type d'erreur et son message
+                        print(f"Erreur : {e}")  # Message d'erreur
+                        print(f"Type d'erreur : {type(e).__name__}")  # Type de l'erreur
             case "Total":
                 can_save = False
 
@@ -258,38 +329,45 @@ def import_GC_AUTRES(sheet_data):
                 can_save = True
             case "Autre":
                 if can_save:
-                    tache = Tache.objects.filter(
-                        activite=activite, title_fr__icontains=row.iloc[0]
-                    ).first()
-                    exercice = Exercice.objects.get(annee=2024)
-                    execution = EstExecuteeGCAUTRES.objects.create(
-                        tache=tache,
-                        exercice=exercice,
-                        montant_ae_init=float(row.iloc[1]) * 1000,
-                        montant_cp_init=float(row.iloc[2]) * 1000,
-                        montant_ae_rev=float(row.iloc[3]) * 1000,
-                        montant_cp_rev=float(row.iloc[4]) * 1000,
-                        contrat_situation_actuelle=row.iloc[5],
-                        montant_contrat=float(row.iloc[6]) * 1000,
-                        date_demarrage_travaux=parse_date_or_default(
-                            row.iloc[7], "%d/%m/%Y", default_date=(2024, 1, 1)
-                        ),
-                        delai_execution_contrat=int(row.iloc[8]),
-                        montant_ae_eng=float(row.iloc[9]) * 1000,
-                        montant_cp_eng=float(row.iloc[10]) * 1000,
-                        montant_liq=float(row.iloc[11]) * 1000,
-                        liquidation=float(row.iloc[11]) * 1000,
-                        ordonancement=float(row.iloc[12]) * 1000,
-                        pourcentage_ae_eng=float(row.iloc[13]),
-                        pourcentage_cp_eng=float(row.iloc[14]),
-                        pourcentage_liq=float(row.iloc[15]),
-                        pourcentage_ord=float(row.iloc[16]),
-                        prise_en_charge_TTC=float(row.iloc[17]),
-                        paiement_net_HT=float(row.iloc[18]),
-                        pourcentage_execution_physique_au_demarrage=float(row.iloc[19]),
-                        pourcentage_execution_physique_a_date=float(row.iloc[20]),
-                        observations=row.iloc[21],
-                    )
+                    try:
+                        tache = Tache.objects.filter(
+                            activite=activite, title_fr__icontains=row.iloc[0]
+                        ).first()
+                        exercice = Exercice.objects.get(annee=2024)
+                        execution = EstExecuteeGCAUTRES.objects.create(
+                            tache=tache,
+                            exercice=exercice,
+                            montant_ae_init=float(row.iloc[1]) * 1000,
+                            montant_cp_init=float(row.iloc[2]) * 1000,
+                            montant_ae_rev=float(row.iloc[3]) * 1000,
+                            montant_cp_rev=float(row.iloc[4]) * 1000,
+                            contrat_situation_actuelle=row.iloc[5],
+                            montant_contrat=float(row.iloc[6]) * 1000,
+                            date_demarrage_travaux=parse_date(
+                                row.iloc[7], "%d/%m/%Y", default_date=(2024, 1, 1)
+                            ),
+                            delai_execution_contrat=int(row.iloc[8]),
+                            montant_ae_eng=float(row.iloc[9]) * 1000,
+                            montant_cp_eng=float(row.iloc[10]) * 1000,
+                            montant_liq=float(row.iloc[11]) * 1000,
+                            liquidation=float(row.iloc[11]) * 1000,
+                            ordonancement=float(row.iloc[12]) * 1000,
+                            pourcentage_ae_eng=float(row.iloc[13]),
+                            pourcentage_cp_eng=float(row.iloc[14]),
+                            pourcentage_liq=float(row.iloc[15]),
+                            pourcentage_ord=float(row.iloc[16]),
+                            prise_en_charge_TTC=float(row.iloc[17]),
+                            paiement_net_HT=float(row.iloc[18]),
+                            pourcentage_execution_physique_au_demarrage=float(
+                                row.iloc[19]
+                            ),
+                            pourcentage_execution_physique_a_date=float(row.iloc[20]),
+                            observations=row.iloc[21],
+                        )
+                    except Exception as e:
+                        # Imprimer le type d'erreur et son message
+                        print(f"Erreur : {e}")  # Message d'erreur
+                        print(f"Type d'erreur : {type(e).__name__}")  # Type de l'erreur
             case "Total":
                 can_save = False
 
@@ -334,38 +412,45 @@ def import_GC_SUB(sheet_data):
                 can_save = True
             case "Autre":
                 if can_save:
-                    tache = Tache.objects.filter(
-                        activite=activite, title_fr__icontains=row.iloc[0]
-                    ).first()
-                    exercice = Exercice.objects.get(annee=2024)
-                    execution = EstExecuteeGCSUB.objects.create(
-                        tache=tache,
-                        exercice=exercice,
-                        montant_ae_init=float(row.iloc[1]) * 1000,
-                        montant_cp_init=float(row.iloc[2]) * 1000,
-                        montant_ae_rev=float(row.iloc[3]) * 1000,
-                        montant_cp_rev=float(row.iloc[4]) * 1000,
-                        contrat_situation_actuelle=row.iloc[5],
-                        montant_contrat=float(row.iloc[6]) * 1000,
-                        date_demarrage_travaux=parse_date_or_default(
-                            row.iloc[7], "%d/%m/%Y", default_date=(2024, 1, 1)
-                        ),
-                        delai_execution_contrat=int(row.iloc[8]),
-                        montant_ae_eng=float(row.iloc[9]) * 1000,
-                        montant_cp_eng=float(row.iloc[10]) * 1000,
-                        montant_liq=float(row.iloc[11]) * 1000,
-                        liquidation=float(row.iloc[11]) * 1000,
-                        ordonancement=float(row.iloc[12]) * 1000,
-                        pourcentage_ae_eng=float(row.iloc[13]),
-                        pourcentage_cp_eng=float(row.iloc[14]),
-                        pourcentage_liq=float(row.iloc[15]),
-                        pourcentage_ord=float(row.iloc[16]),
-                        prise_en_charge_TTC=float(row.iloc[17]),
-                        paiement_net_HT=float(row.iloc[18]),
-                        pourcentage_execution_physique_au_demarrage=float(row.iloc[19]),
-                        pourcentage_execution_physique_a_date=float(row.iloc[20]),
-                        observations=row.iloc[21],
-                    )
+                    try:
+                        tache = Tache.objects.filter(
+                            activite=activite, title_fr__icontains=row.iloc[0]
+                        ).first()
+                        exercice = Exercice.objects.get(annee=2024)
+                        execution = EstExecuteeGCSUB.objects.create(
+                            tache=tache,
+                            exercice=exercice,
+                            montant_ae_init=float(row.iloc[1]) * 1000,
+                            montant_cp_init=float(row.iloc[2]) * 1000,
+                            montant_ae_rev=float(row.iloc[3]) * 1000,
+                            montant_cp_rev=float(row.iloc[4]) * 1000,
+                            contrat_situation_actuelle=row.iloc[5],
+                            montant_contrat=float(row.iloc[6]) * 1000,
+                            date_demarrage_travaux=parse_date(
+                                row.iloc[7], "%d/%m/%Y", default_date=(2024, 1, 1)
+                            ),
+                            delai_execution_contrat=int(row.iloc[8]),
+                            montant_ae_eng=float(row.iloc[9]) * 1000,
+                            montant_cp_eng=float(row.iloc[10]) * 1000,
+                            montant_liq=float(row.iloc[11]) * 1000,
+                            liquidation=float(row.iloc[11]) * 1000,
+                            ordonancement=float(row.iloc[12]) * 1000,
+                            pourcentage_ae_eng=float(row.iloc[13]),
+                            pourcentage_cp_eng=float(row.iloc[14]),
+                            pourcentage_liq=float(row.iloc[15]),
+                            pourcentage_ord=float(row.iloc[16]),
+                            prise_en_charge_TTC=float(row.iloc[17]),
+                            paiement_net_HT=float(row.iloc[18]),
+                            pourcentage_execution_physique_au_demarrage=float(
+                                row.iloc[19]
+                            ),
+                            pourcentage_execution_physique_a_date=float(row.iloc[20]),
+                            observations=row.iloc[21],
+                        )
+                    except Exception as e:
+                        # Imprimer le type d'erreur et son message
+                        print(f"Erreur : {e}")  # Message d'erreur
+                        print(f"Type d'erreur : {type(e).__name__}")  # Type de l'erreur
             case "Total":
                 can_save = False
 
