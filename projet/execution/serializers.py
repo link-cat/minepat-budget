@@ -17,7 +17,13 @@ from .models import (
     EstProgramme,
 )
 
-from setting.serializers import TacheSerializer
+from setting.models import Tache
+
+
+class TacheTitleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tache
+        fields = ["title_fr", "title_en"]
 
 
 class EstExecuteeActionSerializer(serializers.ModelSerializer):
@@ -43,7 +49,7 @@ class EstExecuteeActionSerializer(serializers.ModelSerializer):
 
 
 class EstExecuteeFCPDRSerializer(serializers.ModelSerializer):
-    tache = TacheSerializer()
+    tache = TacheTitleSerializer()
 
     class Meta:
         model = EstExecuteeFCPDR
@@ -67,7 +73,7 @@ class EstExecuteeFCPDRSerializer(serializers.ModelSerializer):
 
 
 class EstExecuteeFCPTDDSerializer(serializers.ModelSerializer):
-    tache = TacheSerializer()
+    tache = TacheTitleSerializer()
 
     class Meta:
         model = EstExecuteeFCPTDD
@@ -91,7 +97,7 @@ class EstExecuteeFCPTDDSerializer(serializers.ModelSerializer):
 
 
 class EstExecuteeGCAUTRESSerializer(serializers.ModelSerializer):
-    tache = TacheSerializer()
+    tache = TacheTitleSerializer()
 
     class Meta:
         model = EstExecuteeGCAUTRES
@@ -115,7 +121,7 @@ class EstExecuteeGCAUTRESSerializer(serializers.ModelSerializer):
 
 
 class EstExecuteeGCSUBSerializer(serializers.ModelSerializer):
-    tache = TacheSerializer()
+    tache = TacheTitleSerializer()
 
     class Meta:
         model = EstExecuteeGCSUB
@@ -185,7 +191,7 @@ class EstExecuteeOperationFDCDRSerializer(serializers.ModelSerializer):
 
 
 class EstExecuteeSurSerializer(serializers.ModelSerializer):
-    tache = TacheSerializer()
+    tache = TacheTitleSerializer()
 
     class Meta:
         model = EstExecuteeSur
@@ -203,7 +209,7 @@ class EstExecuteeSurSerializer(serializers.ModelSerializer):
 
 
 class EstProgrammeSerializer(serializers.ModelSerializer):
-    tache = TacheSerializer()
+    tache = TacheTitleSerializer()
 
     class Meta:
         model = EstProgramme
