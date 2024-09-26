@@ -17,6 +17,8 @@ from .models import (
     EstProgramme,
 )
 
+from setting.serializers import TacheSerializer
+
 
 class EstExecuteeActionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -41,6 +43,8 @@ class EstExecuteeActionSerializer(serializers.ModelSerializer):
 
 
 class EstExecuteeFCPDRSerializer(serializers.ModelSerializer):
+    tache = TacheSerializer()
+
     class Meta:
         model = EstExecuteeFCPDR
         fields = "__all__"
@@ -63,6 +67,8 @@ class EstExecuteeFCPDRSerializer(serializers.ModelSerializer):
 
 
 class EstExecuteeFCPTDDSerializer(serializers.ModelSerializer):
+    tache = TacheSerializer()
+
     class Meta:
         model = EstExecuteeFCPTDD
         fields = "__all__"
@@ -85,6 +91,8 @@ class EstExecuteeFCPTDDSerializer(serializers.ModelSerializer):
 
 
 class EstExecuteeGCAUTRESSerializer(serializers.ModelSerializer):
+    tache = TacheSerializer()
+
     class Meta:
         model = EstExecuteeGCAUTRES
         fields = "__all__"
@@ -107,6 +115,8 @@ class EstExecuteeGCAUTRESSerializer(serializers.ModelSerializer):
 
 
 class EstExecuteeGCSUBSerializer(serializers.ModelSerializer):
+    tache = TacheSerializer()
+
     class Meta:
         model = EstExecuteeGCSUB
         fields = "__all__"
@@ -175,6 +185,8 @@ class EstExecuteeOperationFDCDRSerializer(serializers.ModelSerializer):
 
 
 class EstExecuteeSurSerializer(serializers.ModelSerializer):
+    tache = TacheSerializer()
+
     class Meta:
         model = EstExecuteeSur
         fields = "__all__"
@@ -191,6 +203,8 @@ class EstExecuteeSurSerializer(serializers.ModelSerializer):
 
 
 class EstProgrammeSerializer(serializers.ModelSerializer):
+    tache = TacheSerializer()
+
     class Meta:
         model = EstProgramme
         fields = "__all__"
