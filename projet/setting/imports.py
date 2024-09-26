@@ -1,5 +1,6 @@
 import pandas as pd
 import re
+from datetime import datetime
 
 
 from setting.models import (
@@ -18,7 +19,13 @@ from setting.models import (
     GroupeDepense,
     Exercice,
 )
-from execution.models import EstExecuteeAction, EstExecuteeFCPDR
+from execution.models import (
+    EstExecuteeAction,
+    EstExecuteeFCPDR,
+    EstExecuteeGCAUTRES,
+    EstExecuteeGCSUB,
+)
+from .utils import parse_date_or_default
 
 
 # Variables pour stocker le nombre d'instances créées
@@ -64,14 +71,16 @@ def import_excel_file(file_path):
     # Traiter chaque feuille
     for sheet_name, sheet_data in excel_data.items():
         match sheet_name:
-            case "22":
-                import_bip(sheet_data)
             # case "TabOp_FCPDR":
             #     import_op_fcpdr(sheet_data)
             # case "TabExe-Prog":
             #     import_ExeProg(sheet_data)
-            case "GC_FCPDR":
-                import_GC_FCPDR(sheet_data)
+            # case "GC_FCPDR":
+            #     import_GC_FCPDR(sheet_data)
+            case "GC_AUTRES":
+                import_GC_AUTRES(sheet_data)
+            # case "GC_SUBV-TRANSF":
+            #     import_GC_SUB(sheet_data)
         # Vous pouvez ajouter le traitement des données ici
 
 
@@ -134,6 +143,8 @@ def import_ExeProg(sheet_data):
 
 
 def import_GC_FCPDR(sheet_data):
+    sheet_data.iloc[:, 7] = sheet_data.iloc[:, 7].fillna("1/01/2024").astype(str)
+    sheet_data.iloc[:, 8] = sheet_data.iloc[:, 8].fillna("0").astype(str)
     can_save = False
     for _, row in sheet_data.iterrows():
         match determine_line_type(row):
@@ -178,20 +189,182 @@ def import_GC_FCPDR(sheet_data):
                     execution = EstExecuteeFCPDR.objects.create(
                         tache=tache,
                         exercice=exercice,
-                        montant_ae_init=int(row.iloc[1]) * 1000,
-                        montant_cp_init=int(row.iloc[2]) * 1000,
-                        montant_ae_rev=int(row.iloc[3]) * 1000,
-                        montant_cp_rev=int(row.iloc[4]) * 1000,
-                        montant_ae_eng=int(row.iloc[5]) * 1000,
-                        montant_cp_eng=int(row.iloc[6]) * 1000,
-                        montant_liq=int(row.iloc[7]) * 1000,
-                        liquidation=int(row.iloc[7]) * 1000,
-                        ordonancement=int(row.iloc[8]) * 1000,
-                        pourcentage_ae_eng=row.iloc[9],
-                        pourcentage_cp_eng=row.iloc[10],
-                        pourcentage_liq=row.iloc[11],
-                        pourcentage_ord=row.iloc[12],
-                        pourcentage_RPHY_cp=row.iloc[13],
+                        montant_ae_init=float(row.iloc[1]) * 1000,
+                        montant_cp_init=float(row.iloc[2]) * 1000,
+                        montant_ae_rev=float(row.iloc[3]) * 1000,
+                        montant_cp_rev=float(row.iloc[4]) * 1000,
+                        contrat_situation_actuelle=row.iloc[5],
+                        montant_contrat=float(row.iloc[6]) * 1000,
+                        date_demarrage_travaux=parse_date_or_default(
+                            row.iloc[7], "%d/%m/%Y", default_date=(2024, 1, 1)
+                        ),
+                        delai_execution_contrat=int(row.iloc[8]),
+                        montant_ae_eng=float(row.iloc[9]) * 1000,
+                        montant_cp_eng=float(row.iloc[10]) * 1000,
+                        montant_liq=float(row.iloc[11]) * 1000,
+                        liquidation=float(row.iloc[11]) * 1000,
+                        ordonancement=float(row.iloc[12]) * 1000,
+                        pourcentage_ae_eng=float(row.iloc[13]),
+                        pourcentage_cp_eng=float(row.iloc[14]),
+                        pourcentage_liq=float(row.iloc[15]),
+                        pourcentage_ord=float(row.iloc[16]),
+                        prise_en_charge_TTC=float(row.iloc[17]),
+                        paiement_net_HT=float(row.iloc[18]),
+                        pourcentage_execution_physique_au_demarrage=float(row.iloc[19]),
+                        pourcentage_execution_physique_a_date=float(row.iloc[20]),
+                        observations=row.iloc[21],
+                    )
+            case "Total":
+                can_save = False
+
+
+def import_GC_AUTRES(sheet_data):
+    sheet_data.iloc[:, 7] = sheet_data.iloc[:, 7].fillna("1/01/2024").astype(str)
+    sheet_data.iloc[:, 8] = sheet_data.iloc[:, 8].fillna("0").astype(str)
+    can_save = False
+    for _, row in sheet_data.iterrows():
+        match determine_line_type(row):
+            case "Chapitre":
+                numero_chapitre = int(
+                    re.search(r"Chapitre\s*:\s*(\d+)", row.iloc[0]).group(1)
+                )
+                chapitre = Chapitre.objects.get(code=numero_chapitre)
+            case "Programme":
+                numero_programme = int(
+                    re.search(r"Programme\s*:\s*(\d+)", row.iloc[0]).group(1)
+                )
+                programme = Programme.objects.get(
+                    chapitre=chapitre,
+                    code=numero_programme,
+                )
+            case "Action":
+                numero_action = int(
+                    re.search(r"Action\s*:\s*(\d+)", row.iloc[0]).group(1)
+                )
+                action = Action.objects.get(
+                    programme=programme,
+                    code=numero_action,
+                )
+            case "Activite":
+                nom_activite = (
+                    re.search(r"Projet/Activite\s*:\s*(.*)", row.iloc[0])
+                    .group(1)
+                    .replace('"-U', '" -U')
+                )
+                activite = Activite.objects.filter(
+                    action=action,
+                    title_fr__icontains=nom_activite,
+                ).first()
+                can_save = True
+            case "Autre":
+                if can_save:
+                    tache = Tache.objects.filter(
+                        activite=activite, title_fr__icontains=row.iloc[0]
+                    ).first()
+                    exercice = Exercice.objects.get(annee=2024)
+                    execution = EstExecuteeGCAUTRES.objects.create(
+                        tache=tache,
+                        exercice=exercice,
+                        montant_ae_init=float(row.iloc[1]) * 1000,
+                        montant_cp_init=float(row.iloc[2]) * 1000,
+                        montant_ae_rev=float(row.iloc[3]) * 1000,
+                        montant_cp_rev=float(row.iloc[4]) * 1000,
+                        contrat_situation_actuelle=row.iloc[5],
+                        montant_contrat=float(row.iloc[6]) * 1000,
+                        date_demarrage_travaux=parse_date_or_default(
+                            row.iloc[7], "%d/%m/%Y", default_date=(2024, 1, 1)
+                        ),
+                        delai_execution_contrat=int(row.iloc[8]),
+                        montant_ae_eng=float(row.iloc[9]) * 1000,
+                        montant_cp_eng=float(row.iloc[10]) * 1000,
+                        montant_liq=float(row.iloc[11]) * 1000,
+                        liquidation=float(row.iloc[11]) * 1000,
+                        ordonancement=float(row.iloc[12]) * 1000,
+                        pourcentage_ae_eng=float(row.iloc[13]),
+                        pourcentage_cp_eng=float(row.iloc[14]),
+                        pourcentage_liq=float(row.iloc[15]),
+                        pourcentage_ord=float(row.iloc[16]),
+                        prise_en_charge_TTC=float(row.iloc[17]),
+                        paiement_net_HT=float(row.iloc[18]),
+                        pourcentage_execution_physique_au_demarrage=float(row.iloc[19]),
+                        pourcentage_execution_physique_a_date=float(row.iloc[20]),
+                        observations=row.iloc[21],
+                    )
+            case "Total":
+                can_save = False
+
+
+def import_GC_SUB(sheet_data):
+    sheet_data.iloc[:, 7] = sheet_data.iloc[:, 7].fillna("1/01/2024").astype(str)
+    sheet_data.iloc[:, 8] = sheet_data.iloc[:, 8].fillna("0").astype(str)
+    can_save = False
+    for _, row in sheet_data.iterrows():
+        match determine_line_type(row):
+            case "Chapitre":
+                numero_chapitre = int(
+                    re.search(r"Chapitre\s*:\s*(\d+)", row.iloc[0]).group(1)
+                )
+                chapitre = Chapitre.objects.get(code=numero_chapitre)
+            case "Programme":
+                numero_programme = int(
+                    re.search(r"Programme\s*:\s*(\d+)", row.iloc[0]).group(1)
+                )
+                programme = Programme.objects.get(
+                    chapitre=chapitre,
+                    code=numero_programme,
+                )
+            case "Action":
+                numero_action = int(
+                    re.search(r"Action\s*:\s*(\d+)", row.iloc[0]).group(1)
+                )
+                action = Action.objects.get(
+                    programme=programme,
+                    code=numero_action,
+                )
+            case "Activite":
+                nom_activite = (
+                    re.search(r"Projet/Activite\s*:\s*(.*)", row.iloc[0])
+                    .group(1)
+                    .replace('"-U', '" -U')
+                )
+                activite = Activite.objects.filter(
+                    action=action,
+                    title_fr__icontains=nom_activite,
+                ).first()
+                can_save = True
+            case "Autre":
+                if can_save:
+                    tache = Tache.objects.filter(
+                        activite=activite, title_fr__icontains=row.iloc[0]
+                    ).first()
+                    exercice = Exercice.objects.get(annee=2024)
+                    execution = EstExecuteeGCSUB.objects.create(
+                        tache=tache,
+                        exercice=exercice,
+                        montant_ae_init=float(row.iloc[1]) * 1000,
+                        montant_cp_init=float(row.iloc[2]) * 1000,
+                        montant_ae_rev=float(row.iloc[3]) * 1000,
+                        montant_cp_rev=float(row.iloc[4]) * 1000,
+                        contrat_situation_actuelle=row.iloc[5],
+                        montant_contrat=float(row.iloc[6]) * 1000,
+                        date_demarrage_travaux=parse_date_or_default(
+                            row.iloc[7], "%d/%m/%Y", default_date=(2024, 1, 1)
+                        ),
+                        delai_execution_contrat=int(row.iloc[8]),
+                        montant_ae_eng=float(row.iloc[9]) * 1000,
+                        montant_cp_eng=float(row.iloc[10]) * 1000,
+                        montant_liq=float(row.iloc[11]) * 1000,
+                        liquidation=float(row.iloc[11]) * 1000,
+                        ordonancement=float(row.iloc[12]) * 1000,
+                        pourcentage_ae_eng=float(row.iloc[13]),
+                        pourcentage_cp_eng=float(row.iloc[14]),
+                        pourcentage_liq=float(row.iloc[15]),
+                        pourcentage_ord=float(row.iloc[16]),
+                        prise_en_charge_TTC=float(row.iloc[17]),
+                        paiement_net_HT=float(row.iloc[18]),
+                        pourcentage_execution_physique_au_demarrage=float(row.iloc[19]),
+                        pourcentage_execution_physique_a_date=float(row.iloc[20]),
+                        observations=row.iloc[21],
                     )
             case "Total":
                 can_save = False
@@ -320,9 +493,7 @@ def import_bip(sheet_data):
             logs["GroupeDepense"] += 1
 
         nature, created = NatureDepense.objects.get_or_create(
-            code=row["Paragraphe"],
-            title=row["Lib. Nature depense"],
-            groupe=groupe
+            code=row["Paragraphe"], title=row["Lib. Nature depense"], groupe=groupe
         )
         if created:
             logs["NatureDepense"] += 1

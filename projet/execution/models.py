@@ -92,7 +92,6 @@ class EstExecuteeFCPDR(models.Model):
     ordonancement = models.FloatField()
     pourcentage_liq = models.DecimalField(max_digits=4, decimal_places=2)
     pourcentage_ord = models.DecimalField(max_digits=4, decimal_places=2)
-    pourcentage_RPHY_cp = models.DecimalField(max_digits=4, decimal_places=2)
     gc_category_ressource = models.CharField(max_length=45)
     contrat_situation_actuelle = models.CharField(
         max_length=100, choices=CONTRAT_SITUATION_CHOICES, default="BC:Non executé"
@@ -100,6 +99,11 @@ class EstExecuteeFCPDR(models.Model):
     montant_contrat = models.FloatField()
     date_demarrage_travaux = models.DateTimeField()
     delai_execution_contrat = models.IntegerField()
+    prise_en_charge_TTC = models.FloatField()
+    paiement_net_HT = models.FloatField()
+    pourcentage_execution_physique_au_demarrage = models.FloatField()
+    pourcentage_execution_physique_a_date = models.FloatField()
+    observations = models.TextField()
     history = HistoricalRecords()
 
 
@@ -120,14 +124,7 @@ class EstExecuteeFCPTDD(models.Model):
     ordonancement = models.FloatField()
     pourcentage_liq = models.DecimalField(max_digits=4, decimal_places=2)
     pourcentage_ord = models.DecimalField(max_digits=4, decimal_places=2)
-    pourcentage_RPHY_cp = models.DecimalField(max_digits=4, decimal_places=2)
-    gc_category_ressource = models.CharField(max_length=45)
-    contrat_situation_actuelle = models.CharField(
-        max_length=100, choices=CONTRAT_SITUATION_CHOICES, default="BC:Non executé"
-    )
-    montant_contrat = models.FloatField()
-    date_demarrage_travaux = models.DateTimeField()
-    delai_execution_contrat = models.IntegerField()
+    observations = models.TextField()
     history = HistoricalRecords()
 
 
@@ -148,7 +145,6 @@ class EstExecuteeGCAUTRES(models.Model):
     ordonancement = models.FloatField()
     pourcentage_liq = models.DecimalField(max_digits=4, decimal_places=2)
     pourcentage_ord = models.DecimalField(max_digits=4, decimal_places=2)
-    pourcentage_RPHY_cp = models.DecimalField(max_digits=4, decimal_places=2)
     gc_category_ressource = models.CharField(max_length=45)
     contrat_situation_actuelle = models.CharField(
         max_length=100, choices=CONTRAT_SITUATION_CHOICES, default="BC:Non executé"
@@ -156,6 +152,11 @@ class EstExecuteeGCAUTRES(models.Model):
     montant_contrat = models.FloatField()
     date_demarrage_travaux = models.DateTimeField()
     delai_execution_contrat = models.IntegerField()
+    prise_en_charge_TTC = models.FloatField()
+    paiement_net_HT = models.FloatField()
+    pourcentage_execution_physique_au_demarrage = models.FloatField()
+    pourcentage_execution_physique_a_date = models.FloatField()
+    observations = models.TextField()
     history = HistoricalRecords()
 
 
@@ -176,7 +177,6 @@ class EstExecuteeGCSUB(models.Model):
     ordonancement = models.FloatField()
     pourcentage_liq = models.DecimalField(max_digits=4, decimal_places=2)
     pourcentage_ord = models.DecimalField(max_digits=4, decimal_places=2)
-    pourcentage_RPHY_cp = models.DecimalField(max_digits=4, decimal_places=2)
     gc_category_ressource = models.CharField(max_length=45)
     contrat_situation_actuelle = models.CharField(
         max_length=100, choices=CONTRAT_SITUATION_CHOICES, default="BC:Non executé"
@@ -184,6 +184,11 @@ class EstExecuteeGCSUB(models.Model):
     montant_contrat = models.FloatField()
     date_demarrage_travaux = models.DateTimeField()
     delai_execution_contrat = models.IntegerField()
+    prise_en_charge_TTC = models.FloatField()
+    paiement_net_HT = models.FloatField()
+    pourcentage_execution_physique_au_demarrage = models.FloatField()
+    pourcentage_execution_physique_a_date = models.FloatField()
+    observations = models.TextField()
     history = HistoricalRecords()
 
 

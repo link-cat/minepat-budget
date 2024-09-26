@@ -29,6 +29,7 @@ from setting.views import (
 )
 
 from execution.views import (
+    ExcelImportViewSet as ImportExecution,
     EstExecuteeActionViewSet,
     EstExecuteeFCPDRViewSet,
     EstExecuteeFCPTDDViewSet,
@@ -83,6 +84,7 @@ for prefix, viewset, basename in setting_viewsets:
 
 # Routes pour le module 'execution'
 execution_viewsets = [
+    ("upload-execution", ImportExecution, "upload-execution"),
     ("est-executee-action", EstExecuteeActionViewSet, "est-executee-action"),
     ("est-executee-fcpdr", EstExecuteeFCPDRViewSet, "est-executee-fcpdr"),
     ("est-executee-fcptdd", EstExecuteeFCPTDDViewSet, "est-executee-fcptdd"),
