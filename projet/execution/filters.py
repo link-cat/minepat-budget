@@ -5,23 +5,23 @@ from .models import EstExecuteeGCSUB, EstExecuteeGCAUTRES
 class EstExecuteeGCSUBFilter(django_filters.FilterSet):
     # Filtrer par titre d'une action
     action = django_filters.CharFilter(
-        field_name="tache__activite__action__title_fr", lookup_expr="icontains"
+        field_name="tache__activite__action__code", lookup_expr="icontains"
     )
 
     # Filtrer par titre d'un programme
     programme = django_filters.CharFilter(
-        field_name="tache__activite__action__programme__title_fr",
+        field_name="tache__activite__action__programme__code",
         lookup_expr="icontains",
     )
 
     # Filtrer par titre d'une activité
     activite = django_filters.CharFilter(
-        field_name="tache__activite__title_fr", lookup_expr="icontains"
+        field_name="tache__activite__code", lookup_expr="icontains"
     )
 
     # Filtrer par titre d'un chapitre
     chapitre = django_filters.CharFilter(
-        field_name="tache__activite__action__programme__chapitre__title_fr",
+        field_name="tache__activite__action__programme__chapitre__code",
         lookup_expr="icontains",
     )
 
@@ -33,23 +33,23 @@ class EstExecuteeGCSUBFilter(django_filters.FilterSet):
 class EstExecuteeGCAutresFilter(django_filters.FilterSet):
     # Filtrer par titre d'une action
     action = django_filters.CharFilter(
-        field_name="tache__activite__action__title_fr", lookup_expr="icontains"
+        field_name="tache__activite__action__code", lookup_expr="icontains"
     )
 
     # Filtrer par titre d'un programme
     programme = django_filters.CharFilter(
-        field_name="tache__activite__action__programme__title_fr",
+        field_name="tache__activite__action__programme__code",
         lookup_expr="icontains",
     )
 
     # Filtrer par titre d'une activité
     activite = django_filters.CharFilter(
-        field_name="tache__activite__title_fr", lookup_expr="icontains"
+        field_name="tache__activite__code", lookup_expr="icontains"
     )
 
     # Filtrer par titre d'un chapitre
     chapitre = django_filters.CharFilter(
-        field_name="tache__activite__action__programme__chapitre__title_fr",
+        field_name="tache__activite__action__programme__chapitre__code",
         lookup_expr="icontains",
     )
 
