@@ -1,4 +1,10 @@
 from rest_framework import serializers
+import math
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 from .models import (
     EstExecuteeAction,
     EstExecuteeFCPDR,
@@ -23,6 +29,16 @@ class EstExecuteeActionSerializer(serializers.ModelSerializer):
             "montant_cp_rev",
         ]
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        # Remplace les valeurs NaN ou inf par 0 (ou une autre valeur)
+        for key, value in data.items():
+            if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+                data[key] = 0  # Remplacer par 0 ou une autre valeur par défaut
+
+        return data
+
 
 class EstExecuteeFCPDRSerializer(serializers.ModelSerializer):
     class Meta:
@@ -34,6 +50,16 @@ class EstExecuteeFCPDRSerializer(serializers.ModelSerializer):
             "montant_ae_rev",
             "montant_cp_rev",
         ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        # Remplace les valeurs NaN ou inf par 0 (ou une autre valeur)
+        for key, value in data.items():
+            if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+                data[key] = 0  # Remplacer par 0 ou une autre valeur par défaut
+
+        return data
 
 
 class EstExecuteeFCPTDDSerializer(serializers.ModelSerializer):
@@ -47,6 +73,16 @@ class EstExecuteeFCPTDDSerializer(serializers.ModelSerializer):
             "montant_cp_rev",
         ]
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        # Remplace les valeurs NaN ou inf par 0 (ou une autre valeur)
+        for key, value in data.items():
+            if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+                data[key] = 0  # Remplacer par 0 ou une autre valeur par défaut
+
+        return data
+
 
 class EstExecuteeGCAUTRESSerializer(serializers.ModelSerializer):
     class Meta:
@@ -58,6 +94,16 @@ class EstExecuteeGCAUTRESSerializer(serializers.ModelSerializer):
             "montant_ae_rev",
             "montant_cp_rev",
         ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        # Remplace les valeurs NaN ou inf par 0 (ou une autre valeur)
+        for key, value in data.items():
+            if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+                data[key] = 0  # Remplacer par 0 ou une autre valeur par défaut
+
+        return data
 
 
 class EstExecuteeGCSUBSerializer(serializers.ModelSerializer):
@@ -71,6 +117,18 @@ class EstExecuteeGCSUBSerializer(serializers.ModelSerializer):
             "montant_cp_rev",
         ]
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        logger.debug(f"Data before sanitization: {data}")
+
+        # Remplace les valeurs NaN ou inf par 0 (ou une autre valeur)
+        for key, value in data.items():
+            if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+                data[key] = 0  # Remplacer par 0 ou une autre valeur par défaut
+
+        logger.debug(f"Data after sanitization: {data}")
+        return data
+
 
 class EstExecuteeModeGestionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -82,6 +140,16 @@ class EstExecuteeModeGestionSerializer(serializers.ModelSerializer):
             "montant_ae_rev",
             "montant_cp_rev",
         ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        # Remplace les valeurs NaN ou inf par 0 (ou une autre valeur)
+        for key, value in data.items():
+            if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+                data[key] = 0  # Remplacer par 0 ou une autre valeur par défaut
+
+        return data
 
 
 class EstExecuteeOperationFDCDRSerializer(serializers.ModelSerializer):
@@ -95,11 +163,31 @@ class EstExecuteeOperationFDCDRSerializer(serializers.ModelSerializer):
             "montant_cp_rev",
         ]
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        # Remplace les valeurs NaN ou inf par 0 (ou une autre valeur)
+        for key, value in data.items():
+            if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+                data[key] = 0  # Remplacer par 0 ou une autre valeur par défaut
+
+        return data
+
 
 class EstExecuteeSurSerializer(serializers.ModelSerializer):
     class Meta:
         model = EstExecuteeSur
         fields = "__all__"
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        # Remplace les valeurs NaN ou inf par 0 (ou une autre valeur)
+        for key, value in data.items():
+            if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+                data[key] = 0  # Remplacer par 0 ou une autre valeur par défaut
+
+        return data
 
 
 class EstProgrammeSerializer(serializers.ModelSerializer):
@@ -112,3 +200,13 @@ class EstProgrammeSerializer(serializers.ModelSerializer):
             "montant_ae_rev",
             "montant_cp_rev",
         ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        # Remplace les valeurs NaN ou inf par 0 (ou une autre valeur)
+        for key, value in data.items():
+            if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+                data[key] = 0  # Remplacer par 0 ou une autre valeur par défaut
+
+        return data
