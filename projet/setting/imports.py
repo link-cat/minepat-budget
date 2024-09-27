@@ -248,9 +248,9 @@ def import_GC_FCPDR(sheet_data):
                 can_save = True
             case "Autre":
                 if can_save:
-                    try: 
+                    try:
                         tache = Tache.objects.filter(
-                        activite=activite, title_fr__icontains=row.iloc[0]
+                            activite=activite, title_fr__icontains=row.iloc[0]
                         ).first()
                         exercice = Exercice.objects.get(annee=2024)
                         execution = EstExecuteeFCPDR.objects.create(
@@ -269,7 +269,6 @@ def import_GC_FCPDR(sheet_data):
                             montant_ae_eng=float(row.iloc[9]) * 1000,
                             montant_cp_eng=float(row.iloc[10]) * 1000,
                             montant_liq=float(row.iloc[11]) * 1000,
-                            liquidation=float(row.iloc[11]) * 1000,
                             ordonancement=float(row.iloc[12]) * 1000,
                             pourcentage_ae_eng=float(row.iloc[13]),
                             pourcentage_cp_eng=float(row.iloc[14]),
@@ -277,7 +276,9 @@ def import_GC_FCPDR(sheet_data):
                             pourcentage_ord=float(row.iloc[16]),
                             prise_en_charge_TTC=float(row.iloc[17]),
                             paiement_net_HT=float(row.iloc[18]),
-                            pourcentage_execution_physique_au_demarrage=float(row.iloc[19]),
+                            pourcentage_execution_physique_au_demarrage=float(
+                                row.iloc[19]
+                            ),
                             pourcentage_execution_physique_a_date=float(row.iloc[20]),
                             observations=row.iloc[21],
                         )
@@ -350,7 +351,6 @@ def import_GC_AUTRES(sheet_data):
                             montant_ae_eng=float(row.iloc[9]) * 1000,
                             montant_cp_eng=float(row.iloc[10]) * 1000,
                             montant_liq=float(row.iloc[11]) * 1000,
-                            liquidation=float(row.iloc[11]) * 1000,
                             ordonancement=float(row.iloc[12]) * 1000,
                             pourcentage_ae_eng=float(row.iloc[13]),
                             pourcentage_cp_eng=float(row.iloc[14]),
@@ -433,7 +433,6 @@ def import_GC_SUB(sheet_data):
                             montant_ae_eng=float(row.iloc[9]) * 1000,
                             montant_cp_eng=float(row.iloc[10]) * 1000,
                             montant_liq=float(row.iloc[11]) * 1000,
-                            liquidation=float(row.iloc[11]) * 1000,
                             ordonancement=float(row.iloc[12]) * 1000,
                             pourcentage_ae_eng=float(row.iloc[13]),
                             pourcentage_cp_eng=float(row.iloc[14]),

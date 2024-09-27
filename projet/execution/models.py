@@ -2,7 +2,17 @@ from django.db import models
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
 
-from setting.models import Action,Exercice,EtapeExecutionGlob,Tache,Operation,NatureDepense,GroupeDepense,EtapeExecution,SUBGroupe
+from setting.models import (
+    Action,
+    Exercice,
+    EtapeExecutionGlob,
+    Tache,
+    Operation,
+    NatureDepense,
+    GroupeDepense,
+    EtapeExecution,
+    SUBGroupe,
+)
 
 CONTRAT_SITUATION_CHOICES = [
     ("BC:Non executé", "BC:Non executé"),
@@ -47,6 +57,7 @@ CONTRAT_SITUATION_CHOICES = [
     ("Dotation non repartie", "Dotation non repartie"),
 ]
 
+
 class EstExecuteeAction(models.Model):
     action = models.ForeignKey(Action, on_delete=models.CASCADE)
     exercice = models.ForeignKey(Exercice, on_delete=models.CASCADE)
@@ -63,7 +74,6 @@ class EstExecuteeAction(models.Model):
     montant_liq = models.FloatField()
     pourcentage_ae_eng = models.DecimalField(max_digits=4, decimal_places=2)
     pourcentage_cp_eng = models.DecimalField(max_digits=4, decimal_places=2)
-    liquidation = models.FloatField()
     ordonancement = models.FloatField()
     pourcentage_liq = models.DecimalField(max_digits=4, decimal_places=2)
     pourcentage_ord = models.DecimalField(max_digits=4, decimal_places=2)
@@ -88,7 +98,6 @@ class EstExecuteeFCPDR(models.Model):
     montant_liq = models.FloatField()
     pourcentage_ae_eng = models.DecimalField(max_digits=4, decimal_places=2)
     pourcentage_cp_eng = models.DecimalField(max_digits=4, decimal_places=2)
-    liquidation = models.FloatField()
     ordonancement = models.FloatField()
     pourcentage_liq = models.DecimalField(max_digits=4, decimal_places=2)
     pourcentage_ord = models.DecimalField(max_digits=4, decimal_places=2)
@@ -120,7 +129,6 @@ class EstExecuteeFCPTDD(models.Model):
     montant_liq = models.FloatField()
     pourcentage_ae_eng = models.DecimalField(max_digits=4, decimal_places=2)
     pourcentage_cp_eng = models.DecimalField(max_digits=4, decimal_places=2)
-    liquidation = models.FloatField()
     ordonancement = models.FloatField()
     pourcentage_liq = models.DecimalField(max_digits=4, decimal_places=2)
     pourcentage_ord = models.DecimalField(max_digits=4, decimal_places=2)
@@ -141,7 +149,6 @@ class EstExecuteeGCAUTRES(models.Model):
     montant_liq = models.FloatField()
     pourcentage_ae_eng = models.DecimalField(max_digits=4, decimal_places=2)
     pourcentage_cp_eng = models.DecimalField(max_digits=4, decimal_places=2)
-    liquidation = models.FloatField()
     ordonancement = models.FloatField()
     pourcentage_liq = models.DecimalField(max_digits=4, decimal_places=2)
     pourcentage_ord = models.DecimalField(max_digits=4, decimal_places=2)
@@ -173,7 +180,6 @@ class EstExecuteeGCSUB(models.Model):
     montant_liq = models.FloatField()
     pourcentage_ae_eng = models.DecimalField(max_digits=4, decimal_places=2)
     pourcentage_cp_eng = models.DecimalField(max_digits=4, decimal_places=2)
-    liquidation = models.FloatField()
     ordonancement = models.FloatField()
     pourcentage_liq = models.DecimalField(max_digits=4, decimal_places=2)
     pourcentage_ord = models.DecimalField(max_digits=4, decimal_places=2)
@@ -208,7 +214,6 @@ class EstExecuteeModeGestion(models.Model):
     montant_liq = models.FloatField()
     pourcentage_ae_eng = models.DecimalField(max_digits=4, decimal_places=2)
     pourcentage_cp_eng = models.DecimalField(max_digits=4, decimal_places=2)
-    liquidation = models.FloatField()
     ordonancement = models.FloatField()
     pourcentage_liq = models.DecimalField(max_digits=4, decimal_places=2)
     pourcentage_ord = models.DecimalField(max_digits=4, decimal_places=2)
