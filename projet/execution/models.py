@@ -101,7 +101,6 @@ class EstExecuteeFCPDR(models.Model):
     ordonancement = models.FloatField()
     pourcentage_liq = models.DecimalField(max_digits=4, decimal_places=2)
     pourcentage_ord = models.DecimalField(max_digits=4, decimal_places=2)
-    gc_category_ressource = models.CharField(max_length=45, default="RAS")
     contrat_situation_actuelle = models.CharField(
         max_length=100, choices=CONTRAT_SITUATION_CHOICES, default="BC:Non executé"
     )
@@ -152,7 +151,6 @@ class EstExecuteeGCAUTRES(models.Model):
     ordonancement = models.FloatField()
     pourcentage_liq = models.DecimalField(max_digits=4, decimal_places=2)
     pourcentage_ord = models.DecimalField(max_digits=4, decimal_places=2)
-    gc_category_ressource = models.CharField(max_length=45, default="RAS")
     contrat_situation_actuelle = models.CharField(
         max_length=100, choices=CONTRAT_SITUATION_CHOICES, default="BC:Non executé"
     )
@@ -183,7 +181,6 @@ class EstExecuteeGCSUB(models.Model):
     ordonancement = models.FloatField()
     pourcentage_liq = models.DecimalField(max_digits=4, decimal_places=2)
     pourcentage_ord = models.DecimalField(max_digits=4, decimal_places=2)
-    gc_category_ressource = models.CharField(max_length=45, default="RAS")
     contrat_situation_actuelle = models.CharField(
         max_length=100, choices=CONTRAT_SITUATION_CHOICES, default="BC:Non executé"
     )
