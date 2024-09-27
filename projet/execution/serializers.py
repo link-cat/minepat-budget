@@ -49,7 +49,10 @@ class EstExecuteeActionSerializer(serializers.ModelSerializer):
 
 
 class EstExecuteeFCPDRSerializer(serializers.ModelSerializer):
-    tache = TacheTitleSerializer()
+    tache = serializers.SerializerMethodField()
+
+    def get_tache(self, obj):
+        return obj.tache.title_fr
 
     class Meta:
         model = EstExecuteeFCPDR
@@ -73,7 +76,10 @@ class EstExecuteeFCPDRSerializer(serializers.ModelSerializer):
 
 
 class EstExecuteeFCPTDDSerializer(serializers.ModelSerializer):
-    tache = TacheTitleSerializer()
+    tache = serializers.SerializerMethodField()
+
+    def get_tache(self, obj):
+        return obj.tache.title_fr
 
     class Meta:
         model = EstExecuteeFCPTDD
@@ -97,7 +103,10 @@ class EstExecuteeFCPTDDSerializer(serializers.ModelSerializer):
 
 
 class EstExecuteeGCAUTRESSerializer(serializers.ModelSerializer):
-    tache = TacheTitleSerializer()
+    tache = serializers.SerializerMethodField()
+
+    def get_tache(self, obj):
+        return obj.tache.title_fr
 
     class Meta:
         model = EstExecuteeGCAUTRES
@@ -121,7 +130,10 @@ class EstExecuteeGCAUTRESSerializer(serializers.ModelSerializer):
 
 
 class EstExecuteeGCSUBSerializer(serializers.ModelSerializer):
-    tache = TacheTitleSerializer()
+    tache = serializers.SerializerMethodField()
+
+    def get_tache(self, obj):
+        return obj.tache.title_fr
 
     class Meta:
         model = EstExecuteeGCSUB
@@ -191,7 +203,10 @@ class EstExecuteeOperationFDCDRSerializer(serializers.ModelSerializer):
 
 
 class EstExecuteeSurSerializer(serializers.ModelSerializer):
-    tache = TacheTitleSerializer()
+    tache = serializers.SerializerMethodField()
+
+    def get_tache(self, obj):
+        return obj.tache.title_fr
 
     class Meta:
         model = EstExecuteeSur
@@ -209,7 +224,10 @@ class EstExecuteeSurSerializer(serializers.ModelSerializer):
 
 
 class EstProgrammeSerializer(serializers.ModelSerializer):
-    tache = TacheTitleSerializer()
+    tache = serializers.SerializerMethodField()
+
+    def get_tache(self, obj):
+        return obj.tache.title_fr
 
     class Meta:
         model = EstProgramme
