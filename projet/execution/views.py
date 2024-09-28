@@ -59,7 +59,7 @@ class EstExecuteeActionViewSet(BaseModelViewSet):
 
     def get_queryset(self):
         # Surcharge de get_queryset pour trier par date de création
-        return EstExecuteeAction.objects.all().order_by("-created_at")
+        return EstExecuteeAction.objects.all().order_by("-id")
 
 
 class EstExecuteeFCPDRViewSet(BaseModelViewSet):
@@ -68,7 +68,7 @@ class EstExecuteeFCPDRViewSet(BaseModelViewSet):
 
     def get_queryset(self):
         # Surcharge de get_queryset pour trier par date de création
-        return EstExecuteeFCPDR.objects.all().order_by("-created_at")
+        return EstExecuteeFCPDR.objects.all().order_by("-id")
 
 
 class EstExecuteeFCPTDDViewSet(BaseModelViewSet):
@@ -77,7 +77,7 @@ class EstExecuteeFCPTDDViewSet(BaseModelViewSet):
 
     def get_queryset(self):
         # Surcharge de get_queryset pour trier par date de création
-        return EstExecuteeFCPTDD.objects.all().order_by("-created_at")
+        return EstExecuteeFCPTDD.objects.all().order_by("-id")
 
 
 class EstExecuteeGCAUTRESViewSet(BaseModelViewSet):
@@ -88,7 +88,7 @@ class EstExecuteeGCAUTRESViewSet(BaseModelViewSet):
 
     def get_queryset(self):
         # Surcharge de get_queryset pour trier par date de création
-        return EstExecuteeGCAUTRES.objects.all().order_by("-created_at")
+        return EstExecuteeGCAUTRES.objects.all().order_by("-id")
 
 
 class EstExecuteeGCSUBViewSet(BaseModelViewSet):
@@ -99,7 +99,7 @@ class EstExecuteeGCSUBViewSet(BaseModelViewSet):
 
     def get_queryset(self):
         # Surcharge de get_queryset pour trier par date de création
-        return EstExecuteeGCSUB.objects.all().order_by("-created_at")
+        return EstExecuteeGCSUB.objects.all().order_by("-id")
 
 
 class EstExecuteeModeGestionViewSet(BaseModelViewSet):
@@ -108,7 +108,7 @@ class EstExecuteeModeGestionViewSet(BaseModelViewSet):
 
     def get_queryset(self):
         # Surcharge de get_queryset pour trier par date de création
-        return EstExecuteeModeGestion.objects.all().order_by("-created_at")
+        return EstExecuteeModeGestion.objects.all().order_by("-id")
 
 
 class EstExecuteeOperationFDCDRViewSet(BaseModelViewSet):
@@ -117,7 +117,7 @@ class EstExecuteeOperationFDCDRViewSet(BaseModelViewSet):
 
     def get_queryset(self):
         # Surcharge de get_queryset pour trier par date de création
-        return EstExecuteeOperationFDCDR.objects.all().order_by("-created_at")
+        return EstExecuteeOperationFDCDR.objects.all().order_by("-id")
 
 
 class EstExecuteeSurViewSet(BaseModelViewSet):
@@ -126,7 +126,7 @@ class EstExecuteeSurViewSet(BaseModelViewSet):
 
     def get_queryset(self):
         # Surcharge de get_queryset pour trier par date de création
-        return EstExecuteeSur.objects.all().order_by("-created_at")
+        return EstExecuteeSur.objects.all().order_by("-id")
 
 
 class EstProgrammeViewSet(BaseModelViewSet):
@@ -135,7 +135,7 @@ class EstProgrammeViewSet(BaseModelViewSet):
 
     def get_queryset(self):
         # Surcharge de get_queryset pour trier par date de création
-        return EstProgramme.objects.all().order_by("-created_at")
+        return EstProgramme.objects.all().order_by("-id")
 
 
 from rest_framework.decorators import action
