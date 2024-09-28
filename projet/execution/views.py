@@ -57,15 +57,27 @@ class EstExecuteeActionViewSet(BaseModelViewSet):
     queryset = EstExecuteeAction.objects.all()
     serializer_class = EstExecuteeActionSerializer
 
+    def get_queryset(self):
+        # Surcharge de get_queryset pour trier par date de création
+        return EstExecuteeAction.objects.all().order_by("-created_at")
+
 
 class EstExecuteeFCPDRViewSet(BaseModelViewSet):
     queryset = EstExecuteeFCPDR.objects.all()
     serializer_class = EstExecuteeFCPDRSerializer
 
+    def get_queryset(self):
+        # Surcharge de get_queryset pour trier par date de création
+        return EstExecuteeFCPDR.objects.all().order_by("-created_at")
+
 
 class EstExecuteeFCPTDDViewSet(BaseModelViewSet):
     queryset = EstExecuteeFCPTDD.objects.all()
     serializer_class = EstExecuteeFCPTDDSerializer
+
+    def get_queryset(self):
+        # Surcharge de get_queryset pour trier par date de création
+        return EstExecuteeFCPTDD.objects.all().order_by("-created_at")
 
 
 class EstExecuteeGCAUTRESViewSet(BaseModelViewSet):
@@ -74,6 +86,10 @@ class EstExecuteeGCAUTRESViewSet(BaseModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_class = EstExecuteeGCAutresFilter
 
+    def get_queryset(self):
+        # Surcharge de get_queryset pour trier par date de création
+        return EstExecuteeGCAUTRES.objects.all().order_by("-created_at")
+
 
 class EstExecuteeGCSUBViewSet(BaseModelViewSet):
     queryset = EstExecuteeGCSUB.objects.all()
@@ -81,25 +97,46 @@ class EstExecuteeGCSUBViewSet(BaseModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_class = EstExecuteeGCSUBFilter
 
+    def get_queryset(self):
+        # Surcharge de get_queryset pour trier par date de création
+        return EstExecuteeGCSUB.objects.all().order_by("-created_at")
+
 
 class EstExecuteeModeGestionViewSet(BaseModelViewSet):
     queryset = EstExecuteeModeGestion.objects.all()
     serializer_class = EstExecuteeModeGestionSerializer
+
+    def get_queryset(self):
+        # Surcharge de get_queryset pour trier par date de création
+        return EstExecuteeModeGestion.objects.all().order_by("-created_at")
 
 
 class EstExecuteeOperationFDCDRViewSet(BaseModelViewSet):
     queryset = EstExecuteeOperationFDCDR.objects.all()
     serializer_class = EstExecuteeOperationFDCDRSerializer
 
+    def get_queryset(self):
+        # Surcharge de get_queryset pour trier par date de création
+        return EstExecuteeOperationFDCDR.objects.all().order_by("-created_at")
+
 
 class EstExecuteeSurViewSet(BaseModelViewSet):
     queryset = EstExecuteeSur.objects.all()
     serializer_class = EstExecuteeSurSerializer
 
+    def get_queryset(self):
+        # Surcharge de get_queryset pour trier par date de création
+        return EstExecuteeSur.objects.all().order_by("-created_at")
+
 
 class EstProgrammeViewSet(BaseModelViewSet):
     queryset = EstProgramme.objects.all()
     serializer_class = EstProgrammeSerializer
+
+    def get_queryset(self):
+        # Surcharge de get_queryset pour trier par date de création
+        return EstProgramme.objects.all().order_by("-created_at")
+
 
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser

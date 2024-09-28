@@ -20,12 +20,6 @@ from .models import (
 from setting.models import Tache
 
 
-class TacheTitleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Tache
-        fields = ["title_fr", "title_en"]
-
-
 class EstExecuteeActionSerializer(serializers.ModelSerializer):
     class Meta:
         model = EstExecuteeAction
