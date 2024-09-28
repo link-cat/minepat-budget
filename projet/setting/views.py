@@ -64,6 +64,10 @@ class BaseModelViewSet(viewsets.ModelViewSet):
         """
         instance.delete()
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.order_by("-id")
+
 
 class TypeRessourceViewSet(BaseModelViewSet):
     queryset = TypeRessource.objects.all()
