@@ -1,8 +1,10 @@
 from rest_framework import viewsets
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
+
+from projet.permissions import CustomDjangoModelPermissions
 
 
 from .models import (
@@ -35,7 +37,7 @@ class BaseModelViewSet(viewsets.ModelViewSet):
     Un ModelViewSet de base qui surcharge la méthode destroy pour
     retourner l'ID de l'élément supprimé dans la réponse.
     """
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()

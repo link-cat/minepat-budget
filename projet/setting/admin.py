@@ -7,7 +7,6 @@ from .models import (
     ModeGestion,
     Exercice,
     GroupeDepense,
-    EtapeContractualisation,
     EtapeExecution,
     EtapeExecutionGlob,
     Chapitre,
@@ -122,7 +121,6 @@ admin.site.register(TypeRessource, TypeRessourceAdmin)
 admin.site.register(NatureDepense, NatureDepenseAdmin)
 admin.site.register(ModeGestion, ModeGestionAdmin)
 admin.site.register(Exercice, ExerciceAdmin)
-admin.site.register(EtapeContractualisation, EtapeContractualisationAdmin)
 admin.site.register(EtapeExecution, EtapeExecutionAdmin)
 admin.site.register(EtapeExecutionGlob, EtapeExecutionGlobAdmin)
 admin.site.register(Chapitre, ChapitreAdmin)

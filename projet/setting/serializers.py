@@ -15,7 +15,6 @@ from .models import (
     Region,
     Departement,
     Arrondissement,
-    EtapeContractualisation,
     EtapeExecution,
 )
 
@@ -107,12 +106,6 @@ class DepartementSerializer(serializers.ModelSerializer):
 class ArrondissementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Arrondissement
-        fields = "__all__"
-
-
-class EtapeContractualisationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EtapeContractualisation
         fields = "__all__"
 
 

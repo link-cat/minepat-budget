@@ -1,5 +1,6 @@
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from projet.permissions import CustomDjangoModelPermissions
 
 
 from setting.models import (
@@ -18,7 +19,6 @@ from setting.models import (
     Region,
     Departement,
     Arrondissement,
-    EtapeContractualisation,
     EtapeExecution,
 )
 from setting.serializers import (
@@ -37,7 +37,6 @@ from setting.serializers import (
     RegionSerializer,
     DepartementSerializer,
     ArrondissementSerializer,
-    EtapeContractualisationSerializer,
     EtapeExecutionSerializer,
     UploadSerializer,
 )
@@ -72,103 +71,98 @@ class BaseModelViewSet(viewsets.ModelViewSet):
 class TypeRessourceViewSet(BaseModelViewSet):
     queryset = TypeRessource.objects.all()
     serializer_class = TypeRessourceSerializer
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
 
 
 class NatureDepenseViewSet(BaseModelViewSet):
     queryset = NatureDepense.objects.all()
     serializer_class = NatureDepenseSerializer
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
 
 
 class ModeGestionViewSet(BaseModelViewSet):
     queryset = ModeGestion.objects.all()
     serializer_class = ModeGestionSerializer
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
 
 
 class ExerciceViewSet(BaseModelViewSet):
     queryset = Exercice.objects.all()
     serializer_class = ExerciceSerializer
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
 
 
 class EtapeExecutionGlobViewSet(BaseModelViewSet):
     queryset = EtapeExecutionGlob.objects.all()
     serializer_class = EtapeExecutionGlobSerializer
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
 
 
 class ChapitreViewSet(BaseModelViewSet):
     queryset = Chapitre.objects.all()
     serializer_class = ChapitreSerializer
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
 
 
 class ProgrammeViewSet(BaseModelViewSet):
     queryset = Programme.objects.all()
     serializer_class = ProgrammeSerializer
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
 
 
 class ActionViewSet(BaseModelViewSet):
     queryset = Action.objects.all()
     serializer_class = ActionSerializer
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
 
 
 class ActiviteViewSet(BaseModelViewSet):
     queryset = Activite.objects.all()
     serializer_class = ActiviteSerializer
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
 
 
 class TacheViewSet(BaseModelViewSet):
     queryset = Tache.objects.all()
     serializer_class = TacheSerializer
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
 
 
 class GroupeDepenseViewSet(BaseModelViewSet):
     queryset = GroupeDepense.objects.all()
     serializer_class = GroupeDepenseSerializer
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
 
 
 class OperationViewSet(BaseModelViewSet):
     queryset = Operation.objects.all()
     serializer_class = OperationSerializer
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
 
 
 class RegionViewSet(BaseModelViewSet):
     queryset = Region.objects.all()
     serializer_class = RegionSerializer
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
 
 
 class DepartementViewSet(BaseModelViewSet):
     queryset = Departement.objects.all()
     serializer_class = DepartementSerializer
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
 
 
 class ArrondissementViewSet(BaseModelViewSet):
     queryset = Arrondissement.objects.all()
     serializer_class = ArrondissementSerializer
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
 
-
-class EtapeContractualisationViewSet(BaseModelViewSet):
-    queryset = EtapeContractualisation.objects.all()
-    serializer_class = EtapeContractualisationSerializer
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
 
 class EtapeExecutionViewSet(BaseModelViewSet):
     queryset = EtapeExecution.objects.all()
     serializer_class = EtapeExecutionSerializer
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
 
 
 # import excel file
@@ -238,7 +232,6 @@ class ExcelImportViewSet(viewsets.ViewSet):
 from rest_framework_simplejwt.views import TokenObtainPairView
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework import generics
 
 from setting.serializers import ProfileSerializer
 
@@ -276,3 +269,17 @@ def getProfile(request):
     user = request.user
     serializer = ProfileSerializer(user, many=False)
     return Response(serializer.data)
+
+
+from django.contrib.auth.models import Permission
+
+
+@api_view(["GET"])
+@swagger_auto_schema(
+    operation_description="Liste des permissions disponibles avec ID et codename",
+    responses={200: "Liste des permissions sous forme {id: codename}"},
+)
+@permission_classes([AllowAny])
+def PermissionListView(request):
+    permissions = Permission.objects.all().values("id", "codename")
+    return Response({"permissions": list(permissions)}, status=status.HTTP_200_OK)

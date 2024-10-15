@@ -20,12 +20,12 @@ from setting.views import (
     ActiviteViewSet,
     GroupeDepenseViewSet,
     OperationViewSet,
-    EtapeContractualisationViewSet,
     EtapeExecutionViewSet,
     RegionViewSet,
     DepartementViewSet,
     ArrondissementViewSet,
     getProfile,
+    PermissionListView
 )
 
 from execution.views import (
@@ -71,11 +71,6 @@ setting_viewsets = [
     ("region", RegionViewSet, "region"),
     ("departement", DepartementViewSet, "departement"),
     ("arrondissement", ArrondissementViewSet, "arrondissement"),
-    (
-        "etape-contractualisation",
-        EtapeContractualisationViewSet,
-        "etape-contractualisation",
-    ),
     ("etape-execution", EtapeExecutionViewSet, "etape-execution"),
 ]
 router_setting = routers.DefaultRouter()
@@ -114,6 +109,7 @@ urlpatterns = [
     path("execution/", include(router_execution.urls)),
     path("api/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/login/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("api/permissions/", PermissionListView, name="permissions-list"),
     path("profile/", getProfile, name="profile"),
     path(
         "swagger<format>/", schema_view.without_ui(cache_timeout=0), name="schema-json"
