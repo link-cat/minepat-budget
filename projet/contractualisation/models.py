@@ -20,6 +20,7 @@ class EtapeContractualisation(models.Model):
     observations = models.TextField(blank=True, null=True)
     document = models.FileField(upload_to="documents/", null=True, blank=True)
     ecart_jours = models.IntegerField(editable=False, null=True, blank=True)
+    is_finished = models.BooleanField(default=False)
 
     history = HistoricalRecords()
 
