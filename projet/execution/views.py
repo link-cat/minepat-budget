@@ -199,4 +199,4 @@ class ExcelImportViewSet(viewsets.ViewSet):
             )
         finally:
             # Supprimer le fichier après traitement
-            default_storage.delete(file_path)
+            print("import reussi")

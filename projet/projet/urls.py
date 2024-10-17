@@ -41,6 +41,14 @@ from execution.views import (
     EstProgrammeViewSet,
 )
 
+from contractualisation.views import (
+    EtapeContractualisationViewSet,
+    EtapeViewSet,
+    PPMViewSet,
+    JPMViewSet,
+    ContractExcelImportViewSet,
+)
+
 schema_view = get_schema_view(
     openapi.Info(
         title="Projet API",
@@ -102,11 +110,32 @@ router_execution = routers.DefaultRouter()
 for prefix, viewset, basename in execution_viewsets:
     router_execution.register(rf"{prefix}", viewset, basename=basename)
 
+# Routes pour le module 'contractualisation'
+contractualisation_viewsets = [
+    (
+        "etape-contractualisation",
+        EtapeContractualisationViewSet,
+        "etape-contractualisation",
+    ),
+    ("etape", EtapeViewSet, "etape"),
+    ("ppm", PPMViewSet, "ppm"),
+    ("jpm", JPMViewSet, "jpm"),
+    (
+        "upload-contractualisation",
+        ContractExcelImportViewSet,
+        "upload-contractualisation",
+    ),
+]
+router_contractualisation = routers.DefaultRouter()
+for prefix, viewset, basename in contractualisation_viewsets:
+    router_contractualisation.register(rf"{prefix}", viewset, basename=basename)
+
 # URLs globales
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("setting/", include(router_setting.urls)),
     path("execution/", include(router_execution.urls)),
+    path("contractualisation/", include(router_contractualisation.urls)),
     path("api/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/login/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/permissions/", PermissionListView, name="permissions-list"),

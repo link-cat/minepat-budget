@@ -158,7 +158,6 @@ class ArrondissementViewSet(BaseModelViewSet):
     permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
 
 
-
 class EtapeExecutionViewSet(BaseModelViewSet):
     queryset = EtapeExecution.objects.all()
     serializer_class = EtapeExecutionSerializer
@@ -225,7 +224,7 @@ class ExcelImportViewSet(viewsets.ViewSet):
             )
         finally:
             # Supprimer le fichier après traitement
-            default_storage.delete(file_path)
+            print("import reussi")
 
 
 # for auth

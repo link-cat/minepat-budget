@@ -28,6 +28,7 @@ from execution.models import (
     EstExecuteeGCSUB,
     EstExecuteeOperationFDCDR,
 )
+from contractualisation.models import PPM,JPM
 from .utils import parse_date
 
 
@@ -76,10 +77,8 @@ def import_excel_file(file_path):
     # Traiter chaque feuille
     for sheet_name, sheet_data in excel_data.items():
         match sheet_name:
-            # case "TabOp_FCPDR":
-            #     import_op_fcpdr(sheet_data)
-            # case "TabExe-Prog":
-            #     import_ExeProg(sheet_data)
+            case "TabExe-Prog":
+                import_ExeProg(sheet_data)
             case "GC_FCPDR":
                 import_GC_FCPDR(sheet_data)
             case "GC_AUTRES":
@@ -88,6 +87,18 @@ def import_excel_file(file_path):
                 import_GC_SUB(sheet_data)
             case "TabOp_FCPDR":
                 import_TabOp_FCPDR(sheet_data)
+        # Vous pouvez ajouter le traitement des données ici
+
+def import_excel_contract_file(file_path):
+    # Lire toutes les feuilles du fichier Excel
+    excel_data = pd.read_excel(file_path, sheet_name=None)
+    # Traiter chaque feuille
+    for sheet_name, sheet_data in excel_data.items():
+        match sheet_name:
+            case "PPM MINEPAT":
+                import_ppm_minepat(sheet_data)
+            case "PPM MINEPAT":
+                import_jpm_minepat(sheet_data)
         # Vous pouvez ajouter le traitement des données ici
 
 
@@ -99,9 +110,151 @@ def import_bip_excel_file(file_path):
         import_bip(sheet_data)
 
 
-def import_op_fcpdr(sheet_data):
+def import_ppm_minepat(sheet_data):
     for _, row in sheet_data.iterrows():
-        print(row.iloc[1])
+        try:
+            # Rechercher une tâche correspondante en base de données via 'Désignation'
+            tache = Tache.objects.get(
+                title_fr__icontains=row["Désignation et localisation du projet"]
+            )
+        except Tache.DoesNotExist:
+            print(
+                f"Tâche non trouvée pour la désignation: {row['Désignation et localisation du projet']}"
+            )
+            continue
+
+        # Créer ou récupérer un objet PPM avec les données de la ligne
+        ppm, created = PPM.objects.get_or_create(
+            tache=tache,
+            defaults={
+                "nature_prestations": row["Nature des prestations"],
+                "montant_previsionnel": row["Montant Prévisionnel (FCFA)"],
+                "source_financement": row["Source de financement"],
+                "autorite_contractante": row[
+                    "Autorité Contractante / Commission(s) Compétente(s)"
+                ],
+                "mode_consultation_solicite": row["Mode de consultation sollicité"],
+                "procedure": row["Procédure"],
+                "saisine_ac": row["Saisine AC"],
+                "saisine_cpm": row["Saisine CPM"],
+                "examen_dao_cpm": row["Examen DAO CPM"],
+                "saisine_cccm_dao": row["Saisine CCCM DAO"],
+                "avis_cccm_dao": row["Avis CCCM DAO"],
+                "non_objection_bf_1": row["Non-objection BF (1)"],
+                "date_publication_ao": pd.to_datetime(
+                    row["Date Prévisionnelle de Publication de l'Appel d'Offres"],
+                    errors="coerce",
+                ),
+                "depouillement_offres": pd.to_datetime(
+                    row["Dépouillement des Offres"], errors="coerce"
+                ),
+                "analyse_offres_techniques": pd.to_datetime(
+                    row["Analyse des Offres Techniques"], errors="coerce"
+                ),
+                "examen_rapport_offres_techniques": pd.to_datetime(
+                    row["Examen du rapport offres techniques"], errors="coerce"
+                ),
+                "non_objection_bf_2": row["Non-objection BF (2)"],
+                "ouverture_offres_financieres": pd.to_datetime(
+                    row["Ouverture des Offres Financières"], errors="coerce"
+                ),
+                "analyse_offres_financieres_synthese": pd.to_datetime(
+                    row["Analyse des Offres Financières et Synthèse"], errors="coerce"
+                ),
+                "proposition_attribution_cpm": pd.to_datetime(
+                    row["Proposition d'Attribution par la CPM"], errors="coerce"
+                ),
+                "saisine_cccm_attribution": row["Saisine CCCM sur Attribution"],
+                "avis_cccm_attribution": row["Avis CCCM sur Attribution"],
+                "non_objection_bf_3": row["Non-objection BF (3)"],
+                "publication_resultats": pd.to_datetime(
+                    row["Publication des Résultats"], errors="coerce"
+                ),
+                "notification_decision_attribution": pd.to_datetime(
+                    row["Notification de la décision d'attribution"], errors="coerce"
+                ),
+                "preparation_projet_marche": row[
+                    "Préparation Projet de Marché et Souscription"
+                ],
+                "saisine_cpm_marche": row["Saisine CPM"],
+                "examen_projet_marche": row["Examen du Projet de Marché"],
+                "saisine_cccm_marche": row["Saisine CCCM"],
+                "avis_cccm_projet_marche_gg": row["Avis CCCM sur projet de marché GG"],
+                "non_objection_bf_4": row["Non-objection BF (4)"],
+                "date_signature_marche": pd.to_datetime(
+                    row["Date de Signature du Marché"], errors="coerce"
+                ),
+                "notification_marche": pd.to_datetime(
+                    row["Notification du Marché"], errors="coerce"
+                ),
+                "demarrage_prestations": pd.to_datetime(
+                    row["Démarrage des Prestations"], errors="coerce"
+                ),
+                "reception_provisoire": pd.to_datetime(
+                    row["Réception Provisoire"], errors="coerce"
+                ),
+                "reception_definitive": pd.to_datetime(
+                    row["Réception Définitive"], errors="coerce"
+                ),
+            },
+        )
+
+        if not created:
+            print(
+                f"Le PPM pour la tâche {tache.title_fr} existe déjà et n'a pas été créé."
+            )
+
+    print("Importation terminée.")
+
+
+def import_jpm_minepat(sheet_data):
+    for _, row in sheet_data.iterrows():
+        try:
+            # Rechercher une tâche correspondante en base de données via 'Désignation'
+            tache = Tache.objects.get(
+                title_fr__icontains=row["Désignation et localisation du projet"]
+            )
+        except Tache.DoesNotExist:
+            print(
+                f"Tâche non trouvée pour la désignation: {row['Désignation et localisation du projet']}"
+            )
+            continue
+
+        # Créer un nouvel objet JPM avec les données de la ligne
+        jpm, created = JPM.objects.get_or_create(
+            tache=tache,
+            defaults={
+                "nature_prestations": row["Nature des prestations"],
+                "montant_previsionnel": row["Montant prévisionnel (FCFA)"],
+                "source_financement": row["Source de financement"],
+                "autorite_contractante": row[
+                    "Autorité Contractante / Administration bénéficiaire"
+                ],
+                "mode_consultation": row["Mode de consultation"],
+                "date_lancement_consultation": pd.to_datetime(
+                    row["Date de lancement de la consultation"], errors="coerce"
+                ),
+                "date_attribution_marche": pd.to_datetime(
+                    row["Date d'attribution du marché"], errors="coerce"
+                ),
+                "date_signature_marche": pd.to_datetime(
+                    row["Date de signature du marché"], errors="coerce"
+                ),
+                "date_demarrage_prestations": pd.to_datetime(
+                    row["Date de démarrage des prestations"], errors="coerce"
+                ),
+                "date_reception_prestations": pd.to_datetime(
+                    row["Date de réception des prestations"], errors="coerce"
+                ),
+            },
+        )
+
+        if not created:
+            print(
+                f"Le JPM pour la tâche {tache.title_fr} existe déjà et n'a pas été créé."
+            )
+
+    print("Importation terminée.")
 
 
 def import_ExeProg(sheet_data):
