@@ -78,7 +78,7 @@ class EstExecuteeAction(models.Model):
     pourcentage_liq = models.DecimalField(max_digits=4, decimal_places=2)
     pourcentage_ord = models.DecimalField(max_digits=4, decimal_places=2)
     pourcentage_RPHY_cp = models.DecimalField(max_digits=4, decimal_places=2)
-    ressource_mobilise = models.CharField(max_length=50)
+    ressource_mobilise = models.CharField(max_length=300)
     history = HistoricalRecords()
 
 
@@ -102,7 +102,7 @@ class EstExecuteeFCPDR(models.Model):
     pourcentage_liq = models.DecimalField(max_digits=4, decimal_places=2)
     pourcentage_ord = models.DecimalField(max_digits=4, decimal_places=2)
     contrat_situation_actuelle = models.CharField(
-        max_length=100, choices=CONTRAT_SITUATION_CHOICES, default="BC:Non executé"
+        max_length=300, choices=CONTRAT_SITUATION_CHOICES, default="BC:Non executé"
     )
     montant_contrat = models.FloatField()
     date_demarrage_travaux = models.DateTimeField()
@@ -152,7 +152,7 @@ class EstExecuteeGCAUTRES(models.Model):
     pourcentage_liq = models.DecimalField(max_digits=4, decimal_places=2)
     pourcentage_ord = models.DecimalField(max_digits=4, decimal_places=2)
     contrat_situation_actuelle = models.CharField(
-        max_length=100, choices=CONTRAT_SITUATION_CHOICES, default="BC:Non executé"
+        max_length=300, choices=CONTRAT_SITUATION_CHOICES, default="BC:Non executé"
     )
     montant_contrat = models.FloatField()
     date_demarrage_travaux = models.DateTimeField()
@@ -182,7 +182,7 @@ class EstExecuteeGCSUB(models.Model):
     pourcentage_liq = models.DecimalField(max_digits=4, decimal_places=2)
     pourcentage_ord = models.DecimalField(max_digits=4, decimal_places=2)
     contrat_situation_actuelle = models.CharField(
-        max_length=100, choices=CONTRAT_SITUATION_CHOICES, default="BC:Non executé"
+        max_length=300, choices=CONTRAT_SITUATION_CHOICES, default="BC:Non executé"
     )
     montant_contrat = models.FloatField()
     date_demarrage_travaux = models.DateTimeField()
@@ -225,7 +225,7 @@ class EstExecuteeOperationFDCDR(models.Model):
     montant_cp = models.FloatField()
     dateimport = models.DateField(default=timezone.now)
     contrat_situation_actuelle = models.CharField(
-        max_length=100, choices=CONTRAT_SITUATION_CHOICES, default="BC:Non executé"
+        max_length=300, choices=CONTRAT_SITUATION_CHOICES, default="BC:Non executé"
     )
     montant_contrat = models.FloatField()
     date_demarrage_travaux = models.DateTimeField()
@@ -247,7 +247,7 @@ class EstExecuteeSur(models.Model):
     )
     date_debut = models.DateField()
     date_fin = models.DateField()
-    chemin_extrant = models.CharField(max_length=150)
+    chemin_extrant = models.CharField(max_length=300)
     ecart = models.IntegerField()
     difficultes_rencontrees = models.TextField()
     history = HistoricalRecords()

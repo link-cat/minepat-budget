@@ -22,7 +22,7 @@ def parse_date(date, default_date=None, date_format="%d/%m/%Y"):
                 else parsed_date
             )
         except ValueError:
-            print("Erreur : la chaîne n'est pas au bon format")
+            # print("Erreur : la chaîne n'est pas au bon format")
             return default_date
 
     # Si c'est déjà un objet datetime, on vérifie qu'il est "aware"

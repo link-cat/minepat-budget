@@ -28,7 +28,7 @@ from execution.models import (
     EstExecuteeGCSUB,
     EstExecuteeOperationFDCDR,
 )
-from contractualisation.models import PPM,JPM
+from contractualisation.models import PPM, JPM
 from .utils import parse_date
 
 
@@ -88,6 +88,7 @@ def import_excel_file(file_path):
             case "TabOp_FCPDR":
                 import_TabOp_FCPDR(sheet_data)
         # Vous pouvez ajouter le traitement des données ici
+
 
 def import_excel_contract_file(file_path):
     # Lire toutes les feuilles du fichier Excel
@@ -292,7 +293,6 @@ def import_ExeProg(sheet_data):
                     montant_ae_eng=int(row.iloc[5]) * 1000,
                     montant_cp_eng=int(row.iloc[6]) * 1000,
                     montant_liq=int(row.iloc[7]) * 1000,
-                    liquidation=int(row.iloc[7]) * 1000,
                     ordonancement=int(row.iloc[8]) * 1000,
                     pourcentage_ae_eng=row.iloc[9],
                     pourcentage_cp_eng=row.iloc[10],
@@ -331,6 +331,9 @@ def import_TabOp_FCPDR(sheet_data):
             case "Autre":
                 if can_save:
                     try:
+                        if activite is None:
+                            print(f"activite : {nom_activite} n'existe pas.")
+                            continue
                         subgroupe, created = SUBGroupe.objects.get_or_create(
                             groupe=groupe,
                             activite=activite,
@@ -406,6 +409,9 @@ def import_GC_FCPDR(sheet_data):
                             activite=activite, title_fr__icontains=row.iloc[0]
                         ).first()
                         exercice = Exercice.objects.get(annee=2024)
+                        if tache is None:
+                            print(f"la tache : {row.iloc[0]} n'existe pas")
+                            continue
                         execution = EstExecuteeFCPDR.objects.create(
                             tache=tache,
                             exercice=exercice,
@@ -415,9 +421,7 @@ def import_GC_FCPDR(sheet_data):
                             montant_cp_rev=float(row.iloc[4]) * 1000,
                             contrat_situation_actuelle=row.iloc[5],
                             montant_contrat=float(row.iloc[6]) * 1000,
-                            date_demarrage_travaux=parse_date(
-                                row.iloc[7], "%d/%m/%Y", default_date=(2024, 1, 1)
-                            ),
+                            date_demarrage_travaux=parse_date(row.iloc[7]),
                             delai_execution_contrat=int(row.iloc[8]),
                             montant_ae_eng=float(row.iloc[9]) * 1000,
                             montant_cp_eng=float(row.iloc[10]) * 1000,
@@ -488,6 +492,9 @@ def import_GC_AUTRES(sheet_data):
                             activite=activite, title_fr__icontains=row.iloc[0]
                         ).first()
                         exercice = Exercice.objects.get(annee=2024)
+                        if tache is None:
+                            print(f"la tache : {row.iloc[0]} n'existe pas")
+                            continue
                         execution = EstExecuteeGCAUTRES.objects.create(
                             tache=tache,
                             exercice=exercice,
@@ -497,9 +504,7 @@ def import_GC_AUTRES(sheet_data):
                             montant_cp_rev=float(row.iloc[4]) * 1000,
                             contrat_situation_actuelle=row.iloc[5],
                             montant_contrat=float(row.iloc[6]) * 1000,
-                            date_demarrage_travaux=parse_date(
-                                row.iloc[7], "%d/%m/%Y", default_date=(2024, 1, 1)
-                            ),
+                            date_demarrage_travaux=parse_date(row.iloc[7]),
                             delai_execution_contrat=int(row.iloc[8]),
                             montant_ae_eng=float(row.iloc[9]) * 1000,
                             montant_cp_eng=float(row.iloc[10]) * 1000,
@@ -570,6 +575,9 @@ def import_GC_SUB(sheet_data):
                             activite=activite, title_fr__icontains=row.iloc[0]
                         ).first()
                         exercice = Exercice.objects.get(annee=2024)
+                        if tache is None:
+                            print(f"la tache : {row.iloc[0]} n'existe pas")
+                            continue
                         execution = EstExecuteeGCSUB.objects.create(
                             tache=tache,
                             exercice=exercice,
@@ -579,9 +587,7 @@ def import_GC_SUB(sheet_data):
                             montant_cp_rev=float(row.iloc[4]) * 1000,
                             contrat_situation_actuelle=row.iloc[5],
                             montant_contrat=float(row.iloc[6]) * 1000,
-                            date_demarrage_travaux=parse_date(
-                                row.iloc[7], "%d/%m/%Y", default_date=(2024, 1, 1)
-                            ),
+                            date_demarrage_travaux=parse_date(row.iloc[7]),
                             delai_execution_contrat=int(row.iloc[8]),
                             montant_ae_eng=float(row.iloc[9]) * 1000,
                             montant_cp_eng=float(row.iloc[10]) * 1000,
