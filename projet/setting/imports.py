@@ -113,90 +113,54 @@ def import_bip_excel_file(file_path):
 
 def import_ppm_minepat(sheet_data):
     for _, row in sheet_data.iterrows():
-        try:
-            # Rechercher une tâche correspondante en base de données via 'Désignation'
-            tache = Tache.objects.get(
-                title_fr__icontains=row["Désignation et localisation du projet"]
-            )
-        except Tache.DoesNotExist:
-            print(
-                f"Tâche non trouvée pour la désignation: {row['Désignation et localisation du projet']}"
-            )
+        if _ < 3:
+            continue
+        # Rechercher une tâche correspondante en base de données via 'Désignation'
+        tache = Tache.objects.filter(title_fr__icontains=row.iloc[1]).first()
+        if tache is None:
+            print(f"Tâche non trouvée pour la désignation: {row.iloc[1]}")
             continue
 
         # Créer ou récupérer un objet PPM avec les données de la ligne
         ppm, created = PPM.objects.get_or_create(
             tache=tache,
             defaults={
-                "nature_prestations": row["Nature des prestations"],
-                "montant_previsionnel": row["Montant Prévisionnel (FCFA)"],
-                "source_financement": row["Source de financement"],
-                "autorite_contractante": row[
-                    "Autorité Contractante / Commission(s) Compétente(s)"
-                ],
-                "mode_consultation_solicite": row["Mode de consultation sollicité"],
-                "procedure": row["Procédure"],
-                "saisine_ac": row["Saisine AC"],
-                "saisine_cpm": row["Saisine CPM"],
-                "examen_dao_cpm": row["Examen DAO CPM"],
-                "saisine_cccm_dao": row["Saisine CCCM DAO"],
-                "avis_cccm_dao": row["Avis CCCM DAO"],
-                "non_objection_bf_1": row["Non-objection BF (1)"],
-                "date_publication_ao": pd.to_datetime(
-                    row["Date Prévisionnelle de Publication de l'Appel d'Offres"],
-                    errors="coerce",
-                ),
-                "depouillement_offres": pd.to_datetime(
-                    row["Dépouillement des Offres"], errors="coerce"
-                ),
-                "analyse_offres_techniques": pd.to_datetime(
-                    row["Analyse des Offres Techniques"], errors="coerce"
-                ),
-                "examen_rapport_offres_techniques": pd.to_datetime(
-                    row["Examen du rapport offres techniques"], errors="coerce"
-                ),
-                "non_objection_bf_2": row["Non-objection BF (2)"],
-                "ouverture_offres_financieres": pd.to_datetime(
-                    row["Ouverture des Offres Financières"], errors="coerce"
-                ),
-                "analyse_offres_financieres_synthese": pd.to_datetime(
-                    row["Analyse des Offres Financières et Synthèse"], errors="coerce"
-                ),
-                "proposition_attribution_cpm": pd.to_datetime(
-                    row["Proposition d'Attribution par la CPM"], errors="coerce"
-                ),
-                "saisine_cccm_attribution": row["Saisine CCCM sur Attribution"],
-                "avis_cccm_attribution": row["Avis CCCM sur Attribution"],
-                "non_objection_bf_3": row["Non-objection BF (3)"],
-                "publication_resultats": pd.to_datetime(
-                    row["Publication des Résultats"], errors="coerce"
-                ),
-                "notification_decision_attribution": pd.to_datetime(
-                    row["Notification de la décision d'attribution"], errors="coerce"
-                ),
-                "preparation_projet_marche": row[
-                    "Préparation Projet de Marché et Souscription"
-                ],
-                "saisine_cpm_marche": row["Saisine CPM"],
-                "examen_projet_marche": row["Examen du Projet de Marché"],
-                "saisine_cccm_marche": row["Saisine CCCM"],
-                "avis_cccm_projet_marche_gg": row["Avis CCCM sur projet de marché GG"],
-                "non_objection_bf_4": row["Non-objection BF (4)"],
-                "date_signature_marche": pd.to_datetime(
-                    row["Date de Signature du Marché"], errors="coerce"
-                ),
-                "notification_marche": pd.to_datetime(
-                    row["Notification du Marché"], errors="coerce"
-                ),
-                "demarrage_prestations": pd.to_datetime(
-                    row["Démarrage des Prestations"], errors="coerce"
-                ),
-                "reception_provisoire": pd.to_datetime(
-                    row["Réception Provisoire"], errors="coerce"
-                ),
-                "reception_definitive": pd.to_datetime(
-                    row["Réception Définitive"], errors="coerce"
-                ),
+                "nature_prestations": row.iloc[2],
+                "montant_previsionnel": row.iloc[3],
+                "source_financement": row.iloc[4],
+                "autorite_contractante": row.iloc[5],
+                "mode_consultation_solicite": row.iloc[6],
+                "procedure": row.iloc[7],
+                "saisine_ac": parse_date(row.iloc[8]),
+                "saisine_cpm": parse_date(row.iloc[9]),
+                "examen_dao_cpm": parse_date(row.iloc[10]),
+                "saisine_cccm_dao": parse_date(row.iloc[11]),
+                "avis_cccm_dao": row.iloc[12],
+                "non_objection_bf_1": row.iloc[13],
+                "date_publication_ao": parse_date(row.iloc[14]),
+                "depouillement_offres": parse_date(row.iloc[15]),
+                "analyse_offres_techniques": parse_date(row.iloc[16]),
+                "examen_rapport_offres_techniques": parse_date(row.iloc[17]),
+                "non_objection_bf_2": row.iloc[18],
+                "ouverture_offres_financieres": parse_date(row.iloc[19]),
+                "analyse_offres_financieres_synthese": parse_date(row.iloc[20]),
+                "proposition_attribution_cpm": parse_date(row.iloc[21]),
+                "saisine_cccm_attribution": parse_date(row.iloc[22]),
+                "avis_cccm_attribution": row.iloc[23],
+                "non_objection_bf_3": row.iloc[24],
+                "publication_resultats": parse_date(row.iloc[25]),
+                "notification_decision_attribution": parse_date(row.iloc[26]),
+                "preparation_projet_marche": parse_date(row.iloc[27]),
+                "saisine_cpm_marche": parse_date(row.iloc[28]),
+                "examen_projet_marche": parse_date(row.iloc[29]),
+                "saisine_cccm_marche": parse_date(row.iloc[30]),
+                "avis_cccm_projet_marche_gg": row.iloc[31],
+                "non_objection_bf_4": row.iloc[32],
+                "date_signature_marche": parse_date(row.iloc[33]),
+                "notification_marche": parse_date(row.iloc[34]),
+                "demarrage_prestations": parse_date(row.iloc[35]),
+                "reception_provisoire": parse_date(row.iloc[36]),
+                "reception_definitive": parse_date(row.iloc[37]),
             },
         )
 
@@ -209,44 +173,30 @@ def import_ppm_minepat(sheet_data):
 
 
 def import_jpm_minepat(sheet_data):
-    for _, row in sheet_data.iterrows():
+    for _, row in sheet_data.iterrow.ilocs():
+        if _ < 3:
+            continue
         try:
             # Rechercher une tâche correspondante en base de données via 'Désignation'
-            tache = Tache.objects.get(
-                title_fr__icontains=row["Désignation et localisation du projet"]
-            )
+            tache = Tache.objects.get(title_fr__icontains=row.iloc[1])
         except Tache.DoesNotExist:
-            print(
-                f"Tâche non trouvée pour la désignation: {row['Désignation et localisation du projet']}"
-            )
+            print(f"Tâche non trouvée pour la désignation: {row.iloc[1]}")
             continue
 
         # Créer un nouvel objet JPM avec les données de la ligne
         jpm, created = JPM.objects.get_or_create(
             tache=tache,
             defaults={
-                "nature_prestations": row["Nature des prestations"],
-                "montant_previsionnel": row["Montant prévisionnel (FCFA)"],
-                "source_financement": row["Source de financement"],
-                "autorite_contractante": row[
-                    "Autorité Contractante / Administration bénéficiaire"
-                ],
-                "mode_consultation": row["Mode de consultation"],
-                "date_lancement_consultation": pd.to_datetime(
-                    row["Date de lancement de la consultation"], errors="coerce"
-                ),
-                "date_attribution_marche": pd.to_datetime(
-                    row["Date d'attribution du marché"], errors="coerce"
-                ),
-                "date_signature_marche": pd.to_datetime(
-                    row["Date de signature du marché"], errors="coerce"
-                ),
-                "date_demarrage_prestations": pd.to_datetime(
-                    row["Date de démarrage des prestations"], errors="coerce"
-                ),
-                "date_reception_prestations": pd.to_datetime(
-                    row["Date de réception des prestations"], errors="coerce"
-                ),
+                "nature_prestations": row.iloc[2],
+                "montant_previsionnel": row.iloc[3],
+                "source_financement": row.iloc[4],
+                "autorite_contractante": row.iloc[5],
+                "mode_consultation": row.iloc[6],
+                "date_lancement_consultation": parse_date(row.iloc[7]),
+                "date_attribution_marche": parse_date(row.iloc[8]),
+                "date_signature_marche": parse_date(row.iloc[9]),
+                "date_demarrage_prestations": parse_date(row.iloc[10]),
+                "date_reception_prestations": parse_date(row.iloc[11]),
             },
         )
 
