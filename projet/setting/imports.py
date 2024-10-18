@@ -98,7 +98,7 @@ def import_excel_contract_file(file_path):
         match sheet_name:
             case "PPM MINEPAT":
                 import_ppm_minepat(sheet_data)
-            case "PPM MINEPAT":
+            case "JPM MINEPAT":
                 import_jpm_minepat(sheet_data)
         # Vous pouvez ajouter le traitement des données ici
 
@@ -173,13 +173,11 @@ def import_ppm_minepat(sheet_data):
 
 
 def import_jpm_minepat(sheet_data):
-    for _, row in sheet_data.iterrow.ilocs():
+    for _, row in sheet_data.iterrows():
         if _ < 3:
             continue
-        try:
-            # Rechercher une tâche correspondante en base de données via 'Désignation'
-            tache = Tache.objects.get(title_fr__icontains=row.iloc[1])
-        except Tache.DoesNotExist:
+        tache = Tache.objects.filter(title_fr__icontains=row.iloc[1]).first()
+        if tache is None:
             print(f"Tâche non trouvée pour la désignation: {row.iloc[1]}")
             continue
 
