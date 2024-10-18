@@ -29,7 +29,7 @@ from .serializers import (
     EstExecuteeSurSerializer,
     EstProgrammeSerializer,
 )
-from .filters import EstExecuteeGCSUBFilter,EstExecuteeGCAutresFilter
+from .filters import EstExecuteeGCSUBFilter,EstExecuteeGCAutresFilter,EstExecuteeOperationFCPFilter
 
 
 class BaseModelViewSet(viewsets.ModelViewSet):
@@ -116,6 +116,8 @@ class EstExecuteeModeGestionViewSet(BaseModelViewSet):
 class EstExecuteeOperationFDCDRViewSet(BaseModelViewSet):
     queryset = EstExecuteeOperationFDCDR.objects.all()
     serializer_class = EstExecuteeOperationFDCDRSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = EstExecuteeOperationFCPFilter
 
     def get_queryset(self):
         # Surcharge de get_queryset pour trier par date de création
