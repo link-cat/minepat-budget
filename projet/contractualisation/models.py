@@ -119,7 +119,7 @@ class EtapeContractualisation(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        return f"{self.etape.title} - {self.date_prevue}"
+        return f"{self.etape.title} - {self.tache.title_fr}"
 
     def save(self, *args, **kwargs):
         # Calcul de l'écart en jours si la date effective est fournie
