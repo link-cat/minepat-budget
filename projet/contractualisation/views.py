@@ -65,12 +65,12 @@ class PPMViewSet(BaseModelViewSet):
 
 
 class JPMViewSet(BaseModelViewSet):
-    queryset = PPM.objects.all()
+    queryset = JPM.objects.all()
     serializer_class = JPMSerializer
 
     def get_queryset(self):
         # Surcharge de get_queryset pour trier par date de création
-        return PPM.objects.all().order_by("-id")
+        return JPM.objects.all().order_by("-id")
 
 
 from rest_framework.decorators import action
