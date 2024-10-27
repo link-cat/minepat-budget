@@ -16,6 +16,8 @@ from .models import (
     Departement,
     Arrondissement,
     EtapeExecution,
+    Groupe,
+    SUBGroupe,
 )
 
 
@@ -106,6 +108,15 @@ class DepartementSerializer(serializers.ModelSerializer):
 class ArrondissementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Arrondissement
+        fields = "__all__"
+
+class GroupeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Groupe
+        fields = "__all__"
+class SUBGroupeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SUBGroupe
         fields = "__all__"
 
 

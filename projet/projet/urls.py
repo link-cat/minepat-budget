@@ -24,6 +24,8 @@ from setting.views import (
     RegionViewSet,
     DepartementViewSet,
     ArrondissementViewSet,
+    GroupeViewSet,
+    SUBGroupeViewSet,
     getProfile,
     PermissionListView
 )
@@ -79,6 +81,8 @@ setting_viewsets = [
     ("region", RegionViewSet, "region"),
     ("departement", DepartementViewSet, "departement"),
     ("arrondissement", ArrondissementViewSet, "arrondissement"),
+    ("groupe", GroupeViewSet, "groupe"),
+    ("sub-groupe", SUBGroupeViewSet, "sub-groupe"),
     ("etape-execution", EtapeExecutionViewSet, "etape-execution"),
 ]
 router_setting = routers.DefaultRouter()

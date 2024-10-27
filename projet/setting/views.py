@@ -19,6 +19,8 @@ from setting.models import (
     Region,
     Departement,
     Arrondissement,
+    Groupe,
+    SUBGroupe,
     EtapeExecution,
 )
 from setting.serializers import (
@@ -39,6 +41,8 @@ from setting.serializers import (
     ArrondissementSerializer,
     EtapeExecutionSerializer,
     UploadSerializer,
+    GroupeSerializer,
+    SUBGroupeSerializer,
 )
 
 
@@ -155,6 +159,18 @@ class DepartementViewSet(BaseModelViewSet):
 class ArrondissementViewSet(BaseModelViewSet):
     queryset = Arrondissement.objects.all()
     serializer_class = ArrondissementSerializer
+    permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
+
+
+class GroupeViewSet(BaseModelViewSet):
+    queryset = Groupe.objects.all()
+    serializer_class = GroupeSerializer
+    permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
+
+
+class SUBGroupeViewSet(BaseModelViewSet):
+    queryset = SUBGroupe.objects.all()
+    serializer_class = SUBGroupeSerializer
     permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
 
 
