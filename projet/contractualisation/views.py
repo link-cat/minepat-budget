@@ -1,7 +1,9 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
 
+from .filters import EtapeContractualisationFilter
 from projet.permissions import CustomDjangoModelPermissions
 
 from .models import EtapeContractualisation, Etape, PPM, JPM
@@ -40,6 +42,8 @@ class BaseModelViewSet(viewsets.ModelViewSet):
 class EtapeContractualisationViewSet(BaseModelViewSet):
     queryset = EtapeContractualisation.objects.all()
     serializer_class = EtapeContractualisationSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = EtapeContractualisationFilter
 
     def get_queryset(self):
         # Surcharge de get_queryset pour trier par date de création
