@@ -97,8 +97,10 @@ class PieceJointe(models.Model):
         Etape, on_delete=models.CASCADE, related_name="pieces_jointes"
     )
     label = models.CharField(max_length=255, verbose_name="Nom du document")
-    document = models.FileField(upload_to="documents/", verbose_name="Fichier")
-    date_upload = models.DateTimeField(auto_now_add=True, verbose_name="Date d'upload")
+    document = models.FileField(
+        upload_to="documents/", null=True, blank=True, verbose_name="Fichier"
+    )
+    date_upload = models.DateTimeField(auto_now_add=True, null=True, blank=True, verbose_name="Date d'upload")
     date_obtention = models.DateField(
         verbose_name="Date d'obtention", null=True, blank=True
     )

@@ -1,12 +1,19 @@
-from traceback import format_tb
 from django.contrib import admin
-from .models import Etape, EtapeContractualisation, PPM, JPM
+from .models import Etape, EtapeContractualisation, PieceJointe, PPM, JPM
+
+
+class PieceJointeInline(admin.TabularInline):
+    model = PieceJointe
+    fields = ("label", "document", "date_upload", "date_obtention")
+    readonly_fields = ("date_upload",)  # La date d'upload est générée automatiquement
+    extra = 1  # Nombre de pièces jointes supplémentaires affichées dans le formulaire
 
 
 @admin.register(Etape)
 class EtapeAdmin(admin.ModelAdmin):
     list_display = ("title",)
     search_fields = ("title",)
+    inlines = [PieceJointeInline]  # Ajout des pièces jointes directement dans l'admin
 
 
 @admin.register(EtapeContractualisation)
@@ -19,17 +26,26 @@ class EtapeContractualisationAdmin(admin.ModelAdmin):
         "observations",
     )
     list_filter = ("etape", "date_prevue", "date_effective")
-    search_fields = ("etape__nom", "observations")
-    readonly_fields = ("ecart_jours",)
+    search_fields = ("etape__title", "observations")
+    readonly_fields = (
+        "ecart_jours",
+        "ecart_montant",
+    )  # Rendre ces champs non modifiables
 
-    def document_link(self, obj):
-        if obj.document:
-            return format_tb(
-                '<a href="{}" target="_blank">Télécharger</a>', obj.document.url
-            )
-        return "Pas de document"
+    # Affichage des pièces jointes liées
+    def related_pieces_jointes(self, obj):
+        pieces = obj.etape.pieces_jointes.all()  # Accès aux pièces jointes liées
+        if not pieces.exists():
+            return "Aucune pièce jointe"
+        return ", ".join(
+            [
+                f'<a href="{piece.document.url}" target="_blank">{piece.label}</a>'
+                for piece in pieces
+            ]
+        )
 
-    document_link.short_description = "Document"
+    related_pieces_jointes.short_description = "Pièces jointes liées"
+    related_pieces_jointes.allow_tags = True
 
 
 @admin.register(PPM)

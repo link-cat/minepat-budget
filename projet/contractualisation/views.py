@@ -6,12 +6,13 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .filters import EtapeContractualisationFilter
 from projet.permissions import CustomDjangoModelPermissions
 
-from .models import EtapeContractualisation, Etape, PPM, JPM
+from .models import EtapeContractualisation, Etape, PPM, JPM, PieceJointe
 from .serializers import (
     EtapeContractualisationSerializer,
     EtapeSerializer,
     PPMSerializer,
     JPMSerializer,
+    PieceJointeSerializer,
 )
 
 
@@ -78,7 +79,7 @@ class JPMViewSet(BaseModelViewSet):
 
 
 from rest_framework.decorators import action
-from rest_framework.parsers import MultiPartParser
+from rest_framework.parsers import MultiPartParser,FormParser
 from rest_framework.response import Response
 from rest_framework import status
 from django.core.files.storage import default_storage
@@ -139,3 +140,17 @@ class ContractExcelImportViewSet(viewsets.ViewSet):
         finally:
             # Supprimer le fichier après traitement
             print("import reussi")
+
+
+class PieceJointeViewSet(BaseModelViewSet):
+    queryset = PieceJointe.objects.all()
+    serializer_class = PieceJointeSerializer
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_queryset(self):
+        # Filtrer par l'étape si nécessaire
+        etape_id = self.request.query_params.get("etape_id")
+        if etape_id:
+            return self.queryset.filter(etape_id=etape_id)
+        return self.queryset

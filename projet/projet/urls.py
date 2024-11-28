@@ -29,7 +29,7 @@ from setting.views import (
     GroupeViewSet,
     SUBGroupeViewSet,
     getProfile,
-    PermissionListView
+    PermissionListView,
 )
 
 from execution.views import (
@@ -51,6 +51,7 @@ from contractualisation.views import (
     PPMViewSet,
     JPMViewSet,
     ContractExcelImportViewSet,
+    PieceJointeViewSet,
 )
 
 schema_view = get_schema_view(
@@ -131,6 +132,7 @@ contractualisation_viewsets = [
         ContractExcelImportViewSet,
         "upload-contractualisation",
     ),
+    ("pieces-jointe", PieceJointeViewSet, "pieces-jointe"),
 ]
 router_contractualisation = routers.DefaultRouter()
 for prefix, viewset, basename in contractualisation_viewsets:
