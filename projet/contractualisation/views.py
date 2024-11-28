@@ -127,7 +127,7 @@ class ContractExcelImportViewSet(viewsets.ViewSet):
 
         # Récupérer le fichier téléchargé
         excel_file = request.FILES["file_uploaded"]
-        file_path = default_storage.save(f"temp/{excel_file.name}", excel_file)
+        file_path = default_storage.save(f"media/temp/{excel_file.name}", excel_file)
 
         try:
             # Appeler la fonction pour importer le fichier Excel

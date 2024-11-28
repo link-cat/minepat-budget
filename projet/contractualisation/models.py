@@ -92,16 +92,33 @@ class Etape(models.Model):
         return self.title
 
 
+class PieceJointe(models.Model):
+    etape = models.ForeignKey(
+        Etape, on_delete=models.CASCADE, related_name="pieces_jointes"
+    )
+    label = models.CharField(max_length=255, verbose_name="Nom du document")
+    document = models.FileField(upload_to="documents/", verbose_name="Fichier")
+    date_upload = models.DateTimeField(auto_now_add=True, verbose_name="Date d'upload")
+    date_obtention = models.DateField(
+        verbose_name="Date d'obtention", null=True, blank=True
+    )
+
+    def __str__(self):
+        return f"{self.label} - {self.etape.title}"
+
+
 class EtapeContractualisation(models.Model):
     etape = models.ForeignKey(
         Etape, on_delete=models.CASCADE, related_name="contractualisations"
     )
     tache = models.ForeignKey(Tache, on_delete=models.CASCADE, related_name="projet")
-    date_prevue = models.DateField(verbose_name="Date prévue",null=True,blank=True)
+    date_prevue = models.DateField(verbose_name="Date prévue", null=True, blank=True)
     date_effective = models.DateField(
         verbose_name="Date effective", null=True, blank=True
     )
-    montant_prevu = models.FloatField(verbose_name="Montant prévisionnel", null=True, blank=True)
+    montant_prevu = models.FloatField(
+        verbose_name="Montant prévisionnel", null=True, blank=True
+    )
     montant_reel = models.FloatField(verbose_name="Montant réel", null=True, blank=True)
     taux_consomation = models.DecimalField(
         max_digits=4,
@@ -111,7 +128,6 @@ class EtapeContractualisation(models.Model):
         verbose_name="Taux de consommation",
     )
     observations = models.TextField(blank=True, null=True)
-    document = models.FileField(upload_to="documents/", null=True, blank=True)
     ecart_jours = models.IntegerField(editable=False, null=True, blank=True)
     ecart_montant = models.FloatField(editable=False, null=True, blank=True)
     is_finished = models.BooleanField(default=False)
@@ -128,3 +144,8 @@ class EtapeContractualisation(models.Model):
         if self.montant_reel and self.montant_prevu:
             self.ecart_montant = self.montant_reel - self.montant_prevu
         super().save(*args, **kwargs)
+
+    @property
+    def pieces_jointes(self):
+        # Retourne toutes les pièces jointes liées à l'étape associée
+        return self.etape.pieces_jointes.all()
