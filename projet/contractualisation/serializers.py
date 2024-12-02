@@ -25,7 +25,7 @@ class JPMSerializer(serializers.ModelSerializer):
 class PieceJointeSerializer(serializers.ModelSerializer):
     class Meta:
         model = PieceJointe
-        fields = ["id", "label", "document", "date_obtention"]
+        fields = "__all__"
         read_only_fields = ["id", "date_upload"]
 
     def update(self, instance, validated_data):
