@@ -17,6 +17,11 @@ class PPMSerializer(serializers.ModelSerializer):
 
 
 class JPMSerializer(serializers.ModelSerializer):
+    tache = serializers.SerializerMethodField()
+
+    def get_tache(self, obj):
+        return obj.tache.title_fr
+
     class Meta:
         model = JPM
         fields = "__all__"
@@ -30,7 +35,7 @@ class PieceJointeSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         if "document" in validated_data:
-            instance.date_upload = timezone.now() 
+            instance.date_upload = timezone.now()
         return super().update(instance, validated_data)
 
 

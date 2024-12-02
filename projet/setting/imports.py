@@ -90,6 +90,14 @@ def import_excel_file(file_path):
         # Vous pouvez ajouter le traitement des données ici
 
 
+def import_bip_excel_file(file_path):
+    # Lire toutes les feuilles du fichier Excel
+    excel_data = pd.read_excel(file_path, sheet_name=None)
+    # Traiter chaque feuille
+    for sheet_name, sheet_data in excel_data.items():
+        import_bip(sheet_data)
+
+
 def import_excel_contract_file(file_path):
     # Lire toutes les feuilles du fichier Excel
     excel_data = pd.read_excel(file_path, sheet_name=None)
@@ -103,71 +111,104 @@ def import_excel_contract_file(file_path):
         # Vous pouvez ajouter le traitement des données ici
 
 
-def import_bip_excel_file(file_path):
-    # Lire toutes les feuilles du fichier Excel
-    excel_data = pd.read_excel(file_path, sheet_name=None)
-    # Traiter chaque feuille
-    for sheet_name, sheet_data in excel_data.items():
-        import_bip(sheet_data)
-
-
 def import_ppm_minepat(sheet_data):
     for _, row in sheet_data.iterrows():
-        if _ < 3:
+        if (
+            _ < 3
+        ):  # Ignorer les premières lignes si elles ne contiennent pas de données utiles
             continue
+
         # Rechercher une tâche correspondante en base de données via 'Désignation'
         tache = Tache.objects.filter(title_fr__icontains=row.iloc[1]).first()
         if tache is None:
             print(f"Tâche non trouvée pour la désignation: {row.iloc[1]}")
             continue
 
-        # Créer ou récupérer un objet PPM avec les données de la ligne
-        ppm, created = PPM.objects.get_or_create(
-            tache=tache,
-            defaults={
-                "nature_prestations": row.iloc[2],
-                "montant_previsionnel": row.iloc[3],
-                "source_financement": row.iloc[4],
-                "autorite_contractante": row.iloc[5],
-                "mode_consultation_solicite": row.iloc[6],
-                "procedure": row.iloc[7],
-                "saisine_ac": parse_date(row.iloc[8]),
-                "saisine_cpm": parse_date(row.iloc[9]),
-                "examen_dao_cpm": parse_date(row.iloc[10]),
-                "saisine_cccm_dao": parse_date(row.iloc[11]),
-                "avis_cccm_dao": row.iloc[12],
-                "non_objection_bf_1": row.iloc[13],
-                "date_publication_ao": parse_date(row.iloc[14]),
-                "depouillement_offres": parse_date(row.iloc[15]),
-                "analyse_offres_techniques": parse_date(row.iloc[16]),
-                "examen_rapport_offres_techniques": parse_date(row.iloc[17]),
-                "non_objection_bf_2": row.iloc[18],
-                "ouverture_offres_financieres": parse_date(row.iloc[19]),
-                "analyse_offres_financieres_synthese": parse_date(row.iloc[20]),
-                "proposition_attribution_cpm": parse_date(row.iloc[21]),
-                "saisine_cccm_attribution": parse_date(row.iloc[22]),
-                "avis_cccm_attribution": row.iloc[23],
-                "non_objection_bf_3": row.iloc[24],
-                "publication_resultats": parse_date(row.iloc[25]),
-                "notification_decision_attribution": parse_date(row.iloc[26]),
-                "preparation_projet_marche": parse_date(row.iloc[27]),
-                "saisine_cpm_marche": parse_date(row.iloc[28]),
-                "examen_projet_marche": parse_date(row.iloc[29]),
-                "saisine_cccm_marche": parse_date(row.iloc[30]),
-                "avis_cccm_projet_marche_gg": row.iloc[31],
-                "non_objection_bf_4": row.iloc[32],
-                "date_signature_marche": parse_date(row.iloc[33]),
-                "notification_marche": parse_date(row.iloc[34]),
-                "demarrage_prestations": parse_date(row.iloc[35]),
-                "reception_provisoire": parse_date(row.iloc[36]),
-                "reception_definitive": parse_date(row.iloc[37]),
-            },
-        )
+        # Vérifier si un PPM existe déjà pour cette tâche
+        ppm = PPM.objects.filter(tache=tache).first()
 
-        if not created:
-            print(
-                f"Le PPM pour la tâche {tache.title_fr} existe déjà et n'a pas été créé."
+        if ppm:
+            # Mettre à jour les champs existants
+            ppm.nature_prestations = row.iloc[2]
+            ppm.montant_previsionnel = row.iloc[3]
+            ppm.source_financement = row.iloc[4]
+            ppm.autorite_contractante = row.iloc[5]
+            ppm.mode_consultation_solicite = row.iloc[6]
+            ppm.procedure = row.iloc[7]
+            ppm.saisine_ac = parse_date(row.iloc[8])
+            ppm.saisine_cpm = parse_date(row.iloc[9])
+            ppm.examen_dao_cpm = parse_date(row.iloc[10])
+            ppm.saisine_cccm_dao = parse_date(row.iloc[11])
+            ppm.avis_cccm_dao = row.iloc[12]
+            ppm.non_objection_bf_1 = row.iloc[13]
+            ppm.date_publication_ao = parse_date(row.iloc[14])
+            ppm.depouillement_offres = parse_date(row.iloc[15])
+            ppm.analyse_offres_techniques = parse_date(row.iloc[16])
+            ppm.examen_rapport_offres_techniques = parse_date(row.iloc[17])
+            ppm.non_objection_bf_2 = row.iloc[18]
+            ppm.ouverture_offres_financieres = parse_date(row.iloc[19])
+            ppm.analyse_offres_financieres_synthese = parse_date(row.iloc[20])
+            ppm.proposition_attribution_cpm = parse_date(row.iloc[21])
+            ppm.saisine_cccm_attribution = parse_date(row.iloc[22])
+            ppm.avis_cccm_attribution = row.iloc[23]
+            ppm.non_objection_bf_3 = row.iloc[24]
+            ppm.publication_resultats = parse_date(row.iloc[25])
+            ppm.notification_decision_attribution = parse_date(row.iloc[26])
+            ppm.preparation_projet_marche = parse_date(row.iloc[27])
+            ppm.saisine_cpm_marche = parse_date(row.iloc[28])
+            ppm.examen_projet_marche = parse_date(row.iloc[29])
+            ppm.saisine_cccm_marche = parse_date(row.iloc[30])
+            ppm.avis_cccm_projet_marche_gg = row.iloc[31]
+            ppm.non_objection_bf_4 = row.iloc[32]
+            ppm.date_signature_marche = parse_date(row.iloc[33])
+            ppm.notification_marche = parse_date(row.iloc[34])
+            ppm.demarrage_prestations = parse_date(row.iloc[35])
+            ppm.reception_provisoire = parse_date(row.iloc[36])
+            ppm.reception_definitive = parse_date(row.iloc[37])
+            ppm.save()
+            print(f"PPM mis à jour pour la tâche : {tache.title_fr}")
+        else:
+            # Créer un nouvel objet PPM
+            PPM.objects.create(
+                tache=tache,
+                nature_prestations=row.iloc[2],
+                montant_previsionnel=row.iloc[3],
+                source_financement=row.iloc[4],
+                autorite_contractante=row.iloc[5],
+                mode_consultation_solicite=row.iloc[6],
+                procedure=row.iloc[7],
+                saisine_ac=parse_date(row.iloc[8]),
+                saisine_cpm=parse_date(row.iloc[9]),
+                examen_dao_cpm=parse_date(row.iloc[10]),
+                saisine_cccm_dao=parse_date(row.iloc[11]),
+                avis_cccm_dao=row.iloc[12],
+                non_objection_bf_1=row.iloc[13],
+                date_publication_ao=parse_date(row.iloc[14]),
+                depouillement_offres=parse_date(row.iloc[15]),
+                analyse_offres_techniques=parse_date(row.iloc[16]),
+                examen_rapport_offres_techniques=parse_date(row.iloc[17]),
+                non_objection_bf_2=row.iloc[18],
+                ouverture_offres_financieres=parse_date(row.iloc[19]),
+                analyse_offres_financieres_synthese=parse_date(row.iloc[20]),
+                proposition_attribution_cpm=parse_date(row.iloc[21]),
+                saisine_cccm_attribution=parse_date(row.iloc[22]),
+                avis_cccm_attribution=row.iloc[23],
+                non_objection_bf_3=row.iloc[24],
+                publication_resultats=parse_date(row.iloc[25]),
+                notification_decision_attribution=parse_date(row.iloc[26]),
+                preparation_projet_marche=parse_date(row.iloc[27]),
+                saisine_cpm_marche=parse_date(row.iloc[28]),
+                examen_projet_marche=parse_date(row.iloc[29]),
+                saisine_cccm_marche=parse_date(row.iloc[30]),
+                avis_cccm_projet_marche_gg=row.iloc[31],
+                non_objection_bf_4=row.iloc[32],
+                date_signature_marche=parse_date(row.iloc[33]),
+                notification_marche=parse_date(row.iloc[34]),
+                demarrage_prestations=parse_date(row.iloc[35]),
+                reception_provisoire=parse_date(row.iloc[36]),
+                reception_definitive=parse_date(row.iloc[37]),
             )
+            print(f"PPM créé pour la tâche : {tache.title_fr}")
 
     print("Importation terminée.")
 
@@ -176,32 +217,45 @@ def import_jpm_minepat(sheet_data):
     for _, row in sheet_data.iterrows():
         if _ < 3:
             continue
+
         tache = Tache.objects.filter(title_fr__icontains=row.iloc[1]).first()
         if tache is None:
             print(f"Tâche non trouvée pour la désignation: {row.iloc[1]}")
             continue
 
-        # Créer un nouvel objet JPM avec les données de la ligne
-        jpm, created = JPM.objects.get_or_create(
-            tache=tache,
-            defaults={
-                "nature_prestations": row.iloc[2],
-                "montant_previsionnel": row.iloc[3],
-                "source_financement": row.iloc[4],
-                "autorite_contractante": row.iloc[5],
-                "mode_consultation": row.iloc[6],
-                "date_lancement_consultation": parse_date(row.iloc[7]),
-                "date_attribution_marche": parse_date(row.iloc[8]),
-                "date_signature_marche": parse_date(row.iloc[9]),
-                "date_demarrage_prestations": parse_date(row.iloc[10]),
-                "date_reception_prestations": parse_date(row.iloc[11]),
-            },
-        )
+        # Vérifier si un JPM existe déjà pour cette tâche
+        jpm = JPM.objects.filter(tache=tache).first()
 
-        if not created:
-            print(
-                f"Le JPM pour la tâche {tache.title_fr} existe déjà et n'a pas été créé."
+        if jpm:
+            # Mettre à jour les champs existants
+            jpm.nature_prestations = row.iloc[2]
+            jpm.montant_previsionnel = row.iloc[3]
+            jpm.source_financement = row.iloc[4]
+            jpm.autorite_contractante = row.iloc[5]
+            jpm.mode_consultation = row.iloc[6]
+            jpm.date_lancement_consultation = parse_date(row.iloc[7])
+            jpm.date_attribution_marche = parse_date(row.iloc[8])
+            jpm.date_signature_marche = parse_date(row.iloc[9])
+            jpm.date_demarrage_prestations = parse_date(row.iloc[10])
+            jpm.date_reception_prestations = parse_date(row.iloc[11])
+            jpm.save()
+            print(f"JPM mis à jour pour la tâche : {tache.title_fr}")
+        else:
+            # Créer un nouvel objet JPM
+            JPM.objects.create(
+                tache=tache,
+                nature_prestations=row.iloc[2],
+                montant_previsionnel=row.iloc[3],
+                source_financement=row.iloc[4],
+                autorite_contractante=row.iloc[5],
+                mode_consultation=row.iloc[6],
+                date_lancement_consultation=parse_date(row.iloc[7]),
+                date_attribution_marche=parse_date(row.iloc[8]),
+                date_signature_marche=parse_date(row.iloc[9]),
+                date_demarrage_prestations=parse_date(row.iloc[10]),
+                date_reception_prestations=parse_date(row.iloc[11]),
             )
+            print(f"JPM créé pour la tâche : {tache.title_fr}")
 
     print("Importation terminée.")
 
