@@ -47,8 +47,10 @@ class EtapeContractualisationViewSet(BaseModelViewSet):
     filterset_class = EtapeContractualisationFilter
 
     def get_queryset(self):
-        # Surcharge de get_queryset pour trier par date de création
-        return EtapeContractualisation.objects.all().order_by("-id")
+        is_finished = self.request.query_params("is_finished")
+        if is_finished:
+            return self.queryset.filter(is_finished=is_finished)
+        return self.queryset.order_by("-id")
 
 
 class EtapeViewSet(BaseModelViewSet):
