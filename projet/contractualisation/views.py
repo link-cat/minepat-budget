@@ -47,7 +47,7 @@ class EtapeContractualisationViewSet(BaseModelViewSet):
     filterset_class = EtapeContractualisationFilter
 
     def get_queryset(self):
-        is_finished = self.request.query_params("is_finished")
+        is_finished = self.request.query_params.get("is_finished")
         if is_finished:
             return self.queryset.filter(is_finished=is_finished)
         return self.queryset.order_by("-id")
