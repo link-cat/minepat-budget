@@ -1,7 +1,7 @@
 from time import timezone
 from rest_framework import serializers
 
-from .models import EtapeContractualisation, Etape, PPM, JPM, PieceJointe
+from .models import EtapeContractualisation, Etape, PPM, JPM, PieceJointe, PieceJointeContractualisation
 
 
 class EtapeSerializer(serializers.ModelSerializer):
@@ -37,10 +37,20 @@ class PieceJointeSerializer(serializers.ModelSerializer):
         if "document" in validated_data:
             instance.date_upload = timezone.now()
         return super().update(instance, validated_data)
+class PieceJointeContractSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PieceJointeContractualisation
+        fields = "__all__"
+        read_only_fields = ["id", "date_upload"]
+
+    def update(self, instance, validated_data):
+        if "document" in validated_data:
+            instance.date_upload = timezone.now()
+        return super().update(instance, validated_data)
 
 
 class EtapeContractualisationSerializer(serializers.ModelSerializer):
-    pieces_jointes = PieceJointeSerializer(many=True, read_only=True)
+    pieces_jointes = PieceJointeContractSerializer(many=True, read_only=True)
 
     class Meta:
         model = EtapeContractualisation

@@ -6,12 +6,13 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .filters import EtapeContractualisationFilter
 from projet.permissions import CustomDjangoModelPermissions
 
-from .models import EtapeContractualisation, Etape, PPM, JPM, PieceJointe
+from .models import EtapeContractualisation, Etape, PPM, JPM, PieceJointe, PieceJointeContractualisation
 from .serializers import (
     EtapeContractualisationSerializer,
     EtapeSerializer,
     PPMSerializer,
     JPMSerializer,
+    PieceJointeContractSerializer,
     PieceJointeSerializer,
 )
 
@@ -180,6 +181,19 @@ class ContractExcelImportViewSet(viewsets.ViewSet):
 class PieceJointeViewSet(BaseModelViewSet):
     queryset = PieceJointe.objects.all()
     serializer_class = PieceJointeSerializer
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_queryset(self):
+        # Filtrer par l'étape si nécessaire
+        etape_id = self.request.query_params.get("etape_id")
+        if etape_id:
+            return self.queryset.filter(etape_id=etape_id)
+        return self.queryset
+
+class PieceJointeContractViewSet(BaseModelViewSet):
+    queryset = PieceJointeContractualisation.objects.all()
+    serializer_class = PieceJointeContractSerializer
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 

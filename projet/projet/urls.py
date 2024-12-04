@@ -52,6 +52,7 @@ from contractualisation.views import (
     JPMViewSet,
     ContractExcelImportViewSet,
     PieceJointeViewSet,
+    PieceJointeContractViewSet,
 )
 
 schema_view = get_schema_view(
@@ -133,6 +134,7 @@ contractualisation_viewsets = [
         "upload-contractualisation",
     ),
     ("pieces-jointe", PieceJointeViewSet, "pieces-jointe"),
+    ("pieces-jointe-contract", PieceJointeContractViewSet, "pieces-jointe-contract"),
 ]
 router_contractualisation = routers.DefaultRouter()
 for prefix, viewset, basename in contractualisation_viewsets:

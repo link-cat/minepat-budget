@@ -12,6 +12,30 @@ class Etape(models.Model):
         return self.title
 
 
+class PieceJointeContractualisation(models.Model):
+    etape_contractualisation = models.ForeignKey(
+        "EtapeContractualisation",
+        on_delete=models.CASCADE,
+        related_name="pieces_jointes",
+    )
+    label = models.CharField(max_length=255, verbose_name="Nom du document")
+    document = models.FileField(
+        upload_to="documents/contractualisation/",
+        null=True,
+        blank=True,
+        verbose_name="Fichier",
+    )
+    date_upload = models.DateTimeField(
+        auto_now_add=True, null=True, blank=True, verbose_name="Date d'upload"
+    )
+    date_obtention = models.DateField(
+        verbose_name="Date d'obtention", null=True, blank=True
+    )
+
+    def __str__(self):
+        return f"{self.label} - {self.etape_contractualisation.tache.title_fr}"
+
+
 class PieceJointe(models.Model):
     etape = models.ForeignKey(
         Etape, on_delete=models.CASCADE, related_name="pieces_jointes"
@@ -59,7 +83,7 @@ class EtapeContractualisation(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        return f"{self.etape.title} - {self.tache.title_fr}"
+        return f"{self.tache.title_fr} - {self.etape.title}"
 
     def save(self, *args, **kwargs):
         # Calcul de l'écart en jours si la date effective est fournie
@@ -67,12 +91,20 @@ class EtapeContractualisation(models.Model):
             self.ecart_jours = (self.date_effective - self.date_prevue).days
         if self.montant_reel and self.montant_prevu:
             self.ecart_montant = self.montant_reel - self.montant_prevu
+            self.taux_consomation = 100 * (self.montant_reel / self.tache.montant_reel)
+
+        # Appeler la méthode save parent
         super().save(*args, **kwargs)
 
-    @property
-    def pieces_jointes(self):
-        # Retourne toutes les pièces jointes liées à l'étape associée
-        return self.etape.pieces_jointes.all()
+        # Copier les pièces jointes de l'étape si elles n'existent pas encore
+        if not self.pieces_jointes.exists():
+            for piece in self.etape.pieces_jointes.all():
+                PieceJointeContractualisation.objects.create(
+                    etape_contractualisation=self,
+                    label=piece.label,
+                    document=piece.document,
+                    date_obtention=piece.date_obtention,
+                )
 
 
 class PPM(models.Model):
