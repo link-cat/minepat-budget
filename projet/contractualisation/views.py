@@ -46,6 +46,39 @@ class EtapeContractualisationViewSet(BaseModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_class = EtapeContractualisationFilter
 
+    def perform_save(self, serializer):
+        etape_contractualisation = serializer.save()
+
+        tache = etape_contractualisation.tache
+
+        jpm = JPM.objects.filter(tache=tache).first()
+        if jpm:
+            prioritaire = (
+                EtapeContractualisation.objects.filter(tache=tache, is_finished=False)
+                .order_by("id")
+                .first()
+            )
+
+            if prioritaire:
+                jpm.current_step = prioritaire
+                jpm.save()
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_save(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_save(serializer)
+        return Response(serializer.data)
+
+
     def get_queryset(self):
         is_finished = self.request.query_params.get("is_finished")
         if is_finished:

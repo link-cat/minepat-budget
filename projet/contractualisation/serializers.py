@@ -20,7 +20,7 @@ class JPMSerializer(serializers.ModelSerializer):
     tache = serializers.SerializerMethodField()
 
     def get_tache(self, obj):
-        return {"id":obj.tache.id,"nom":obj.tache.title_fr}
+        return {"id":obj.tache.id,"nom":obj.tache.title_fr, "code":obj.tache.code}
 
     class Meta:
         model = JPM

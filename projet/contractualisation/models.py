@@ -4,6 +4,77 @@ from simple_history.models import HistoricalRecords
 from setting.models import Tache
 
 
+class Etape(models.Model):
+    title = models.CharField(max_length=255)
+    dated = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.title
+
+
+class PieceJointe(models.Model):
+    etape = models.ForeignKey(
+        Etape, on_delete=models.CASCADE, related_name="pieces_jointes"
+    )
+    label = models.CharField(max_length=255, verbose_name="Nom du document")
+    document = models.FileField(
+        upload_to="documents/", null=True, blank=True, verbose_name="Fichier"
+    )
+    date_upload = models.DateTimeField(
+        auto_now_add=True, null=True, blank=True, verbose_name="Date d'upload"
+    )
+    date_obtention = models.DateField(
+        verbose_name="Date d'obtention", null=True, blank=True
+    )
+
+    def __str__(self):
+        return f"{self.label} - {self.etape.title}"
+
+
+class EtapeContractualisation(models.Model):
+    etape = models.ForeignKey(
+        Etape, on_delete=models.CASCADE, related_name="contractualisations"
+    )
+    tache = models.ForeignKey(Tache, on_delete=models.CASCADE, related_name="projet")
+    date_prevue = models.DateField(verbose_name="Date prévue", null=True, blank=True)
+    date_effective = models.DateField(
+        verbose_name="Date effective", null=True, blank=True
+    )
+    montant_prevu = models.FloatField(
+        verbose_name="Montant prévisionnel", null=True, blank=True
+    )
+    montant_reel = models.FloatField(verbose_name="Montant réel", null=True, blank=True)
+    taux_consomation = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        verbose_name="Taux de consommation",
+    )
+    observations = models.TextField(blank=True, null=True)
+    ecart_jours = models.IntegerField(editable=False, null=True, blank=True)
+    ecart_montant = models.FloatField(editable=False, null=True, blank=True)
+    is_finished = models.BooleanField(default=False)
+
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return f"{self.etape.title} - {self.tache.title_fr}"
+
+    def save(self, *args, **kwargs):
+        # Calcul de l'écart en jours si la date effective est fournie
+        if self.date_effective and self.date_prevue:
+            self.ecart_jours = (self.date_effective - self.date_prevue).days
+        if self.montant_reel and self.montant_prevu:
+            self.ecart_montant = self.montant_reel - self.montant_prevu
+        super().save(*args, **kwargs)
+
+    @property
+    def pieces_jointes(self):
+        # Retourne toutes les pièces jointes liées à l'étape associée
+        return self.etape.pieces_jointes.all()
+
+
 class PPM(models.Model):
     tache = models.ForeignKey(Tache, on_delete=models.CASCADE)
     nature_prestations = models.CharField(max_length=255)
@@ -79,75 +150,7 @@ class JPM(models.Model):
     date_reception_prestations = models.DateField(
         verbose_name="Date de réception des prestations"
     )
+    current_step = models.ForeignKey(EtapeContractualisation, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return self.tache.title_fr
-
-
-class Etape(models.Model):
-    title = models.CharField(max_length=255)
-    dated = models.BooleanField(default=True)
-
-    def __str__(self):
-        return self.title
-
-
-class PieceJointe(models.Model):
-    etape = models.ForeignKey(
-        Etape, on_delete=models.CASCADE, related_name="pieces_jointes"
-    )
-    label = models.CharField(max_length=255, verbose_name="Nom du document")
-    document = models.FileField(
-        upload_to="documents/", null=True, blank=True, verbose_name="Fichier"
-    )
-    date_upload = models.DateTimeField(auto_now_add=True, null=True, blank=True, verbose_name="Date d'upload")
-    date_obtention = models.DateField(
-        verbose_name="Date d'obtention", null=True, blank=True
-    )
-
-    def __str__(self):
-        return f"{self.label} - {self.etape.title}"
-
-
-class EtapeContractualisation(models.Model):
-    etape = models.ForeignKey(
-        Etape, on_delete=models.CASCADE, related_name="contractualisations"
-    )
-    tache = models.ForeignKey(Tache, on_delete=models.CASCADE, related_name="projet")
-    date_prevue = models.DateField(verbose_name="Date prévue", null=True, blank=True)
-    date_effective = models.DateField(
-        verbose_name="Date effective", null=True, blank=True
-    )
-    montant_prevu = models.FloatField(
-        verbose_name="Montant prévisionnel", null=True, blank=True
-    )
-    montant_reel = models.FloatField(verbose_name="Montant réel", null=True, blank=True)
-    taux_consomation = models.DecimalField(
-        max_digits=4,
-        decimal_places=2,
-        blank=True,
-        null=True,
-        verbose_name="Taux de consommation",
-    )
-    observations = models.TextField(blank=True, null=True)
-    ecart_jours = models.IntegerField(editable=False, null=True, blank=True)
-    ecart_montant = models.FloatField(editable=False, null=True, blank=True)
-    is_finished = models.BooleanField(default=False)
-
-    history = HistoricalRecords()
-
-    def __str__(self):
-        return f"{self.etape.title} - {self.tache.title_fr}"
-
-    def save(self, *args, **kwargs):
-        # Calcul de l'écart en jours si la date effective est fournie
-        if self.date_effective and self.date_prevue:
-            self.ecart_jours = (self.date_effective - self.date_prevue).days
-        if self.montant_reel and self.montant_prevu:
-            self.ecart_montant = self.montant_reel - self.montant_prevu
-        super().save(*args, **kwargs)
-
-    @property
-    def pieces_jointes(self):
-        # Retourne toutes les pièces jointes liées à l'étape associée
-        return self.etape.pieces_jointes.all()
