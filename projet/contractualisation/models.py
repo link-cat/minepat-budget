@@ -5,11 +5,24 @@ from setting.models import Tache
 
 
 class Etape(models.Model):
+    class TypeChoices(models.TextChoices):
+        APPEL_DOFFRES_OUVERT = "APPEL D'OFFRES OUVERT", "Appel d'offres ouvert"
+        APPEL_DOFFRES_RESTREINT = "APPEL D'OFFRES RESTREINT", "Appel d'offres restreint"
+        CONSULTATION_INDIVIDUELLE = (
+            "CONSULTATION INDIVIDUELLE",
+            "Consultation individuelle",
+        )
+        REGIE = "REGIE", "Régie"
+        GRE_A_GRE = "GRE A GRE", "Gré à gré"
+
     title = models.CharField(max_length=255)
     dated = models.BooleanField(default=True)
+    type = models.CharField(
+        max_length=50, default=TypeChoices.APPEL_DOFFRES_OUVERT, choices=TypeChoices.choices, verbose_name="Type d'étape"
+    )
 
     def __str__(self):
-        return self.title
+        return f"{self.title} - {self.get_type_display()}"
 
 
 class PieceJointeContractualisation(models.Model):
