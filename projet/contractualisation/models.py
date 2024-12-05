@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 from simple_history.models import HistoricalRecords
 
 from setting.models import Tache
@@ -18,12 +20,14 @@ class Etape(models.Model):
     title = models.CharField(max_length=255)
     dated = models.BooleanField(default=True)
     type = models.CharField(
-        max_length=50, default=TypeChoices.APPEL_DOFFRES_OUVERT, choices=TypeChoices.choices, verbose_name="Type d'étape"
+        max_length=50,
+        default=TypeChoices.APPEL_DOFFRES_OUVERT,
+        choices=TypeChoices.choices,
+        verbose_name="Type d'étape",
     )
 
     def __str__(self):
         return f"{self.title} - {self.get_type_display()}"
-
 
 class PieceJointeContractualisation(models.Model):
     etape_contractualisation = models.ForeignKey(
@@ -66,6 +70,43 @@ class PieceJointe(models.Model):
 
     def __str__(self):
         return f"{self.label} - {self.etape.title}"
+
+    def save(self, *args, **kwargs):
+
+        super().save(*args, **kwargs)
+
+        # Synchronise les pièces jointes avec les étapes de contractualisation associées
+        etapes_contractualisation = self.etape.contractualisations.all()
+        print(etapes_contractualisation)
+        for etape_contractualisation in etapes_contractualisation:
+            # Vérifie si une pièce jointe existe déjà
+            existing_piece = PieceJointeContractualisation.objects.filter(
+                 etape_contractualisation=etape_contractualisation,
+                label=self.label,
+            ).first()
+            if existing_piece:
+                existing_piece.save()
+            else:
+                # Créez une nouvelle pièce jointe
+                new = PieceJointeContractualisation.objects.create(
+                    etape_contractualisation=etape_contractualisation,
+                    label=self.label,
+                    document=self.document,
+                    date_obtention=self.date_obtention,
+               )
+
+
+@receiver(post_delete, sender=PieceJointe)
+def delete_related_pieces_jointes_contractualisation(sender, instance, **kwargs):
+    # Trouver les `EtapeContractualisation` associées à l'étape
+    etapes_contractualisation = instance.etape.contractualisations.all()
+
+    for etape_contractualisation in etapes_contractualisation:
+        # Supprimer les pièces jointes correspondantes dans les étapes contractualisation
+        PieceJointeContractualisation.objects.filter(
+            etape_contractualisation=etape_contractualisation,
+            label=instance.label,  # Correspondance basée sur le label
+        ).delete()
 
 
 class EtapeContractualisation(models.Model):
@@ -195,7 +236,9 @@ class JPM(models.Model):
     date_reception_prestations = models.DateField(
         verbose_name="Date de réception des prestations"
     )
-    current_step = models.ForeignKey(EtapeContractualisation, on_delete=models.SET_NULL, null=True, blank=True)
+    current_step = models.ForeignKey(
+        EtapeContractualisation, on_delete=models.SET_NULL, null=True, blank=True
+    )
 
     def __str__(self):
         return self.tache.title_fr
