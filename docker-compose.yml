@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: link2024
+      POSTGRES_DB: projet
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5442:5432"
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: django_api
+    restart: always
+    environment:
+    - DJANGO_SUPERUSER_USERNAME=admin
+    - DJANGO_SUPERUSER_EMAIL=admin@example.com
+    - DJANGO_SUPERUSER_PASSWORD=admin
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py shell < create_superuser.py &&
+             python manage.py runserver --noreload 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+
+volumes:
+  postgres_data:
