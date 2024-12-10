@@ -205,12 +205,29 @@ class PPM(models.Model):
 
 
 class JPM(models.Model):
+
+    class TypeChoices(models.TextChoices):
+        APPEL_DOFFRES_OUVERT = "APPEL D'OFFRES OUVERT", "Appel d'offres ouvert"
+        APPEL_DOFFRES_RESTREINT = "APPEL D'OFFRES RESTREINT", "Appel d'offres restreint"
+        CONSULTATION_INDIVIDUELLE = (
+            "CONSULTATION INDIVIDUELLE",
+            "Consultation individuelle",
+        )
+        REGIE = "REGIE", "Régie"
+        GRE_A_GRE = "GRE A GRE", "Gré à gré"
+
     tache = models.ForeignKey(
         Tache,
         on_delete=models.CASCADE,
     )
     nature_prestations = models.CharField(
         max_length=50, verbose_name="Nature des prestations"
+    )
+    type = models.CharField(
+        max_length=50,
+        default=TypeChoices.APPEL_DOFFRES_OUVERT,
+        choices=TypeChoices.choices,
+        verbose_name="Type d'étape",
     )
     montant_previsionnel = models.FloatField(verbose_name="Montant prévisionnel (FCFA)")
     source_financement = models.CharField(
