@@ -127,9 +127,7 @@ class EtapeContractualisation(models.Model):
         verbose_name="Montant prévisionnel", null=True, blank=True
     )
     montant_reel = models.FloatField(verbose_name="Montant réel", null=True, blank=True)
-    taux_consomation = models.DecimalField(
-        max_digits=4,
-        decimal_places=2,
+    taux_consomation = models.FloatField(
         blank=True,
         null=True,
         verbose_name="Taux de consommation",
