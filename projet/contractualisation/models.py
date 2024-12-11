@@ -25,9 +25,11 @@ class Etape(models.Model):
         choices=TypeChoices.choices,
         verbose_name="Type d'étape",
     )
+    acteurs = models.CharField(max_length=75, null=True, blank=True)
 
     def __str__(self):
         return f"{self.title} - {self.get_type_display()}"
+
 
 class PieceJointeContractualisation(models.Model):
     etape_contractualisation = models.ForeignKey(
@@ -81,7 +83,7 @@ class PieceJointe(models.Model):
         for etape_contractualisation in etapes_contractualisation:
             # Vérifie si une pièce jointe existe déjà
             existing_piece = PieceJointeContractualisation.objects.filter(
-                 etape_contractualisation=etape_contractualisation,
+                etape_contractualisation=etape_contractualisation,
                 label=self.label,
             ).first()
             if existing_piece:
@@ -93,7 +95,7 @@ class PieceJointe(models.Model):
                     label=self.label,
                     document=self.document,
                     date_obtention=self.date_obtention,
-               )
+                )
 
 
 @receiver(post_delete, sender=PieceJointe)
@@ -107,6 +109,9 @@ def delete_related_pieces_jointes_contractualisation(sender, instance, **kwargs)
             etape_contractualisation=etape_contractualisation,
             label=instance.label,  # Correspondance basée sur le label
         ).delete()
+
+
+from django.utils.timezone import now
 
 
 class EtapeContractualisation(models.Model):
@@ -134,6 +139,12 @@ class EtapeContractualisation(models.Model):
     ecart_montant = models.FloatField(editable=False, null=True, blank=True)
     is_finished = models.BooleanField(default=False)
 
+    # Nouveaux champs
+    date_demarrage = models.DateTimeField(
+        null=True, blank=True, verbose_name="Date de démarrage"
+    )
+    date_fin = models.DateTimeField(null=True, blank=True, verbose_name="Date de fin")
+
     history = HistoricalRecords()
 
     def __str__(self):
@@ -146,6 +157,14 @@ class EtapeContractualisation(models.Model):
         if self.montant_reel and self.montant_prevu:
             self.ecart_montant = self.montant_reel - self.montant_prevu
             self.taux_consomation = 100 * (self.montant_reel / self.tache.montant_reel)
+
+        # Mettre à jour la date de démarrage uniquement lors du premier update
+        if not self.date_demarrage and self.pk:  # L'instance existe déjà (update)
+            self.date_demarrage = now()
+
+        # Enregistrer la date de fin lorsque l'étape est marquée comme terminée
+        if self.is_finished and not self.date_fin:
+            self.date_fin = now()
 
         # Appeler la méthode save parent
         super().save(*args, **kwargs)

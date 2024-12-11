@@ -55,6 +55,8 @@ from contractualisation.views import (
     PieceJointeContractViewSet,
 )
 
+from statistiques.views import ContractualisationViewSet
+
 schema_view = get_schema_view(
     openapi.Info(
         title="Projet API",
@@ -140,11 +142,19 @@ router_contractualisation = routers.DefaultRouter()
 for prefix, viewset, basename in contractualisation_viewsets:
     router_contractualisation.register(rf"{prefix}", viewset, basename=basename)
 
+statistiques_viewsets = [
+    ('contractualisation', ContractualisationViewSet, 'contractualisation'),
+]
+router_statistiques = routers.DefaultRouter()
+for prefix, viewset, basename in statistiques_viewsets:
+    router_statistiques.register(rf"{prefix}", viewset, basename=basename)
+
 # URLs globales
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("setting/", include(router_setting.urls)),
     path("execution/", include(router_execution.urls)),
+    path("statistiques/", include(router_statistiques.urls)),
     path("contractualisation/", include(router_contractualisation.urls)),
     path("api/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/login/refresh/", TokenRefreshView.as_view(), name="token_refresh"),

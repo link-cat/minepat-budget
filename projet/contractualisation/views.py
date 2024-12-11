@@ -6,7 +6,14 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .filters import EtapeContractualisationFilter
 from projet.permissions import CustomDjangoModelPermissions
 
-from .models import EtapeContractualisation, Etape, PPM, JPM, PieceJointe, PieceJointeContractualisation
+from .models import (
+    EtapeContractualisation,
+    Etape,
+    PPM,
+    JPM,
+    PieceJointe,
+    PieceJointeContractualisation,
+)
 from .serializers import (
     EtapeContractualisationSerializer,
     EtapeSerializer,
@@ -69,7 +76,9 @@ class EtapeContractualisationViewSet(BaseModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_save(serializer)
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)
@@ -78,7 +87,6 @@ class EtapeContractualisationViewSet(BaseModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_save(serializer)
         return Response(serializer.data)
-
 
     def get_queryset(self):
         is_finished = self.request.query_params.get("is_finished")
@@ -115,7 +123,7 @@ class JPMViewSet(BaseModelViewSet):
 
 
 from rest_framework.decorators import action
-from rest_framework.parsers import MultiPartParser,FormParser
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework import status
 from django.core.files.storage import default_storage
@@ -124,6 +132,7 @@ from drf_yasg import openapi
 from setting.serializers import UploadSerializer
 
 from setting.imports import import_excel_contract_file
+
 
 class ContractExcelImportViewSet(viewsets.ViewSet):
     parser_classes = [MultiPartParser]
@@ -190,6 +199,7 @@ class PieceJointeViewSet(BaseModelViewSet):
         if etape_id:
             return self.queryset.filter(etape_id=etape_id)
         return self.queryset
+
 
 class PieceJointeContractViewSet(BaseModelViewSet):
     queryset = PieceJointeContractualisation.objects.all()
