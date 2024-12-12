@@ -51,6 +51,7 @@ class PieceJointeContractSerializer(serializers.ModelSerializer):
 
 class EtapeContractualisationSerializer(serializers.ModelSerializer):
     pieces_jointes = PieceJointeContractSerializer(many=True, read_only=True)
+    etape = serializers.SerializerMethodField()
 
     class Meta:
         model = EtapeContractualisation
