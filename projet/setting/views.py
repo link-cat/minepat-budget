@@ -229,11 +229,11 @@ class ExcelImportViewSet(viewsets.ViewSet):
                 {"error": "Aucun fichier fourni"}, status=status.HTTP_400_BAD_REQUEST
             )
         excel_file = request.FILES["file_uploaded"]
-        file_path = default_storage.save(f"media/temp/{excel_file.name}", excel_file)
+        file_path = default_storage.save(f"temp/{excel_file.name}", excel_file)
 
         try:
             # Importer le fichier Excel
-            import_bip_excel_file(file_path)
+            import_bip_excel_file(f"media/{file_path}")
             return Response(
                 {"message": "Fichier Excel importé avec succès"},
                 status=status.HTTP_200_OK,

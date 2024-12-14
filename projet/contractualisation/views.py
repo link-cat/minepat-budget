@@ -54,20 +54,25 @@ class EtapeContractualisationViewSet(BaseModelViewSet):
 
     def perform_save(self, serializer):
         etape_contractualisation = serializer.save()
-
         tache = etape_contractualisation.tache
 
         if tache:
+            # Récupérer l'étape prioritaire
             prioritaire = (
                 EtapeContractualisation.objects.filter(tache=tache, is_finished=False)
                 .order_by("id")
                 .first()
             )
+            # Mettre à jour les attributs de la tâche
             tache.type = etape_contractualisation.etape.type
+            tache.current_step = prioritaire if prioritaire else None
 
-            if prioritaire:
-                tache.current_step = prioritaire
+            print(tache)
+
+            # Sauvegarder la tâche
             tache.save()
+        else:
+            print("Aucune tâche associée à cette étape.")
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
