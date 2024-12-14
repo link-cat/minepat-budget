@@ -221,58 +221,42 @@ class PPM(models.Model):
         return self.tache.title_fr
 
 
-class JPM(models.Model):
+# class JPM(models.Model):
 
-    class TypeChoices(models.TextChoices):
-        APPEL_DOFFRES_OUVERT = "APPEL D'OFFRES OUVERT", "Appel d'offres ouvert"
-        APPEL_DOFFRES_RESTREINT = "APPEL D'OFFRES RESTREINT", "Appel d'offres restreint"
-        CONSULTATION_INDIVIDUELLE = (
-            "CONSULTATION INDIVIDUELLE",
-            "Consultation individuelle",
-        )
-        REGIE = "REGIE", "Régie"
-        GRE_A_GRE = "GRE A GRE", "Gré à gré"
+#     tache = models.ForeignKey(
+#         Tache,
+#         on_delete=models.CASCADE,
+#     )
+#     nature_prestations = models.CharField(
+#         max_length=50, verbose_name="Nature des prestations"
+#     )
+#     montant_previsionnel = models.FloatField(verbose_name="Montant prévisionnel (FCFA)")
+#     source_financement = models.CharField(
+#         max_length=255, verbose_name="Source de financement"
+#     )
+#     autorite_contractante = models.CharField(
+#         max_length=255,
+#         verbose_name="Autorité Contractante / Administration bénéficiaire",
+#     )
+#     mode_consultation = models.CharField(
+#         max_length=255, verbose_name="Mode de consultation"
+#     )
+#     date_lancement_consultation = models.DateField(
+#         verbose_name="Date de lancement de la consultation"
+#     )
+#     date_attribution_marche = models.DateField(
+#         verbose_name="Date d'attribution du marché"
+#     )
+#     date_signature_marche = models.DateField(verbose_name="Date de signature du marché")
+#     date_demarrage_prestations = models.DateField(
+#         verbose_name="Date de démarrage des prestations"
+#     )
+#     date_reception_prestations = models.DateField(
+#         verbose_name="Date de réception des prestations"
+#     )
+#     current_step = models.ForeignKey(
+#         EtapeContractualisation, on_delete=models.SET_NULL, null=True, blank=True
+#     )
 
-    tache = models.ForeignKey(
-        Tache,
-        on_delete=models.CASCADE,
-    )
-    nature_prestations = models.CharField(
-        max_length=50, verbose_name="Nature des prestations"
-    )
-    type = models.CharField(
-        max_length=50,
-        default=TypeChoices.APPEL_DOFFRES_OUVERT,
-        choices=TypeChoices.choices,
-        verbose_name="Type d'étape",
-    )
-    montant_previsionnel = models.FloatField(verbose_name="Montant prévisionnel (FCFA)")
-    source_financement = models.CharField(
-        max_length=255, verbose_name="Source de financement"
-    )
-    autorite_contractante = models.CharField(
-        max_length=255,
-        verbose_name="Autorité Contractante / Administration bénéficiaire",
-    )
-    mode_consultation = models.CharField(
-        max_length=255, verbose_name="Mode de consultation"
-    )
-    date_lancement_consultation = models.DateField(
-        verbose_name="Date de lancement de la consultation"
-    )
-    date_attribution_marche = models.DateField(
-        verbose_name="Date d'attribution du marché"
-    )
-    date_signature_marche = models.DateField(verbose_name="Date de signature du marché")
-    date_demarrage_prestations = models.DateField(
-        verbose_name="Date de démarrage des prestations"
-    )
-    date_reception_prestations = models.DateField(
-        verbose_name="Date de réception des prestations"
-    )
-    current_step = models.ForeignKey(
-        EtapeContractualisation, on_delete=models.SET_NULL, null=True, blank=True
-    )
-
-    def __str__(self):
-        return self.tache.title_fr
+#     def __str__(self):
+#         return self.tache.title_fr

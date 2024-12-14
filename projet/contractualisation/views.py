@@ -10,7 +10,6 @@ from .models import (
     EtapeContractualisation,
     Etape,
     PPM,
-    JPM,
     PieceJointe,
     PieceJointeContractualisation,
 )
@@ -18,7 +17,6 @@ from .serializers import (
     EtapeContractualisationSerializer,
     EtapeSerializer,
     PPMSerializer,
-    JPMSerializer,
     PieceJointeContractSerializer,
     PieceJointeSerializer,
 )
@@ -59,17 +57,17 @@ class EtapeContractualisationViewSet(BaseModelViewSet):
 
         tache = etape_contractualisation.tache
 
-        jpm = JPM.objects.filter(tache=tache).first()
-        if jpm:
+        if tache:
             prioritaire = (
                 EtapeContractualisation.objects.filter(tache=tache, is_finished=False)
                 .order_by("id")
                 .first()
             )
+            tache.type = etape_contractualisation.etape.type
 
             if prioritaire:
-                jpm.current_step = prioritaire
-                jpm.save()
+                tache.current_step = prioritaire
+            tache.save()
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -113,13 +111,13 @@ class PPMViewSet(BaseModelViewSet):
         return PPM.objects.all().order_by("-id")
 
 
-class JPMViewSet(BaseModelViewSet):
-    queryset = JPM.objects.all()
-    serializer_class = JPMSerializer
+# class JPMViewSet(BaseModelViewSet):
+#     queryset = JPM.objects.all()
+#     serializer_class = JPMSerializer
 
-    def get_queryset(self):
-        # Surcharge de get_queryset pour trier par date de création
-        return JPM.objects.all().order_by("-id")
+#     def get_queryset(self):
+#         # Surcharge de get_queryset pour trier par date de création
+#         return JPM.objects.all().order_by("-id")
 
 
 from rest_framework.decorators import action
@@ -131,60 +129,58 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from setting.serializers import UploadSerializer
 
-from setting.imports import import_excel_contract_file
 
+# class ContractExcelImportViewSet(viewsets.ViewSet):
+#     parser_classes = [MultiPartParser]
+#     serializer_class = UploadSerializer
+#     permission_classes = [IsAuthenticated]
 
-class ContractExcelImportViewSet(viewsets.ViewSet):
-    parser_classes = [MultiPartParser]
-    serializer_class = UploadSerializer
-    permission_classes = [IsAuthenticated]
+#     @swagger_auto_schema(
+#         operation_summary="Importer un fichier Excel pour les contractualisations",
+#         operation_description="Cette vue permet de téléverser un fichier Excel pour l'importation des données PPM et JPM.",
+#         manual_parameters=[
+#             openapi.Parameter(
+#                 "file_uploaded",
+#                 openapi.IN_FORM,
+#                 description="Le fichier Excel à importer",
+#                 type=openapi.TYPE_FILE,
+#                 required=True,
+#             )
+#         ],
+#         responses={
+#             200: openapi.Response(
+#                 description="Le fichier a été importé avec succès",
+#                 examples={
+#                     "application/json": {"message": "Fichier Excel importé avec succès"}
+#                 },
+#             ),
+#             400: openapi.Response(
+#                 description="Aucun fichier fourni",
+#                 examples={"application/json": {"error": "Aucun fichier fourni"}},
+#             ),
+#         },
+#     )
+#     @action(detail=False, methods=["post"], url_path="contractualisation")
+#     def import_excel(self, request):
+#         if "file_uploaded" not in request.FILES:
+#             return Response(
+#                 {"error": "Aucun fichier fourni"}, status=status.HTTP_400_BAD_REQUEST
+#             )
 
-    @swagger_auto_schema(
-        operation_summary="Importer un fichier Excel pour les contractualisations",
-        operation_description="Cette vue permet de téléverser un fichier Excel pour l'importation des données PPM et JPM.",
-        manual_parameters=[
-            openapi.Parameter(
-                "file_uploaded",
-                openapi.IN_FORM,
-                description="Le fichier Excel à importer",
-                type=openapi.TYPE_FILE,
-                required=True,
-            )
-        ],
-        responses={
-            200: openapi.Response(
-                description="Le fichier a été importé avec succès",
-                examples={
-                    "application/json": {"message": "Fichier Excel importé avec succès"}
-                },
-            ),
-            400: openapi.Response(
-                description="Aucun fichier fourni",
-                examples={"application/json": {"error": "Aucun fichier fourni"}},
-            ),
-        },
-    )
-    @action(detail=False, methods=["post"], url_path="contractualisation")
-    def import_excel(self, request):
-        if "file_uploaded" not in request.FILES:
-            return Response(
-                {"error": "Aucun fichier fourni"}, status=status.HTTP_400_BAD_REQUEST
-            )
+#         # Récupérer le fichier téléchargé
+#         excel_file = request.FILES["file_uploaded"]
+#         file_path = default_storage.save(f"/temp/{excel_file.name}", excel_file)
 
-        # Récupérer le fichier téléchargé
-        excel_file = request.FILES["file_uploaded"]
-        file_path = default_storage.save(f"/temp/{excel_file.name}", excel_file)
-
-        try:
-            # Appeler la fonction pour importer le fichier Excel
-            import_excel_contract_file(file_path)
-            return Response(
-                {"message": "Fichier Excel importé avec succès"},
-                status=status.HTTP_200_OK,
-            )
-        finally:
-            # Supprimer le fichier après traitement
-            print("import reussi")
+#         try:
+#             # Appeler la fonction pour importer le fichier Excel
+#             import_excel_contract_file(file_path)
+#             return Response(
+#                 {"message": "Fichier Excel importé avec succès"},
+#                 status=status.HTTP_200_OK,
+#             )
+#         finally:
+#             # Supprimer le fichier après traitement
+#             print("import reussi")
 
 
 class PieceJointeViewSet(BaseModelViewSet):

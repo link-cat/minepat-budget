@@ -124,6 +124,17 @@ class Activite(models.Model):
 
 
 class Tache(models.Model):
+
+    class TypeChoices(models.TextChoices):
+        APPEL_DOFFRES_OUVERT = "APPEL D'OFFRES OUVERT", "Appel d'offres ouvert"
+        APPEL_DOFFRES_RESTREINT = "APPEL D'OFFRES RESTREINT", "Appel d'offres restreint"
+        CONSULTATION_INDIVIDUELLE = (
+            "CONSULTATION INDIVIDUELLE",
+            "Consultation individuelle",
+        )
+        REGIE = "REGIE", "Régie"
+        GRE_A_GRE = "GRE A GRE", "Gré à gré"
+
     code = models.CharField(max_length=255)
     title_fr = models.CharField(max_length=255)
     title_en = models.CharField(max_length=255)
@@ -139,6 +150,19 @@ class Tache(models.Model):
     montant_reel = models.FloatField(null=True, blank=True)
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
+    type = models.CharField(
+        max_length=50,
+        default=TypeChoices.APPEL_DOFFRES_OUVERT,
+        choices=TypeChoices.choices,
+        verbose_name="Type d'étape",
+    )
+    current_step = models.ForeignKey(
+        "contractualisation.EtapeContractualisation",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="current_step"
+    )
     history = HistoricalRecords()
 
     def __str__(self):

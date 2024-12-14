@@ -1,7 +1,7 @@
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import EtapeContractualisation, Etape, PPM, JPM, PieceJointe, PieceJointeContractualisation
+from .models import EtapeContractualisation, Etape, PPM, PieceJointe, PieceJointeContractualisation
 
 
 class EtapeSerializer(serializers.ModelSerializer):
@@ -16,15 +16,15 @@ class PPMSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class JPMSerializer(serializers.ModelSerializer):
-    tache = serializers.SerializerMethodField()
+# class JPMSerializer(serializers.ModelSerializer):
+#     tache = serializers.SerializerMethodField()
 
-    def get_tache(self, obj):
-        return {"id":obj.tache.id,"nom":obj.tache.title_fr, "code":obj.tache.code}
+#     def get_tache(self, obj):
+#         return {"id":obj.tache.id,"nom":obj.tache.title_fr, "code":obj.tache.code}
 
-    class Meta:
-        model = JPM
-        fields = "__all__"
+#     class Meta:
+#         model = JPM
+#         fields = "__all__"
 
 
 class PieceJointeSerializer(serializers.ModelSerializer):

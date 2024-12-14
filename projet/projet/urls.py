@@ -48,9 +48,6 @@ from execution.views import (
 from contractualisation.views import (
     EtapeContractualisationViewSet,
     EtapeViewSet,
-    PPMViewSet,
-    JPMViewSet,
-    ContractExcelImportViewSet,
     PieceJointeViewSet,
     PieceJointeContractViewSet,
 )
@@ -128,13 +125,6 @@ contractualisation_viewsets = [
         "etape-contractualisation",
     ),
     ("etape", EtapeViewSet, "etape"),
-    ("ppm", PPMViewSet, "ppm"),
-    ("jpm", JPMViewSet, "jpm"),
-    (
-        "upload-contractualisation",
-        ContractExcelImportViewSet,
-        "upload-contractualisation",
-    ),
     ("pieces-jointe", PieceJointeViewSet, "pieces-jointe"),
     ("pieces-jointe-contract", PieceJointeContractViewSet, "pieces-jointe-contract"),
 ]

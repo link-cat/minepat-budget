@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Etape, EtapeContractualisation, PieceJointe, PPM, JPM
+from .models import Etape, EtapeContractualisation, PieceJointe
 
 
 class PieceJointeInline(admin.TabularInline):
@@ -48,27 +48,27 @@ class EtapeContractualisationAdmin(admin.ModelAdmin):
     related_pieces_jointes.allow_tags = True
 
 
-@admin.register(PPM)
-class PPMAdmin(admin.ModelAdmin):
-    list_display = (
-        "tache",
-        "nature_prestations",
-        "montant_previsionnel",
-        "date_publication_ao",
-        "saisine_ac",
-    )
-    search_fields = ("tache__title_fr", "nature_prestations", "source_financement")
-    list_filter = ("tache", "date_publication_ao", "saisine_ac")
+# @admin.register(PPM)
+# class PPMAdmin(admin.ModelAdmin):
+#     list_display = (
+#         "tache",
+#         "nature_prestations",
+#         "montant_previsionnel",
+#         "date_publication_ao",
+#         "saisine_ac",
+#     )
+#     search_fields = ("tache__title_fr", "nature_prestations", "source_financement")
+#     list_filter = ("tache", "date_publication_ao", "saisine_ac")
 
 
-@admin.register(JPM)
-class JPMAdmin(admin.ModelAdmin):
-    list_display = (
-        "tache",
-        "nature_prestations",
-        "montant_previsionnel",
-        "date_lancement_consultation",
-        "date_signature_marche",
-    )
-    search_fields = ("tache__title_fr", "nature_prestations", "source_financement")
-    list_filter = ("tache", "date_lancement_consultation", "date_signature_marche")
+# @admin.register(JPM)
+# class JPMAdmin(admin.ModelAdmin):
+#     list_display = (
+#         "tache",
+#         "nature_prestations",
+#         "montant_previsionnel",
+#         "date_lancement_consultation",
+#         "date_signature_marche",
+#     )
+#     search_fields = ("tache__title_fr", "nature_prestations", "source_financement")
+#     list_filter = ("tache", "date_lancement_consultation", "date_signature_marche")
