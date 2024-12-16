@@ -26,6 +26,9 @@ class Etape(models.Model):
         verbose_name="Type d'étape",
     )
     acteurs = models.CharField(max_length=75, null=True, blank=True)
+    delai = models.IntegerField(null=True, blank=True, verbose_name="delais fixe")
+    rang = models.IntegerField(null=True,blank=True,verbose_name="ordre de passage")
+    references = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.title} - {self.get_type_display()}"
@@ -116,7 +119,7 @@ from django.utils.timezone import now
 
 class EtapeContractualisation(models.Model):
     etape = models.ForeignKey(
-        Etape, on_delete=models.CASCADE, related_name="contractualisations"
+        Etape, on_delete=models.CASCADE, related_name="etape"
     )
     tache = models.ForeignKey(Tache, on_delete=models.CASCADE, related_name="projet")
     date_prevue = models.DateField(verbose_name="Date prévue", null=True, blank=True)
