@@ -2,6 +2,11 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from projet.permissions import CustomDjangoModelPermissions
 
+from rest_framework.decorators import action
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+from django.db.models import Q
+
 
 from setting.models import (
     TypeRessource,
@@ -131,6 +136,35 @@ class TacheViewSet(BaseModelViewSet):
     serializer_class = TacheSerializer
     permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
 
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                "q",
+                openapi.IN_QUERY,
+                description="Mot-clé pour rechercher dans les champs title_fr et title_en.",
+                type=openapi.TYPE_STRING,
+            )
+        ],
+        responses={200: TacheSerializer(many=True)},
+    )
+    @action(detail=False, methods=["get"])
+    def search(self, request):
+        """
+        Recherche les tâches par title_fr ou title_en correspondant à un mot-clé.
+        """
+        keyword = request.query_params.get("q", "").strip()
+        if not keyword:
+            return Response(
+                {"error": "Le paramètre 'q' est requis pour effectuer une recherche."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        tasks = self.queryset.filter(
+            Q(title_fr__icontains=keyword) | Q(title_en__icontains=keyword)
+        )
+        serializer = self.serializer_class(tasks, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class GroupeDepenseViewSet(BaseModelViewSet):
     queryset = GroupeDepense.objects.all()
@@ -181,13 +215,10 @@ class EtapeExecutionViewSet(BaseModelViewSet):
 
 
 # import excel file
-from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework import status
 from django.core.files.storage import default_storage
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
 
 from setting.imports import import_bip_excel_file
 
