@@ -56,6 +56,15 @@ class EtapeContractualisationSerializer(serializers.ModelSerializer):
         queryset=Etape.objects.all(), write_only=True, source="etape"
     )
 
+    def validate(self, attrs):
+        if EtapeContractualisation.objects.filter(
+            tache=attrs["tache"], etape_id=attrs["etape_id"]
+        ).exists():
+            raise serializers.ValidationError(
+                "Une étape contractualisation avec cette tâche et cette étape existe déjà."
+            )
+        return attrs
+
     def get_etape(self, obj):
         return {
             "id": obj.etape.id,

@@ -118,9 +118,7 @@ from django.utils.timezone import now
 
 
 class EtapeContractualisation(models.Model):
-    etape = models.ForeignKey(
-        Etape, on_delete=models.CASCADE, related_name="etape"
-    )
+    etape = models.ForeignKey(Etape, on_delete=models.CASCADE, related_name="etape")
     tache = models.ForeignKey(Tache, on_delete=models.CASCADE, related_name="projet")
     date_prevue = models.DateField(verbose_name="Date prévue", null=True, blank=True)
     date_effective = models.DateField(
@@ -140,13 +138,19 @@ class EtapeContractualisation(models.Model):
     ecart_montant = models.FloatField(editable=False, null=True, blank=True)
     is_finished = models.BooleanField(default=False)
 
-    # Nouveaux champs
     date_demarrage = models.DateTimeField(
         null=True, blank=True, verbose_name="Date de démarrage"
     )
     date_fin = models.DateTimeField(null=True, blank=True, verbose_name="Date de fin")
 
     history = HistoricalRecords()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tache", "etape"], name="unique_tache_etape"
+            )
+        ]
 
     def __str__(self):
         return f"{self.tache.title_fr} - {self.etape.title}"
