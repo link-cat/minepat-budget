@@ -165,6 +165,13 @@ class TacheViewSet(BaseModelViewSet):
         serializer = self.serializer_class(tasks, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    def get_queryset(self):
+        # Filtrer par l'étape si nécessaire
+        type = self.request.query_params.get("type")
+        if type:
+            return self.queryset.filter(type=type)
+        return self.queryset
+
 
 class GroupeDepenseViewSet(BaseModelViewSet):
     queryset = GroupeDepense.objects.all()
