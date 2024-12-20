@@ -81,7 +81,7 @@ class PieceJointe(models.Model):
         super().save(*args, **kwargs)
 
         # Synchronise les pièces jointes avec les étapes de contractualisation associées
-        etapes_contractualisation = self.etape.contractualisations.all()
+        etapes_contractualisation = self.etape.etape.all()
         print(etapes_contractualisation)
         for etape_contractualisation in etapes_contractualisation:
             # Vérifie si une pièce jointe existe déjà
@@ -104,7 +104,7 @@ class PieceJointe(models.Model):
 @receiver(post_delete, sender=PieceJointe)
 def delete_related_pieces_jointes_contractualisation(sender, instance, **kwargs):
     # Trouver les `EtapeContractualisation` associées à l'étape
-    etapes_contractualisation = instance.etape.contractualisations.all()
+    etapes_contractualisation = instance.etape.etape.all()
 
     for etape_contractualisation in etapes_contractualisation:
         # Supprimer les pièces jointes correspondantes dans les étapes contractualisation
