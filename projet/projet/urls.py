@@ -50,6 +50,7 @@ from contractualisation.views import (
     EtapeViewSet,
     PieceJointeViewSet,
     PieceJointeContractViewSet,
+    ExcelImportViewSet,
 )
 
 from statistiques.views import ContractualisationViewSet
@@ -127,6 +128,7 @@ contractualisation_viewsets = [
     ("etape", EtapeViewSet, "etape"),
     ("pieces-jointe", PieceJointeViewSet, "pieces-jointe"),
     ("pieces-jointe-contract", PieceJointeContractViewSet, "pieces-jointe-contract"),
+    ("load-etape", ExcelImportViewSet, "load-etape"),
 ]
 router_contractualisation = routers.DefaultRouter()
 for prefix, viewset, basename in contractualisation_viewsets:

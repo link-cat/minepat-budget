@@ -3,6 +3,7 @@ import re
 from datetime import datetime
 
 
+from contractualisation.models import Etape, PieceJointe
 from setting.models import (
     Region,
     Departement,
@@ -95,6 +96,71 @@ def import_bip_excel_file(file_path):
     # Traiter chaque feuille
     for sheet_name, sheet_data in excel_data.items():
         import_bip(sheet_data)
+
+
+def importer_etapes(fichier_excel):
+    import re
+
+    """
+    Importe les étapes depuis un fichier Excel.
+
+    Args:
+        fichier_excel (str): Chemin vers le fichier Excel à importer.
+    """
+    # Charger le fichier Excel
+    try:
+        df = pd.read_excel(fichier_excel)
+    except Exception as e:
+        print(f"Erreur lors de la lecture du fichier Excel : {e}")
+        return
+
+    # Itérer sur chaque ligne du fichier
+    print(df.head())
+    rang = 0
+    preview_type = None
+    for _, ligne in df.iterrows():
+        title = ligne.get("DESIGNATION DE L'ETAPE")
+        type_etape = ligne.get("TYPE")
+        dated = ligne.get("dated", True)
+        if type_etape == preview_type:
+            rang = rang + 1
+        else:
+            if preview_type is not None:
+                etape, created = Etape.objects.get_or_create(
+                    title="Actualisation des elements de maturation",
+                    type=preview_type,
+                    defaults={
+                        "acteurs": acteurs,
+                        "delai": 0,
+                        "rang": rang + 1,
+                        "references": "",
+                    },
+                )
+            rang = 1
+        acteurs = ligne.get("ACTEURS")
+        delai = ligne.get("Délais fixés (jours)")
+        if pd.isna(delai):
+            delai = 0
+        documents = re.split(r",| et ", ligne.get("DOCUMENTS ASSORTIS"))
+        documents = [mot.strip() for mot in documents if mot.strip()]
+        references = ligne.get("Références textuelles")
+
+        # Créer une nouvelle étape si elle n'existe pas encore
+        etape, created = Etape.objects.get_or_create(
+            title=title,
+            type=type_etape,
+            defaults={
+                "acteurs": acteurs,
+                "delai": delai,
+                "rang": rang,
+                "references": references,
+            },
+        )
+
+        for doc in documents:
+            document,created = PieceJointe.objects.get_or_create(etape=etape, label=doc)
+
+        preview_type = type_etape
 
 
 # def import_excel_contract_file(file_path):

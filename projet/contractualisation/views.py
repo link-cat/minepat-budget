@@ -3,6 +3,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 
+from setting.imports import importer_etapes
+
 from .filters import EtapeContractualisationFilter
 from projet.permissions import CustomDjangoModelPermissions
 
@@ -60,7 +62,7 @@ class EtapeContractualisationViewSet(BaseModelViewSet):
             # Récupérer l'étape prioritaire
             prioritaire = (
                 EtapeContractualisation.objects.filter(tache=tache, is_finished=False)
-                .order_by("id")
+                .order_by("rang")
                 .first()
             )
             # Mettre à jour les attributs de la tâche
@@ -214,3 +216,37 @@ class PieceJointeContractViewSet(BaseModelViewSet):
         if etape_id:
             return self.queryset.filter(etape_id=etape_id)
         return self.queryset
+
+
+class ExcelImportViewSet(viewsets.ViewSet):
+    parser_classes = [MultiPartParser]
+    serializer_class = UploadSerializer
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_summary="Importer un fichier Excel pour charger les etapes",
+        operation_description="Cette vue permet de charger automatiquement des etapes pour la contractualisation.",
+        responses={
+            200: openapi.Response(
+                description="Les etapes ont été crée avec succès",
+            ),
+            400: openapi.Response(
+                description="Aucun fichier fourni",
+                examples={"application/json": {"error": "Aucun fichier fourni"}},
+            ),
+        },
+    )
+    @action(detail=False, methods=["get"], url_path="BIP")
+    def import_excel(self, request):
+        file_path = "ressources/etapes.xlsx"
+
+        try:
+            # Importer le fichier Excel
+            importer_etapes(f"media/{file_path}")
+            return Response(
+                {"message": "Fichier Excel importé avec succès"},
+                status=status.HTTP_200_OK,
+            )
+        finally:
+            # Supprimer le fichier après traitement
+            print("creation reussi")

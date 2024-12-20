@@ -11,8 +11,9 @@ class PieceJointeInline(admin.TabularInline):
 
 @admin.register(Etape)
 class EtapeAdmin(admin.ModelAdmin):
-    list_display = ("title",)
-    search_fields = ("title",)
+    list_display = ("title","type",)
+    search_fields = ("title","type",)
+    list_filter = ("type",)
     inlines = [PieceJointeInline]  # Ajout des pièces jointes directement dans l'admin
 
 
