@@ -90,4 +90,9 @@ class EtapeContractualisationSerializer(serializers.ModelSerializer):
             "observations",
             "is_finished",
             "pieces_jointes",
+            "taux_exec_physique",
+            "numero_marche",
+            "ingenieur_marche",
+            "chef_service_marche",
+            "prestataire",
         ]

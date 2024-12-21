@@ -142,6 +142,16 @@ class EtapeContractualisation(models.Model):
         null=True, blank=True, verbose_name="Date de démarrage"
     )
     date_fin = models.DateTimeField(null=True, blank=True, verbose_name="Date de fin")
+    # champs facultatifs pour la derniere etape
+    taux_exec_physique = models.FloatField(
+        blank=True,
+        null=True,
+        verbose_name="Taux d'execution physique",
+    )
+    numero_marche = models.CharField(blank=True,null=True)
+    ingenieur_marche = models.CharField(blank=True,null=True)
+    chef_service_marche = models.CharField(blank=True,null=True)
+    prestataire = models.CharField(blank=True,null=True)
 
     history = HistoricalRecords()
 
