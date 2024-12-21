@@ -57,8 +57,9 @@ class EtapeContractualisationSerializer(serializers.ModelSerializer):
     )
 
     def validate(self, attrs):
+        print(attrs)
         if EtapeContractualisation.objects.filter(
-            tache=attrs["tache"], etape_id=attrs["etape_id"]
+            tache=attrs["tache"], etape_id=attrs["etape"]
         ).exists():
             raise serializers.ValidationError(
                 "Une étape contractualisation avec cette tâche et cette étape existe déjà."

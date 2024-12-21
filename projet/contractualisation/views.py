@@ -62,7 +62,7 @@ class EtapeContractualisationViewSet(BaseModelViewSet):
             # Récupérer l'étape prioritaire
             prioritaire = (
                 EtapeContractualisation.objects.filter(tache=tache, is_finished=False)
-                .order_by("rang")
+                .order_by("etape__rang")
                 .first()
             )
             # Mettre à jour les attributs de la tâche
