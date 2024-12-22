@@ -69,7 +69,7 @@ class EtapeContractualisationViewSet(BaseModelViewSet):
             tache.type = etape_contractualisation.etape.type
             tache.current_step = prioritaire if prioritaire else None
 
-            print(tache)
+            print(EtapeContractualisation.objects.filter(tache=tache, is_finished=False).first())
 
             # Sauvegarder la tâche
             tache.save()

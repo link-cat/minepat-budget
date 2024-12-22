@@ -76,12 +76,18 @@ class ActiviteSerializer(serializers.ModelSerializer):
 
 
 class TacheSerializer(serializers.ModelSerializer):
+    current_step = serializers.SerializerMethodField()
+
+    def get_current_step(self, obj):
+        return obj.current_step.etape.title
+
     class Meta:
         model = Tache
         fields = "__all__"
 
 
 class GroupeDepenseSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = GroupeDepense
         fields = "__all__"
@@ -110,10 +116,13 @@ class ArrondissementSerializer(serializers.ModelSerializer):
         model = Arrondissement
         fields = "__all__"
 
+
 class GroupeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Groupe
         fields = "__all__"
+
+
 class SUBGroupeSerializer(serializers.ModelSerializer):
     class Meta:
         model = SUBGroupe
