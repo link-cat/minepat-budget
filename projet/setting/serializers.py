@@ -79,7 +79,7 @@ class TacheSerializer(serializers.ModelSerializer):
     current_step = serializers.SerializerMethodField()
 
     def get_current_step(self, obj):
-        return obj.current_step.etape.title
+        return {"id":obj.current_step.etape.id, "title": obj.current_step.etape.title}
 
     class Meta:
         model = Tache
