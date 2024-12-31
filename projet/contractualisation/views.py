@@ -23,6 +23,8 @@ from .serializers import (
     PieceJointeSerializer,
 )
 
+from django.utils.timezone import now
+
 
 class BaseModelViewSet(viewsets.ModelViewSet):
     """
@@ -94,7 +96,22 @@ class EtapeContractualisationViewSet(BaseModelViewSet):
         return Response(serializer.data)
 
     def get_queryset(self):
+        queryset = super().get_queryset()
+        today = now().date()
         is_finished = self.request.query_params.get("is_finished")
+        late = self.request.query_params.get("late")
+        for instance in queryset:
+            if instance.date_prevue and not instance.is_finished:
+                delay_days = (today - instance.date_prevue).days - instance.etape.delai
+                if delay_days > 0:
+                    instance.retard_message = (
+                        f"Vous êtes en retard de {delay_days} jours."
+                    )
+                else:
+                    instance.retard_message = None
+                instance.save(update_fields=["retard_message"])
+        if late:
+            return self.queryset.filter(retard_message__isnull=False)
         if is_finished:
             return self.queryset.filter(is_finished=is_finished)
         return self.queryset.order_by("-id")

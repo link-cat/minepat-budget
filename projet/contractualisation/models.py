@@ -152,6 +152,9 @@ class EtapeContractualisation(models.Model):
     ingenieur_marche = models.CharField(blank=True,null=True)
     chef_service_marche = models.CharField(blank=True,null=True)
     prestataire = models.CharField(blank=True,null=True)
+    retard_message = models.CharField(
+        max_length=255, null=True, blank=True, editable=False
+    )
 
     history = HistoricalRecords()
 
@@ -169,6 +172,16 @@ class EtapeContractualisation(models.Model):
         # Calcul de l'écart en jours si la date effective est fournie
         if self.date_effective and self.date_prevue:
             self.ecart_jours = (self.date_effective - self.date_prevue).days
+        elif self.date_prevue:
+            today = now().date()
+            delay_days = (today - self.date_prevue).days + self.etape.delai
+            if delay_days > 0:
+                self.retard_message = f"Vous êtes en retard de {delay_days} jours."
+            else:
+                self.retard_message = None
+        else:
+            self.retard_message = None
+
         if self.montant_reel and self.montant_prevu:
             self.ecart_montant = self.montant_reel - self.montant_prevu
             self.taux_consomation = 100 * (self.montant_reel / self.tache.montant_reel)
@@ -184,7 +197,7 @@ class EtapeContractualisation(models.Model):
         # Appeler la méthode save parent
         super().save(*args, **kwargs)
 
-        # Copier les pièces jointes de l'étape si elles n'existent pas encore
+        # Copier les pièces jointes de l’étape si elles n’existent pas encore
         if not self.pieces_jointes.exists():
             for piece in self.etape.pieces_jointes.all():
                 PieceJointeContractualisation.objects.create(

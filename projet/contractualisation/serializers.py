@@ -100,4 +100,5 @@ class EtapeContractualisationSerializer(serializers.ModelSerializer):
             "ingenieur_marche",
             "chef_service_marche",
             "prestataire",
+            "retard_message",
         ]
