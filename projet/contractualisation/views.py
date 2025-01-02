@@ -106,7 +106,9 @@ class EtapeContractualisationViewSet(BaseModelViewSet):
         late = self.request.query_params.get("late")
         for instance in queryset:
             if instance.date_prevue and not instance.is_finished:
-                delay_days = (today - instance.date_prevue).days - int(instance.etape.delai)
+                delay_days = (today - instance.date_prevue).days - (
+                    instance.etape.delai or 0
+                )
                 if delay_days > 0:
                     instance.retard_message = (
                         f"Vous êtes en retard de {delay_days} jours."

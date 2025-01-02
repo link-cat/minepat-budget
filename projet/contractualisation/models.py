@@ -175,7 +175,7 @@ class EtapeContractualisation(models.Model):
             self.ecart_jours = (self.date_effective - self.date_prevue).days
         elif self.date_prevue:
             today = now().date()
-            delay_days = (today - self.date_prevue).days + int(self.etape.delai)
+            delay_days = (today - self.date_prevue).days + (self.etape.delai or 0)
             if delay_days > 0:
                 self.retard_message = f"Vous êtes en retard de {delay_days} jours."
             else:
