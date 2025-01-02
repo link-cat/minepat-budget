@@ -21,7 +21,8 @@ class Etape(models.Model):
     dated = models.BooleanField(default=True)
     type = models.CharField(
         max_length=50,
-        default=TypeChoices.APPEL_DOFFRES_OUVERT,
+        null=True,
+        blank=True,
         choices=TypeChoices.choices,
         verbose_name="Type d'étape",
     )
