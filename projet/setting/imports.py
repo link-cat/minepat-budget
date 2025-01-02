@@ -122,21 +122,6 @@ def importer_etapes(fichier_excel):
         title = ligne.get("DESIGNATION DE L'ETAPE")
         type_etape = ligne.get("TYPE")
         dated = ligne.get("dated", True)
-        if type_etape == preview_type:
-            rang = rang + 1
-        else:
-            if preview_type is not None:
-                etape, created = Etape.objects.get_or_create(
-                    title="Actualisation des elements de maturation",
-                    type=preview_type,
-                    defaults={
-                        "acteurs": acteurs,
-                        "delai": 0,
-                        "rang": rang + 1,
-                        "references": "",
-                    },
-                )
-            rang = 1
         acteurs = ligne.get("ACTEURS")
         delai = ligne.get("Délais fixés (jours)")
         if pd.isna(delai):

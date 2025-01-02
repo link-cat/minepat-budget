@@ -116,6 +116,17 @@ class EtapeContractualisationViewSet(BaseModelViewSet):
                 else:
                     instance.retard_message = None
                 instance.save(update_fields=["retard_message"])
+            elif instance.date_prevue and instance.is_finished:
+                delay_days = (instance.date_fin - instance.date_prevue).days - (
+                    instance.etape.delai or 0
+                )
+                if delay_days > 0:
+                    instance.retard_message = (
+                        f"Vous êtes en retard de {delay_days} jours."
+                    )
+                else:
+                    instance.retard_message = None
+                instance.save(update_fields=["retard_message"])
         if late:
             return self.queryset.filter(retard_message__isnull=False)
         if is_finished:

@@ -123,6 +123,29 @@ class Activite(models.Model):
         return self.title_fr
 
 
+class Groupe(models.Model):
+    code = models.CharField(max_length=255)
+    title_fr = models.CharField(max_length=255)
+    title_en = models.CharField(max_length=255)
+    objectif = models.TextField()
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return self.title_fr
+
+
+class SUBGroupe(models.Model):
+    groupe = models.ForeignKey(Groupe, on_delete=models.CASCADE)
+    activite = models.ForeignKey(Activite, on_delete=models.CASCADE)
+    title_fr = models.CharField(max_length=255)
+    title_en = models.CharField(max_length=255)
+    objectif = models.TextField()
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return self.title_fr
+
+
 class Tache(models.Model):
 
     class TypeChoices(models.TextChoices):
@@ -150,6 +173,7 @@ class Tache(models.Model):
     montant_reel = models.FloatField(null=True, blank=True)
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
+    groupe = models.ForeignKey(Groupe,on_delete=models.SET_NULL,null=True, blank=True)
     type = models.CharField(
         max_length=50,
         default=TypeChoices.APPEL_DOFFRES_OUVERT,
@@ -193,25 +217,3 @@ class EtapeExecution(models.Model):
 class EtapeExecutionGlob(models.Model):
     title = models.CharField(max_length=255)
     history = HistoricalRecords()
-
-
-class Groupe(models.Model):
-    code = models.CharField(max_length=255)
-    title_fr = models.CharField(max_length=255)
-    title_en = models.CharField(max_length=255)
-    objectif = models.TextField()
-    history = HistoricalRecords()
-
-    def __str__(self):
-        return self.title_fr
-
-class SUBGroupe(models.Model):
-    groupe = models.ForeignKey(Groupe, on_delete=models.CASCADE)
-    activite = models.ForeignKey(Activite, on_delete=models.CASCADE)
-    title_fr = models.CharField(max_length=255)
-    title_en = models.CharField(max_length=255)
-    objectif = models.TextField()
-    history = HistoricalRecords()
-
-    def __str__(self):
-        return self.title_fr
