@@ -188,6 +188,7 @@ class Tache(models.Model):
         blank=True,
         related_name="current_step"
     )
+    exercices = models.ManyToManyField(Exercice, related_name="taches")
     history = HistoricalRecords()
 
     def __str__(self):

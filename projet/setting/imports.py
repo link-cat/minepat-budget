@@ -736,6 +736,12 @@ def import_bip(sheet_data):
         if created:
             logs["Activite"] += 1
 
+        exercice, created = Exercice.objects.get_or_create(
+            annee=row["Année Dem."],
+        )
+        if created:
+            logs["Exercice"] += 1
+
         tache, created = Tache.objects.get_or_create(
             code=row["Code Tâche"],
             activite=activite,
@@ -749,6 +755,7 @@ def import_bip(sheet_data):
                 "numero_notification": row["Num Carton"],
             },
         )
+        tache.exercices.add(exercice)
         if created:
             logs["Tache"] += 1
 
@@ -791,11 +798,5 @@ def import_bip(sheet_data):
         )
         if created:
             logs["NatureDepense"] += 1
-
-        exercice, created = Exercice.objects.get_or_create(
-            annee=row["Année Dem."],
-        )
-        if created:
-            logs["Exercice"] += 1
 
     print(logs)

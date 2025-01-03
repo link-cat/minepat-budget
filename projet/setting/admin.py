@@ -83,6 +83,7 @@ class ActiviteAdmin(SimpleHistoryAdmin):
 class TacheAdmin(SimpleHistoryAdmin):
     list_display = ("code", "title_fr", "title_en", "activite", "cout_tot")
     search_fields = ("title_fr", "title_en")
+    filter_horizontal = ("exercices",)
 class GroupeAdmin(SimpleHistoryAdmin):
     list_display = ("code", "title_fr", "title_en")
     search_fields = ("title_fr", "title_en")
