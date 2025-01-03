@@ -13,7 +13,6 @@ from setting.models import (
     Action,
     Activite,
     Tache,
-    Operation,
     TypeRessource,
     ModeGestion,
     NatureDepense,
@@ -753,15 +752,15 @@ def import_bip(sheet_data):
         if created:
             logs["Tache"] += 1
 
-        operation, created = Operation.objects.get_or_create(
-            tache=tache,
-            defaults={
-                "title_fr": row["LibFr. Tâche"],
-                "title_en": row["LibUk. Tâche"],
-            },
-        )
-        if created:
-            logs["Operation"] += 1
+        # operation, created = Operation.objects.get_or_create(
+        #     tache=tache,
+        #     defaults={
+        #         "title_fr": row["LibFr. Tâche"],
+        #         "title_en": row["LibUk. Tâche"],
+        #     },
+        # )
+        # if created:
+        #     logs["Operation"] += 1
 
         typeRessource, created = TypeRessource.objects.get_or_create(
             code=row["Lib. Source Fin."].split(" - ")[0],

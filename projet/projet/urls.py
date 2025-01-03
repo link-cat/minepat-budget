@@ -21,7 +21,6 @@ from setting.views import (
     ActionViewSet,
     ActiviteViewSet,
     GroupeDepenseViewSet,
-    OperationViewSet,
     EtapeExecutionViewSet,
     RegionViewSet,
     DepartementViewSet,
@@ -43,6 +42,8 @@ from execution.views import (
     EstExecuteeOperationFDCDRViewSet,
     EstExecuteeSurViewSet,
     EstProgrammeViewSet,
+    OperationViewSet,
+    ConsommationViewSet,
 )
 
 from contractualisation.views import (
@@ -81,7 +82,6 @@ setting_viewsets = [
     ("action", ActionViewSet, "action"),
     ("activite", ActiviteViewSet, "activite"),
     ("groupe-depense", GroupeDepenseViewSet, "groupe-depense"),
-    ("operation", OperationViewSet, "operation"),
     ("region", RegionViewSet, "region"),
     ("departement", DepartementViewSet, "departement"),
     ("arrondissement", ArrondissementViewSet, "arrondissement"),
@@ -113,6 +113,8 @@ execution_viewsets = [
     ),
     ("est-executee-sur", EstExecuteeSurViewSet, "est-executee-sur"),
     ("est-programme", EstProgrammeViewSet, "est-programme"),
+    ("operation", OperationViewSet, "operation"),
+    ("consommation", ConsommationViewSet, "consommation"),
 ]
 router_execution = routers.DefaultRouter()
 for prefix, viewset, basename in execution_viewsets:

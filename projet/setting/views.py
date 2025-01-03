@@ -20,7 +20,6 @@ from setting.models import (
     Activite,
     Tache,
     GroupeDepense,
-    Operation,
     Region,
     Departement,
     Arrondissement,
@@ -40,7 +39,6 @@ from setting.serializers import (
     ActiviteSerializer,
     TacheSerializer,
     GroupeDepenseSerializer,
-    OperationSerializer,
     RegionSerializer,
     DepartementSerializer,
     ArrondissementSerializer,
@@ -176,12 +174,6 @@ class TacheViewSet(BaseModelViewSet):
 class GroupeDepenseViewSet(BaseModelViewSet):
     queryset = GroupeDepense.objects.all()
     serializer_class = GroupeDepenseSerializer
-    permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
-
-
-class OperationViewSet(BaseModelViewSet):
-    queryset = Operation.objects.all()
-    serializer_class = OperationSerializer
     permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
 
 

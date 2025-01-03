@@ -1,4 +1,5 @@
 from django.db import models
+from django.forms import ValidationError
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
 
@@ -7,7 +8,6 @@ from setting.models import (
     Exercice,
     EtapeExecutionGlob,
     Tache,
-    Operation,
     NatureDepense,
     GroupeDepense,
     EtapeExecution,
@@ -261,3 +261,82 @@ class EstProgramme(models.Model):
     montant_ae_rev = models.FloatField()
     montant_cp_rev = models.FloatField()
     history = HistoricalRecords()
+
+
+from django.db.models.signals import pre_save, post_delete
+from django.dispatch import receiver
+
+
+class Operation(models.Model):
+    tache = models.ForeignKey(Tache, on_delete=models.CASCADE)
+    situation_contract = models.CharField(
+        max_length=300, choices=CONTRAT_SITUATION_CHOICES, default="BC:Non executé"
+    )
+    montant = models.FloatField(null=True, blank=True)
+    delai_exec = models.IntegerField(null=True, blank=True)
+    date_situation = models.DateTimeField()
+    montant_engage = models.FloatField(null=True, blank=True)
+    pourcentage_exec_physique = models.FloatField(null=True, blank=True)
+    numero_marche = models.CharField(max_length=255, null=True, blank=True)
+    prestataire = models.CharField(max_length=255, null=True, blank=True)
+    ingenieur_marche = models.CharField(max_length=255, null=True, blank=True)
+    chef_service = models.CharField(max_length=255, null=True, blank=True)
+    history = HistoricalRecords()
+
+
+class Consommation(models.Model):
+    operation = models.ForeignKey(Operation, on_delete=models.CASCADE)
+    document = models.FileField(
+        upload_to="documents/consommations/",
+        null=True,
+        blank=True,
+        verbose_name="Fichier",
+    )
+    montant = models.FloatField(null=True, blank=True)
+    history = HistoricalRecords()
+
+
+@receiver(pre_save, sender=Operation)
+def validate_operation(sender, instance, **kwargs):
+    if instance.tache.montant_operation_restant is None:
+        instance.tache.montant_operation_restant = instance.tache.montant_reel
+        instance.tache.save()
+    montant_restant = instance.tache.montant_operation_restant - instance.montant
+    if montant_restant < 0:
+        raise ValidationError(
+            f"Impossible d'ajouter une opération. Montant restant insuffisant pour la tâche {instance.tache.title_fr}."
+        )
+    else:
+        instance.tache.montant_operation_restant = montant_restant
+        instance.tache.save()
+
+
+@receiver(pre_save, sender=Consommation)
+def validate_consommation(sender, instance, **kwargs):
+    if instance.operation.montant_engage is  None:
+        instance.operation.montant_engage = 0
+        instance.operation.save()
+    montant_possible = instance.operation.montant_engage + instance.montant
+    if montant_possible > instance.operation.montant:
+        raise ValidationError(
+           "Impossible d'ajouter une consommation. Montant restant insuffisant pour l'opération."
+        )
+    else:
+        instance.operation.montant_engage = montant_possible
+        instance.operation.save()
+
+
+@receiver(post_delete, sender=Operation)
+def restore_tache_montant(sender, instance, **kwargs):
+    if instance.tache.montant_operation_restant is None:
+        instance.tache.montant_operation_restant = instance.tache.montant_reel
+    instance.tache.montant_operation_restant += instance.montant
+    instance.tache.save()
+
+
+@receiver(post_delete, sender=Consommation)
+def restore_operation_montant(sender, instance, **kwargs):
+    if instance.operation.montant_engage is None:
+        instance.operation.montant_engage = 0
+    instance.operation.montant_engage -= instance.montant
+    instance.operation.save()

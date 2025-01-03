@@ -11,7 +11,6 @@ from .models import (
     Activite,
     Tache,
     GroupeDepense,
-    Operation,
     Region,
     Departement,
     Arrondissement,
@@ -90,12 +89,6 @@ class GroupeDepenseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GroupeDepense
-        fields = "__all__"
-
-
-class OperationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Operation
         fields = "__all__"
 
 

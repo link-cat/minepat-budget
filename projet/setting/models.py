@@ -171,6 +171,7 @@ class Tache(models.Model):
     numero_ods = models.CharField(max_length=255, null=True, blank=True)
     numero_pv = models.CharField(max_length=255, null=True, blank=True)
     montant_reel = models.FloatField(null=True, blank=True)
+    montant_operation_restant = models.FloatField(null=True, blank=True)
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     groupe = models.ForeignKey(Groupe,on_delete=models.SET_NULL,null=True, blank=True)
@@ -198,15 +199,6 @@ class Tache(models.Model):
             self.latitude = round(random.uniform(2.0, 13.0), 6)
             self.longitude = round(random.uniform(8.5, 16.0), 6)
         super(Tache, self).save(*args, **kwargs)
-
-
-class Operation(models.Model):
-    code = models.CharField(max_length=255)
-    title_fr = models.CharField(max_length=255)
-    title_en = models.CharField(max_length=255)
-    tache = models.ForeignKey(Tache, on_delete=models.CASCADE)
-    history = HistoricalRecords()
-
 
 class EtapeExecution(models.Model):
     title = models.CharField(max_length=255)

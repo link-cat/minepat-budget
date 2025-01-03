@@ -11,6 +11,8 @@ from .models import (
     EstExecuteeOperationFDCDR,
     EstExecuteeSur,
     EstProgramme,
+    Operation,
+    Consommation,
 )
 
 
@@ -97,3 +99,13 @@ class EstProgrammeAdmin(SimpleHistoryAdmin):
     )
     search_fields = ("tache__nom", "exercice__nom")
     list_filter = ("exercice",)
+
+@admin.register(Operation)
+class OperationAdmin(SimpleHistoryAdmin):
+    list_display = ("tache","montant","situation_contract","numero_marche","prestataire","ingenieur_marche","chef_service")
+    list_filter = ("tache", "situation_contract")
+
+@admin.register(Consommation)
+class ConsommationAdmin(SimpleHistoryAdmin):
+    list_display = ("operation","montant")
+    list_filter = ("operation",)

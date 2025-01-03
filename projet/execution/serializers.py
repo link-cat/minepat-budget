@@ -15,6 +15,8 @@ from .models import (
     EstExecuteeOperationFDCDR,
     EstExecuteeSur,
     EstProgramme,
+    Operation,
+    Consommation,
 )
 
 from setting.models import Tache
@@ -247,3 +249,15 @@ class EstProgrammeSerializer(serializers.ModelSerializer):
                 data[key] = 0  # Remplacer par 0 ou une autre valeur par défaut
 
         return data
+
+
+class OperationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Operation
+        fields = "__all__"
+
+
+class ConsommationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Consommation
+        fields = "__all__"

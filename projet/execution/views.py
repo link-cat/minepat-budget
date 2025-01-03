@@ -17,6 +17,8 @@ from .models import (
     EstExecuteeOperationFDCDR,
     EstExecuteeSur,
     EstProgramme,
+    Operation,
+    Consommation,
 )
 from .serializers import (
     EstExecuteeActionSerializer,
@@ -28,8 +30,14 @@ from .serializers import (
     EstExecuteeOperationFDCDRSerializer,
     EstExecuteeSurSerializer,
     EstProgrammeSerializer,
+    OperationSerializer,
+    ConsommationSerializer,
 )
-from .filters import EstExecuteeGCSUBFilter,EstExecuteeGCAutresFilter,EstExecuteeOperationFCPFilter
+from .filters import (
+    EstExecuteeGCSUBFilter,
+    EstExecuteeGCAutresFilter,
+    EstExecuteeOperationFCPFilter,
+)
 
 
 class BaseModelViewSet(viewsets.ModelViewSet):
@@ -37,6 +45,7 @@ class BaseModelViewSet(viewsets.ModelViewSet):
     Un ModelViewSet de base qui surcharge la méthode destroy pour
     retourner l'ID de l'élément supprimé dans la réponse.
     """
+
     permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
 
     def destroy(self, request, *args, **kwargs):
@@ -142,6 +151,18 @@ class EstProgrammeViewSet(BaseModelViewSet):
         return EstProgramme.objects.all().order_by("-id")
 
 
+class OperationViewSet(BaseModelViewSet):
+    queryset = Operation.objects.all()
+    serializer_class = OperationSerializer
+    permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
+
+
+class ConsommationViewSet(BaseModelViewSet):
+    queryset = Consommation.objects.all()
+    serializer_class = ConsommationSerializer
+    permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
+
+
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
@@ -152,6 +173,7 @@ from drf_yasg import openapi
 from setting.serializers import UploadSerializer
 
 from setting.imports import import_excel_file
+
 
 class ExcelImportViewSet(viewsets.ViewSet):
     parser_classes = [MultiPartParser]
