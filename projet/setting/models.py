@@ -177,7 +177,8 @@ class Tache(models.Model):
     groupe = models.ForeignKey(Groupe,on_delete=models.SET_NULL,null=True, blank=True)
     type = models.CharField(
         max_length=50,
-        default=TypeChoices.APPEL_DOFFRES_OUVERT,
+        null=True,
+        blank=True,
         choices=TypeChoices.choices,
         verbose_name="Type d'étape",
     )

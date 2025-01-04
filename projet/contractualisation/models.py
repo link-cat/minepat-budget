@@ -139,10 +139,10 @@ class EtapeContractualisation(models.Model):
     ecart_montant = models.FloatField(editable=False, null=True, blank=True)
     is_finished = models.BooleanField(default=False)
 
-    date_demarrage = models.DateTimeField(
+    date_demarrage = models.DateField(
         null=True, blank=True, verbose_name="Date de démarrage"
     )
-    date_fin = models.DateTimeField(null=True, blank=True, verbose_name="Date de fin")
+    date_fin = models.DateField(null=True, blank=True, verbose_name="Date de fin")
     # champs facultatifs pour la derniere etape
     taux_exec_physique = models.FloatField(
         blank=True,

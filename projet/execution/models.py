@@ -105,7 +105,7 @@ class EstExecuteeFCPDR(models.Model):
         max_length=300, choices=CONTRAT_SITUATION_CHOICES, default="BC:Non executé"
     )
     montant_contrat = models.FloatField()
-    date_demarrage_travaux = models.DateTimeField()
+    date_demarrage_travaux = models.DateField()
     delai_execution_contrat = models.IntegerField()
     prise_en_charge_TTC = models.FloatField()
     paiement_net_HT = models.FloatField()
@@ -155,7 +155,7 @@ class EstExecuteeGCAUTRES(models.Model):
         max_length=300, choices=CONTRAT_SITUATION_CHOICES, default="BC:Non executé"
     )
     montant_contrat = models.FloatField()
-    date_demarrage_travaux = models.DateTimeField()
+    date_demarrage_travaux = models.DateField()
     delai_execution_contrat = models.IntegerField()
     prise_en_charge_TTC = models.FloatField()
     paiement_net_HT = models.FloatField()
@@ -185,7 +185,7 @@ class EstExecuteeGCSUB(models.Model):
         max_length=300, choices=CONTRAT_SITUATION_CHOICES, default="BC:Non executé"
     )
     montant_contrat = models.FloatField()
-    date_demarrage_travaux = models.DateTimeField()
+    date_demarrage_travaux = models.DateField()
     delai_execution_contrat = models.IntegerField()
     prise_en_charge_TTC = models.FloatField()
     paiement_net_HT = models.FloatField()
@@ -228,7 +228,7 @@ class EstExecuteeOperationFDCDR(models.Model):
         max_length=300, choices=CONTRAT_SITUATION_CHOICES, default="BC:Non executé"
     )
     montant_contrat = models.FloatField()
-    date_demarrage_travaux = models.DateTimeField()
+    date_demarrage_travaux = models.DateField()
     delai_execution_contrat = models.IntegerField()
     observation = models.TextField()
     difficultes = models.TextField()
@@ -274,7 +274,7 @@ class Operation(models.Model):
     )
     montant = models.FloatField(null=True, blank=True)
     delai_exec = models.IntegerField(null=True, blank=True)
-    date_situation = models.DateTimeField()
+    date_situation = models.DateField()
     montant_engage = models.FloatField(null=True, blank=True)
     pourcentage_exec_physique = models.FloatField(null=True, blank=True)
     numero_marche = models.CharField(max_length=255, null=True, blank=True)
