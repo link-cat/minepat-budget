@@ -1,4 +1,11 @@
+from django.contrib import messages
 from django.contrib import admin
+from django.http import HttpResponseRedirect
+from django.shortcuts import render
+from django.urls import path
+
+from .imports import import_bip_excel_file
+from .forms import ExcelUploadForm
 from simple_history.admin import SimpleHistoryAdmin
 
 from .models import (
@@ -84,6 +91,51 @@ class TacheAdmin(SimpleHistoryAdmin):
     list_display = ("code", "title_fr", "title_en", "activite", "cout_tot")
     search_fields = ("title_fr", "title_en")
     filter_horizontal = ("exercices",)
+
+    change_list_template = "admin/tache_change_list.html"
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "import-excel/",
+                self.admin_site.admin_view(self.import_excel),
+                name="import_excel",
+            ),
+        ]
+        return custom_urls + urls
+
+    def import_excel(self, request):
+        from django.core.files.storage import default_storage
+
+        if request.method == "POST":
+            form = ExcelUploadForm(request.POST, request.FILES)
+            if form.is_valid():
+                excel_file = form.cleaned_data["file_uploaded"]
+                file_path = default_storage.save(f"temp/{excel_file.name}", excel_file)
+                try:
+                    import_bip_excel_file(f"media/{file_path}")
+                    self.message_user(
+                        request,
+                        "Fichier Excel importé avec succès",
+                        level=messages.SUCCESS,
+                    )
+                except Exception as e:
+                    self.message_user(
+                        request, f"Erreur lors de l'import : {e}", level=messages.ERROR
+                    )
+                return HttpResponseRedirect("../")
+        else:
+            form = ExcelUploadForm()
+
+        context = {
+            "form": form,
+            "opts": self.model._meta,
+            "title": "Importer un fichier Excel",
+        }
+        return render(request, "admin/excel_import.html", context)
+
+
 class GroupeAdmin(SimpleHistoryAdmin):
     list_display = ("code", "title_fr", "title_en")
     search_fields = ("title_fr", "title_en")

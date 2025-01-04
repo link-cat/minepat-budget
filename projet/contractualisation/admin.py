@@ -1,4 +1,8 @@
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.shortcuts import redirect
+from django.urls import path
+
+from setting.imports import importer_etapes
 from .models import Etape, EtapeContractualisation, PieceJointe
 
 
@@ -15,6 +19,40 @@ class EtapeAdmin(admin.ModelAdmin):
     search_fields = ("title","type",)
     list_filter = ("type",)
     inlines = [PieceJointeInline]  # Ajout des pièces jointes directement dans l'admin
+
+    def get_urls(self):
+        """
+        Ajoutez une URL personnalisée pour le bouton d'action.
+        """
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "create-steps/",
+                self.admin_site.admin_view(self.create_steps),
+                name="create_steps",
+            ),
+        ]
+        return custom_urls + urls
+
+    def create_steps(self, request):
+        """
+        Vue pour exécuter l'action de création d'étapes.
+        """
+        file_path = "ressources/etapes.xlsx"
+        try:
+            importer_etapes(f"media/{file_path}")
+            self.message_user(
+                request,
+                "Les étapes de contractualisation ont été créées avec succès.",
+                level=messages.SUCCESS,
+            )
+        except Exception as e:
+            self.message_user(
+                request,
+                f"Erreur lors de la création des étapes : {e}",
+                level=messages.ERROR,
+            )
+        return redirect("..")
 
 
 @admin.register(EtapeContractualisation)
