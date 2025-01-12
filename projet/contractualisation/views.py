@@ -12,6 +12,7 @@ from .models import (
     EtapeContractualisation,
     Etape,
     PPM,
+    Maturation,
     PieceJointe,
     PieceJointeContractualisation,
 )
@@ -19,6 +20,7 @@ from .serializers import (
     EtapeContractualisationSerializer,
     EtapeSerializer,
     PPMSerializer,
+    MaturationSerializer,
     PieceJointeContractSerializer,
     PieceJointeSerializer,
 )
@@ -69,7 +71,11 @@ class EtapeContractualisationViewSet(BaseModelViewSet):
             )
             # Mettre à jour les attributs de la tâche
             tache.type = etape_contractualisation.etape.type
-            tache.current_step = prioritaire if prioritaire else None
+            if prioritaire:
+                tache.current_step = prioritaire
+            else:
+                tache.current_step = None
+                tache.contractualisation_termine = True
 
             print(
                 EtapeContractualisation.objects.filter(
@@ -150,6 +156,13 @@ class PPMViewSet(BaseModelViewSet):
     def get_queryset(self):
         # Surcharge de get_queryset pour trier par date de création
         return PPM.objects.all().order_by("-id")
+class MaturationViewSet(BaseModelViewSet):
+    queryset = Maturation.objects.all()
+    serializer_class = MaturationSerializer
+
+    def get_queryset(self):
+        # Surcharge de get_queryset pour trier par date de création
+        return Maturation.objects.all().order_by("-id")
 
 
 # class JPMViewSet(BaseModelViewSet):

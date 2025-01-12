@@ -189,6 +189,7 @@ class Tache(models.Model):
         blank=True,
         related_name="current_step"
     )
+    contractualisation_termine = models.BooleanField(default=False)
     exercices = models.ManyToManyField(Exercice, related_name="taches")
     history = HistoricalRecords()
 

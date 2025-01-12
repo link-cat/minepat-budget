@@ -1,7 +1,7 @@
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import EtapeContractualisation, Etape, PPM, PieceJointe, PieceJointeContractualisation
+from .models import EtapeContractualisation, Etape, PPM, PieceJointe, PieceJointeContractualisation, Maturation
 
 
 class EtapeSerializer(serializers.ModelSerializer):
@@ -13,6 +13,10 @@ class EtapeSerializer(serializers.ModelSerializer):
 class PPMSerializer(serializers.ModelSerializer):
     class Meta:
         model = PPM
+        fields = "__all__"
+class MaturationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Maturation
         fields = "__all__"
 
 

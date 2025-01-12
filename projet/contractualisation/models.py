@@ -143,16 +143,6 @@ class EtapeContractualisation(models.Model):
         null=True, blank=True, verbose_name="Date de démarrage"
     )
     date_fin = models.DateField(null=True, blank=True, verbose_name="Date de fin")
-    # champs facultatifs pour la derniere etape
-    taux_exec_physique = models.FloatField(
-        blank=True,
-        null=True,
-        verbose_name="Taux d'execution physique",
-    )
-    numero_marche = models.CharField(blank=True,null=True)
-    ingenieur_marche = models.CharField(blank=True,null=True)
-    chef_service_marche = models.CharField(blank=True,null=True)
-    prestataire = models.CharField(blank=True,null=True)
     retard_message = models.CharField(
         max_length=255, null=True, blank=True, editable=False
     )
@@ -188,7 +178,7 @@ class EtapeContractualisation(models.Model):
             self.taux_consomation = 100 * (self.montant_reel / self.tache.montant_reel)
 
         # Mettre à jour la date de démarrage uniquement lors du premier update
-        if not self.date_demarrage and self.pk:  # L'instance existe déjà (update)
+        if not self.date_demarrage and self.date_prevue:  # L'instance existe déjà (update)
             self.date_demarrage = now()
 
         # Enregistrer la date de fin lorsque l'étape est marquée comme terminée
@@ -207,6 +197,24 @@ class EtapeContractualisation(models.Model):
                     document=piece.document,
                     date_obtention=piece.date_obtention,
                 )
+
+class Maturation(models.Model):
+    tache = models.ForeignKey(Tache, on_delete=models.CASCADE)
+    # champs facultatifs pour la derniere etape
+    taux_exec_physique = models.FloatField(
+        blank=True,
+        null=True,
+        verbose_name="Taux d'execution physique",
+    )
+    taux_conso_delai = models.FloatField(
+        blank=True,
+        null=True,
+        verbose_name="Taux de consommation des delais",
+    )
+    numero_marche = models.CharField(blank=True, null=True)
+    ingenieur_marche = models.CharField(blank=True, null=True)
+    chef_service_marche = models.CharField(blank=True, null=True)
+    prestataire = models.CharField(blank=True, null=True)
 
 
 class PPM(models.Model):
