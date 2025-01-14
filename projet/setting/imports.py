@@ -120,6 +120,10 @@ def importer_etapes(fichier_excel):
     for _, ligne in df.iterrows():
         title = ligne.get("DESIGNATION DE L'ETAPE")
         type_etape = ligne.get("TYPE")
+        if preview_type == type_etape:
+            rang = rang +1;
+        else:
+            rang = 1
         dated = ligne.get("dated", True)
         acteurs = ligne.get("ACTEURS")
         delai = ligne.get("Délais fixés (jours)")
@@ -142,7 +146,7 @@ def importer_etapes(fichier_excel):
         )
 
         for doc in documents:
-            document,created = PieceJointe.objects.get_or_create(etape=etape, label=doc)
+            PieceJointe.objects.get_or_create(etape=etape, label=doc)
 
         preview_type = type_etape
 
