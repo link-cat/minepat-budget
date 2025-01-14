@@ -58,53 +58,6 @@ class EtapeContractualisationViewSet(BaseModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_class = EtapeContractualisationFilter
 
-    def perform_save(self, serializer):
-        etape_contractualisation = serializer.save()
-        tache = etape_contractualisation.tache
-
-        if tache:
-            # Récupérer l'étape prioritaire
-            prioritaire = (
-                EtapeContractualisation.objects.filter(tache=tache, is_finished=False)
-                .order_by("etape__rang")
-                .first()
-            )
-            # Mettre à jour les attributs de la tâche
-            tache.type = etape_contractualisation.etape.type
-            if prioritaire:
-                tache.current_step = prioritaire
-            else:
-                tache.current_step = None
-                tache.contractualisation_termine = True
-
-            print(
-                EtapeContractualisation.objects.filter(
-                    tache=tache, is_finished=False
-                ).first()
-            )
-
-            # Sauvegarder la tâche
-            tache.save()
-        else:
-            print("Aucune tâche associée à cette étape.")
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_save(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
-
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop("partial", False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_save(serializer)
-        return Response(serializer.data)
-
     def get_queryset(self):
         queryset = super().get_queryset()
         today = now().date()

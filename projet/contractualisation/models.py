@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
+from django.db import transaction
 from simple_history.models import HistoricalRecords
 
 from setting.models import Tache
@@ -191,6 +192,26 @@ class EtapeContractualisation(models.Model):
         # Appeler la méthode save parent
         super().save(*args, **kwargs)
 
+        # Mise à jour de la tâche associée
+        if self.tache:
+            tache = self.tache
+            prioritaire = (
+                EtapeContractualisation.objects.filter(tache=tache, is_finished=False)
+                .order_by("etape__rang")
+                .first()
+            )
+
+            # Mettre à jour les attributs de la tâche
+            tache.type = self.etape.type
+            if prioritaire:
+                tache.current_step = prioritaire
+            else:
+                tache.current_step = None
+                tache.contractualisation_termine = True
+
+            # Sauvegarder la tâche
+            tache.save()
+
         # Copier les pièces jointes de l’étape si elles n’existent pas encore
         if not self.pieces_jointes.exists():
             for piece in self.etape.pieces_jointes.all():
@@ -200,6 +221,15 @@ class EtapeContractualisation(models.Model):
                     document=piece.document,
                     date_obtention=piece.date_obtention,
                 )
+
+@receiver(post_delete, sender=EtapeContractualisation)
+def update_task_type_on_etape_delete(sender, instance, **kwargs):
+    tache = instance.tache
+    if not EtapeContractualisation.objects.filter(tache=tache).exists():
+        with transaction.atomic():
+            tache.type = None
+            tache.save()
+
 
 class Maturation(models.Model):
     tache = models.ForeignKey(Tache, on_delete=models.CASCADE)

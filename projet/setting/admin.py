@@ -91,6 +91,7 @@ class TacheAdmin(SimpleHistoryAdmin):
     list_display = ("code", "title_fr", "title_en", "activite", "cout_tot")
     search_fields = ("title_fr", "title_en")
     filter_horizontal = ("exercices",)
+    list_filter = ("exercices","type",)
 
     change_list_template = "admin/tache_change_list.html"
 
