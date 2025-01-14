@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: link2024
       POSTGRES_DB: projet
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./postgres_data:/var/lib/postgresql/data
     ports:
       - "5442:5432"
 
