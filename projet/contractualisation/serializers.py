@@ -1,7 +1,14 @@
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import EtapeContractualisation, Etape, PPM, PieceJointe, PieceJointeContractualisation, Maturation
+from .models import (
+    EtapeContractualisation,
+    Etape,
+    PPM,
+    PieceJointe,
+    PieceJointeContractualisation,
+    Maturation,
+)
 
 
 class EtapeSerializer(serializers.ModelSerializer):
@@ -14,6 +21,8 @@ class PPMSerializer(serializers.ModelSerializer):
     class Meta:
         model = PPM
         fields = "__all__"
+
+
 class MaturationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Maturation
@@ -41,6 +50,8 @@ class PieceJointeSerializer(serializers.ModelSerializer):
         if "document" in validated_data:
             instance.date_upload = timezone.now()
         return super().update(instance, validated_data)
+
+
 class PieceJointeContractSerializer(serializers.ModelSerializer):
     class Meta:
         model = PieceJointeContractualisation
@@ -74,14 +85,13 @@ class EtapeContractualisationSerializer(serializers.ModelSerializer):
             )
         return attrs
 
-
     def get_etape(self, obj):
         return {
             "id": obj.etape.id,
             "title": obj.etape.title,
             "type": obj.etape.type,
             "dated": obj.etape.dated,
-            "acteurs": obj.etape.acteurs
+            "acteurs": obj.etape.acteurs,
         }
 
     class Meta:
@@ -99,5 +109,6 @@ class EtapeContractualisationSerializer(serializers.ModelSerializer):
             "observations",
             "is_finished",
             "pieces_jointes",
+            "date_saisine",
             "retard_message",
         ]

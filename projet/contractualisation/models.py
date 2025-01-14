@@ -146,6 +146,9 @@ class EtapeContractualisation(models.Model):
     retard_message = models.CharField(
         max_length=255, null=True, blank=True, editable=False
     )
+    date_saisine = models.DateField(
+        null=True, blank=True, verbose_name="Date de saisine"
+    )
 
     history = HistoricalRecords()
 
