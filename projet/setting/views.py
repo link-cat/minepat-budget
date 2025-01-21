@@ -165,10 +165,18 @@ class TacheViewSet(BaseModelViewSet):
 
     def get_queryset(self):
         # Filtrer par l'étape si nécessaire
+        query_set = self.queryset
         type = self.request.query_params.get("type")
+        contractualisation_termine = self.request.query_params.get(
+            "contractualisation_termine"
+        )
+        if contractualisation_termine is not None:
+            query_set = query_set.filter(
+                contractualisation_termine=contractualisation_termine
+            )
         if type:
-            return self.queryset.filter(type=type)
-        return self.queryset
+            query_set = query_set.filter(type=type)
+        return query_set
 
 
 class GroupeDepenseViewSet(BaseModelViewSet):
