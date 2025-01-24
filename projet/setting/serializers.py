@@ -76,13 +76,29 @@ class ActiviteSerializer(serializers.ModelSerializer):
 
 class TacheSerializer(serializers.ModelSerializer):
     current_step = serializers.SerializerMethodField()
+    has_maturation = serializers.SerializerMethodField()
+
+    def get_has_maturation(self, obj):
+        return hasattr(obj, "maturation") and obj.maturation is not None
 
     def get_current_step(self, obj):
-        return {"id":obj.current_step.id, "title": obj.current_step.etape.title} if obj.current_step else None
+        return (
+            {"id": obj.current_step.id, "title": obj.current_step.etape.title}
+            if obj.current_step
+            else None
+        )
 
     class Meta:
         model = Tache
         fields = "__all__"
+        extra_fields = ["has_maturation"]
+
+    @property
+    def data(self):
+        data = super().data
+        for field in self.Meta.extra_fields:
+            data[field] = getattr(self, f"get_{field}")(self.instance)
+        return data
 
 
 class GroupeDepenseSerializer(serializers.ModelSerializer):
