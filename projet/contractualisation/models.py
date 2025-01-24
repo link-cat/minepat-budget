@@ -232,7 +232,7 @@ def update_task_type_on_etape_delete(sender, instance, **kwargs):
 
 
 class Maturation(models.Model):
-    tache = models.ForeignKey(Tache, on_delete=models.CASCADE)
+    tache = models.OneToOneField(Tache, on_delete=models.CASCADE)
     # champs facultatifs pour la derniere etape
     taux_exec_physique = models.FloatField(
         blank=True,
