@@ -150,6 +150,7 @@ class EtapeContractualisation(models.Model):
     date_saisine = models.DateField(
         null=True, blank=True, verbose_name="Date de saisine"
     )
+    delais_execution = models.IntegerField(null=True, blank=True, verbose_name="Delais d'execution")
 
     history = HistoricalRecords()
 
@@ -169,7 +170,7 @@ class EtapeContractualisation(models.Model):
             self.ecart_jours = (self.date_effective - self.date_prevue).days
         elif self.date_prevue:
             today = now().date()
-            delay_days = (today - self.date_prevue).days + (self.etape.delai or 0)
+            delay_days = (today - self.date_prevue).days
             if delay_days > 0:
                 self.retard_message = f"Vous êtes en retard de {delay_days} jours."
             else:
@@ -208,6 +209,7 @@ class EtapeContractualisation(models.Model):
             else:
                 tache.current_step = None
                 tache.contractualisation_termine = True
+                tache.status = tache.TacheStatus.EN_COURS
 
             # Sauvegarder la tâche
             tache.save()
@@ -232,22 +234,31 @@ def update_task_type_on_etape_delete(sender, instance, **kwargs):
 
 
 class Maturation(models.Model):
-    tache = models.OneToOneField(Tache, on_delete=models.CASCADE)
+    tache = models.ForeignKey(Tache, on_delete=models.CASCADE)
     # champs facultatifs pour la derniere etape
     taux_exec_physique = models.FloatField(
         blank=True,
         null=True,
         verbose_name="Taux d'execution physique",
     )
+    taux_exec_financier = models.FloatField(
+        blank=True,
+        null=True,
+        verbose_name="Taux d'execution financier",
+    )
     taux_conso_delai = models.FloatField(
         blank=True,
         null=True,
         verbose_name="Taux de consommation des delais",
     )
+    date = models.DateField(null=True, blank=True, verbose_name="Date de constat")
+    # document = models.FileField(to="/documents/maturation") ## faire en sorte que ca prenne plusieurs documents ( logique a revoir. )
     numero_marche = models.CharField(blank=True, null=True)
     ingenieur_marche = models.CharField(blank=True, null=True)
     chef_service_marche = models.CharField(blank=True, null=True)
-    prestataire = models.CharField(blank=True, null=True)
+    nom_prestataire = models.CharField(blank=True, null=True)
+    niu_prestataire = models.CharField(blank=True, null=True)
+    observations = models.TextField(blank=True, null=True)
 
 
 class PPM(models.Model):

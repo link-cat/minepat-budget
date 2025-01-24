@@ -157,6 +157,13 @@ class Tache(models.Model):
         )
         REGIE = "REGIE", "Régie"
         GRE_A_GRE = "GRE A GRE", "Gré à gré"
+    class TacheStatus(models.TextChoices):
+        EN_COURS = "EN COURS", "En cours d'execution"
+        EN_ARRET = "EN ARRET", "En arret"
+        RECEPTIONNE = (
+            "RECEPTIONNE",
+            "Receptionne",
+        )
 
     code = models.CharField(max_length=255)
     title_fr = models.CharField(max_length=255)
@@ -181,6 +188,13 @@ class Tache(models.Model):
         blank=True,
         choices=TypeChoices.choices,
         verbose_name="Type d'étape",
+    )
+    status = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        choices=TacheStatus.choices,
+        verbose_name="Status de la tache",
     )
     current_step = models.ForeignKey(
         "contractualisation.EtapeContractualisation",
