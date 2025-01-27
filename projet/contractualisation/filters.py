@@ -8,11 +8,14 @@ class EtapeContractualisationFilter(django_filters.FilterSet):
     tache = django_filters.CharFilter(
         field_name="tache_id", lookup_expr="exact"
     )
+    type = django_filters.CharFilter(
+        field_name="tache_type", lookup_expr="exact"
+    )
     exercice = ExerciceFilter(label="Année d'exercice")
 
     class Meta:
         model = EtapeContractualisation
-        fields = ["tache","exercice"]
+        fields = ["tache","type","exercice"]
 
 class MaturationFilter(django_filters.FilterSet):
     tache = django_filters.CharFilter(
