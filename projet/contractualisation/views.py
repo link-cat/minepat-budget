@@ -63,29 +63,29 @@ class EtapeContractualisationViewSet(BaseModelViewSet):
         today = now().date()
         is_finished = self.request.query_params.get("is_finished")
         late = self.request.query_params.get("late")
-        for instance in queryset:
-            if instance.date_prevue and not instance.is_finished:
-                delay_days = (today - instance.date_prevue).days - (
-                    instance.etape.delai or 0
-                )
-                if delay_days > 0:
-                    instance.retard_message = (
-                        f"Vous êtes en retard de {delay_days} jours."
-                    )
-                else:
-                    instance.retard_message = None
-                instance.save(update_fields=["retard_message"])
-            elif instance.date_prevue and instance.is_finished:
-                delay_days = (instance.date_fin - instance.date_prevue).days - (
-                    instance.etape.delai or 0
-                )
-                if delay_days > 0:
-                    instance.retard_message = (
-                        f"Vous êtes en retard de {delay_days} jours."
-                    )
-                else:
-                    instance.retard_message = None
-                instance.save(update_fields=["retard_message"])
+        # for instance in queryset:
+        #     if instance.date_prevue and not instance.is_finished:
+        #         delay_days = (today - instance.date_prevue).days - (
+        #             instance.etape.delai or 0
+        #         )
+        #         if delay_days > 0:
+        #             instance.retard_message = (
+        #                 f"Vous êtes en retard de {delay_days} jours."
+        #             )
+        #         else:
+        #             instance.retard_message = None
+        #         instance.save(update_fields=["retard_message"])
+        #     elif instance.date_prevue and instance.is_finished:
+        #         delay_days = (instance.date_fin - instance.date_prevue).days - (
+        #             instance.etape.delai or 0
+        #         )
+        #         if delay_days > 0:
+        #             instance.retard_message = (
+        #                 f"Vous êtes en retard de {delay_days} jours."
+        #             )
+        #         else:
+        #             instance.retard_message = None
+        #         instance.save(update_fields=["retard_message"])
         if late:
             queryset = queryset.filter(retard_message__isnull=False)
         if is_finished:
