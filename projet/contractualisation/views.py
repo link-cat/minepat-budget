@@ -51,6 +51,12 @@ class BaseModelViewSet(viewsets.ModelViewSet):
         """
         instance.delete()
 
+from django.db.models import F, ExpressionWrapper, IntegerField
+from django.db.models.functions import Now
+from django.utils import timezone
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
 
 class EtapeContractualisationViewSet(BaseModelViewSet):
     queryset = EtapeContractualisation.objects.all()
@@ -59,38 +65,27 @@ class EtapeContractualisationViewSet(BaseModelViewSet):
     filterset_class = EtapeContractualisationFilter
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        today = now().date()
+        queryset = EtapeContractualisation.objects.all()
+
         is_finished = self.request.query_params.get("is_finished")
-        late = self.request.query_params.get("late")
-        # for instance in queryset:
-        #     if instance.date_prevue and not instance.is_finished:
-        #         delay_days = (today - instance.date_prevue).days - (
-        #             instance.etape.delai or 0
-        #         )
-        #         if delay_days > 0:
-        #             instance.retard_message = (
-        #                 f"Vous êtes en retard de {delay_days} jours."
-        #             )
-        #         else:
-        #             instance.retard_message = None
-        #         instance.save(update_fields=["retard_message"])
-        #     elif instance.date_prevue and instance.is_finished:
-        #         delay_days = (instance.date_fin - instance.date_prevue).days - (
-        #             instance.etape.delai or 0
-        #         )
-        #         if delay_days > 0:
-        #             instance.retard_message = (
-        #                 f"Vous êtes en retard de {delay_days} jours."
-        #             )
-        #         else:
-        #             instance.retard_message = None
-        #         instance.save(update_fields=["retard_message"])
-        if late:
-            queryset = queryset.filter(retard_message__isnull=False)
         if is_finished:
-            queryset = queryset.filter(is_finished=is_finished)
+            queryset = queryset.filter(is_finished=bool(int(is_finished)))
+
         return queryset.order_by("-id")
+
+    @action(detail=False, methods=["get"])
+    def late(self, request):
+        today = now().date()
+        queryset = self.get_queryset().filter(date_prevue__lt=today, is_finished=False)
+
+        filter_params = request.GET.dict()
+        for key, value in filter_params.items():
+            if hasattr(EtapeContractualisation, key):
+                queryset = queryset.filter(**{key: value})
+
+        # Sérialisation des résultats
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class EtapeViewSet(BaseModelViewSet):

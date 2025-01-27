@@ -9,7 +9,7 @@ class EtapeContractualisationFilter(django_filters.FilterSet):
         field_name="tache_id", lookup_expr="exact"
     )
     type = django_filters.CharFilter(
-        field_name="tache_type", lookup_expr="exact"
+        field_name="tache__type", lookup_expr="exact"
     )
     exercice = ExerciceFilter(label="Année d'exercice")
 
