@@ -87,10 +87,10 @@ class EtapeContractualisationViewSet(BaseModelViewSet):
                     instance.retard_message = None
                 instance.save(update_fields=["retard_message"])
         if late:
-            return self.queryset.filter(retard_message__isnull=False)
+            queryset = queryset.filter(retard_message__isnull=False)
         if is_finished:
-            return self.queryset.filter(is_finished=is_finished)
-        return self.queryset.order_by("-id")
+            queryset = queryset.filter(is_finished=is_finished)
+        return queryset.order_by("-id")
 
 
 class EtapeViewSet(BaseModelViewSet):
