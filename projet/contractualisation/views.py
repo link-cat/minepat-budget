@@ -5,7 +5,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from setting.imports import importer_etapes
 
-from .filters import EtapeContractualisationFilter
+from .filters import EtapeContractualisationFilter, MaturationFilter
 from projet.permissions import CustomDjangoModelPermissions
 
 from .models import (
@@ -112,19 +112,11 @@ class PPMViewSet(BaseModelViewSet):
 class MaturationViewSet(BaseModelViewSet):
     queryset = Maturation.objects.all()
     serializer_class = MaturationSerializer
+    filterset_class = MaturationFilter
 
     def get_queryset(self):
-        # Surcharge de get_queryset pour trier par date de création
-        return Maturation.objects.all().order_by("-id")
-
-
-# class JPMViewSet(BaseModelViewSet):
-#     queryset = JPM.objects.all()
-#     serializer_class = JPMSerializer
-
-#     def get_queryset(self):
-#         # Surcharge de get_queryset pour trier par date de création
-#         return JPM.objects.all().order_by("-id")
+        queryset = super().get_queryset()
+        return queryset.order_by("-id")
 
 
 from rest_framework.decorators import action
