@@ -59,6 +59,25 @@ class PieceJointeContractualisation(models.Model):
     def __str__(self):
         return f"{self.label} - {self.etape_contractualisation.tache.title_fr}"
 
+class PieceJointeMaturation(models.Model):
+    maturation = models.ForeignKey(
+        "Maturation",
+        on_delete=models.CASCADE,
+        related_name="pieces_jointes",
+    )
+    document = models.FileField(
+        upload_to="documents/maturation/",
+        null=True,
+        blank=True,
+        verbose_name="Fichier",
+    )
+    date_upload = models.DateTimeField(
+        auto_now_add=True, null=True, blank=True, verbose_name="Date d'upload"
+    )
+
+    def __str__(self):
+        return f"{self.maturation.tache.title_fr}"
+
 
 class PieceJointe(models.Model):
     etape = models.ForeignKey(
@@ -252,7 +271,6 @@ class Maturation(models.Model):
         verbose_name="Taux de consommation des delais",
     )
     date = models.DateField(null=True, blank=True, verbose_name="Date de constat")
-    # document = models.FileField(to="/documents/maturation") ## faire en sorte que ca prenne plusieurs documents ( logique a revoir. )
     numero_marche = models.CharField(blank=True, null=True)
     ingenieur_marche = models.CharField(blank=True, null=True)
     chef_service_marche = models.CharField(blank=True, null=True)

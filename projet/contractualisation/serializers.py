@@ -7,6 +7,7 @@ from .models import (
     PPM,
     PieceJointe,
     PieceJointeContractualisation,
+    PieceJointeMaturation,
     Maturation,
 )
 
@@ -20,12 +21,6 @@ class EtapeSerializer(serializers.ModelSerializer):
 class PPMSerializer(serializers.ModelSerializer):
     class Meta:
         model = PPM
-        fields = "__all__"
-
-
-class MaturationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Maturation
         fields = "__all__"
 
 
@@ -62,6 +57,25 @@ class PieceJointeContractSerializer(serializers.ModelSerializer):
         if "document" in validated_data:
             instance.date_upload = timezone.now()
         return super().update(instance, validated_data)
+
+class PieceJointeMaturationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PieceJointeMaturation
+        fields = "__all__"
+        read_only_fields = ["id", "date_upload"]
+
+    def update(self, instance, validated_data):
+        if "document" in validated_data:
+            instance.date_upload = timezone.now()
+        return super().update(instance, validated_data)
+
+
+class MaturationSerializer(serializers.ModelSerializer):
+    pieces_jointes = PieceJointeMaturationSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Maturation
+        fields = "__all__"
 
 
 class EtapeContractualisationSerializer(serializers.ModelSerializer):
