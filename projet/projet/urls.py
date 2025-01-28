@@ -52,6 +52,7 @@ from contractualisation.views import (
     PieceJointeViewSet,
     MaturationViewSet,
     PieceJointeContractViewSet,
+    PieceJointeMaturationViewSet,
     ExcelImportViewSet as ImportEtape,
 )
 
@@ -131,6 +132,11 @@ contractualisation_viewsets = [
     ("etape", EtapeViewSet, "etape"),
     ("pieces-jointe", PieceJointeViewSet, "pieces-jointe"),
     ("pieces-jointe-contract", PieceJointeContractViewSet, "pieces-jointe-contract"),
+    (
+        "pieces-jointe-maturation",
+        PieceJointeMaturationViewSet,
+        "pieces-jointe-maturation",
+    ),
     ("load-etape", ImportEtape, "load-etape"),
     ("maturation", MaturationViewSet, "maturation"),
 ]

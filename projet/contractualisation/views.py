@@ -15,6 +15,7 @@ from .models import (
     Maturation,
     PieceJointe,
     PieceJointeContractualisation,
+    PieceJointeMaturation
 )
 from .serializers import (
     EtapeContractualisationSerializer,
@@ -23,6 +24,7 @@ from .serializers import (
     MaturationSerializer,
     PieceJointeContractSerializer,
     PieceJointeSerializer,
+    PieceJointeMaturationSerializer
 )
 
 from django.utils.timezone import now
@@ -197,12 +199,11 @@ class PieceJointeContractViewSet(BaseModelViewSet):
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
-    def get_queryset(self):
-        # Filtrer par l'étape si nécessaire
-        etape_id = self.request.query_params.get("etape_id")
-        if etape_id:
-            return self.queryset.filter(etape_id=etape_id)
-        return self.queryset
+class PieceJointeMaturationViewSet(BaseModelViewSet):
+    queryset = PieceJointeMaturation.objects.all()
+    serializer_class = PieceJointeMaturationSerializer
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
 
 class ExcelImportViewSet(viewsets.ViewSet):
