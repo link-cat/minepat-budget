@@ -71,7 +71,7 @@ class EtapeContractualisationViewSet(BaseModelViewSet):
 
         is_finished = self.request.query_params.get("is_finished")
         if is_finished:
-            queryset = queryset.filter(is_finished=bool(int(is_finished)))
+            queryset = queryset.filter(is_finished=is_finished)
 
         return queryset.order_by("-id")
 
