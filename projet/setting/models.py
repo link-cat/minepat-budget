@@ -165,6 +165,12 @@ class Tache(models.Model):
             "Receptionne",
         )
 
+    class EtatForclusionChoices(models.TextChoices):
+        FORCLOS_15_OCTOBRE = "FORCLOS 15 OCTOBRE", "Forclos 15 octobre"
+        FORCLOS_15_NOVEMBRE = "FORCLOS 15 NOVEMBRE", "Forclos 15 novembre"
+        FORCLOS_31_DECEMBRE = "FORCLOS 31 DECEMBRE", "Forclos 31 décembre"
+        CUSTOM = "CUSTOM", "Date personnalisée"
+
     code = models.CharField(max_length=255)
     title_fr = models.CharField(max_length=255)
     title_en = models.CharField(max_length=255)
@@ -205,6 +211,19 @@ class Tache(models.Model):
     )
     contractualisation_termine = models.BooleanField(default=False)
     exercices = models.ManyToManyField(Exercice, related_name="taches")
+    etat_de_forclusion = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        choices=EtatForclusionChoices.choices,
+        verbose_name="État de forclusion",
+    )
+    date_forclusion = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Date de forclusion personnalisée",
+    )
+
     history = HistoricalRecords()
 
     def __str__(self):
