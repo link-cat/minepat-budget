@@ -157,6 +157,12 @@ class Tache(models.Model):
         )
         REGIE = "REGIE", "Régie"
         GRE_A_GRE = "GRE A GRE", "Gré à gré"
+
+    class TypeExecutionChoices(models.TextChoices):
+        FCPDR = "FCPDR", "Fond de contrepartie depense reelles"
+        SUBV = "SUBV", "Transferts et subventions"
+        GC = "GC", "Gestion Centrale"
+
     class TacheStatus(models.TextChoices):
         EN_COURS = "EN COURS", "En cours d'execution"
         EN_ARRET = "EN ARRET", "En arret"
@@ -187,13 +193,19 @@ class Tache(models.Model):
     montant_operation_restant = models.FloatField(null=True, blank=True)
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
-    groupe = models.ForeignKey(Groupe,on_delete=models.SET_NULL,null=True, blank=True)
     type = models.CharField(
         max_length=50,
         null=True,
         blank=True,
         choices=TypeChoices.choices,
         verbose_name="Type d'étape",
+    )
+    type_execution = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        choices=TypeExecutionChoices.choices,
+        verbose_name="Type d'execution",
     )
     status = models.CharField(
         max_length=50,

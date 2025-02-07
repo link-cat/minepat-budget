@@ -102,10 +102,18 @@ class EstProgrammeAdmin(SimpleHistoryAdmin):
 
 @admin.register(Operation)
 class OperationAdmin(SimpleHistoryAdmin):
-    list_display = ("tache","montant","situation_contract","numero_marche","prestataire","ingenieur_marche","chef_service")
-    list_filter = ("tache", "situation_contract")
+    list_display = ("tache","montant", "groupe",)
+    list_filter = ("tache", "groupe")
 
 @admin.register(Consommation)
 class ConsommationAdmin(SimpleHistoryAdmin):
-    list_display = ("operation","montant")
+    list_display = (
+        "operation",
+        "montant_engage",
+        "situation_contract",
+        "numero_marche",
+        "prestataire",
+        "ingenieur_marche",
+        "chef_service",
+    )
     list_filter = ("operation",)
