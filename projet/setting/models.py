@@ -223,6 +223,9 @@ class Tache(models.Model):
         blank=True,
         verbose_name="Date de forclusion personnalisée",
     )
+    delais_execution = models.IntegerField(
+        null=True, blank=True, verbose_name="Delais d'execution"
+    )
 
     history = HistoricalRecords()
 

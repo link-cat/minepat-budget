@@ -169,7 +169,6 @@ class EtapeContractualisation(models.Model):
     date_saisine = models.DateField(
         null=True, blank=True, verbose_name="Date de saisine"
     )
-    delais_execution = models.IntegerField(null=True, blank=True, verbose_name="Delais d'execution")
 
     history = HistoricalRecords()
 
