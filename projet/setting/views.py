@@ -167,7 +167,7 @@ class TacheViewSet(BaseModelViewSet):
         # Filtrer par l'étape si nécessaire
         query_set = self.queryset
         type = self.request.query_params.get("type")
-        type_exercice = self.request.query_params.get("type_exercice")
+        type_execution = self.request.query_params.get("type_execution")
         contractualisation_termine = self.request.query_params.get(
             "contractualisation_termine"
         )
@@ -177,8 +177,8 @@ class TacheViewSet(BaseModelViewSet):
             )
         if type:
             query_set = query_set.filter(type=type)
-        if type_exercice:
-            query_set = query_set.filter(type_exercice=type_exercice)
+        if type_execution:
+            query_set = query_set.filter(type_execution=type_execution)
         return query_set
 
 
