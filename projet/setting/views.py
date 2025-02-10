@@ -162,7 +162,101 @@ class TacheViewSet(BaseModelViewSet):
         )
         serializer = self.serializer_class(tasks, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    @swagger_auto_schema(
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=['ids', 'type_execution'],
+        properties={
+            'ids': openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Items(type=openapi.TYPE_INTEGER),
+                description='Liste des IDs des tâches à mettre à jour.'
+            ),
+            'type_execution': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                enum=[choice[0] for choice in Tache.TypeExecutionChoices.choices],
+                description='Type d\'exécution à affecter.'
+            )
+        }
+    ),
+    responses={
+        200: openapi.Response(
+            description='Mise à jour réussie',
+            schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'message': openapi.Schema(type=openapi.TYPE_STRING)
+                }
+            )
+        ),
+        400: openapi.Response(
+            description='Requête invalide',
+            schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'error': openapi.Schema(type=openapi.TYPE_STRING)
+                }
+            )
+        ),
+        404: openapi.Response(
+            description='IDs non trouvés',
+            schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'error': openapi.Schema(type=openapi.TYPE_STRING)
+                }
+            )
+        )
+    }
+)
+    @action(detail=False, methods=['patch'])
+    def set_type_execution(self, request):
+        ids = request.data.get('ids', [])
+        type_execution = request.data.get('type_execution')
 
+        # Validation des paramètres
+        if not ids or not type_execution:
+            return Response(
+                {'error': 'Les paramètres "ids" et "type_execution" sont requis.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Vérification que le type_execution est valide
+        valid_execution_types = [choice[0] for choice in Tache.TypeExecutionChoices.choices]
+        if type_execution not in valid_execution_types:
+            return Response(
+                {'error': f'Type d\'exécution invalide. Valide: {valid_execution_types}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Conversion des IDs en entiers
+        try:
+            ids = [int(id) for id in ids]
+        except (ValueError, TypeError):
+            return Response(
+                {'error': 'Les IDs doivent être des entiers.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Vérification que tous les IDs existent
+        taches = Tache.objects.filter(id__in=ids)
+        found_ids = set(taches.values_list('id', flat=True))
+        missing_ids = set(ids) - found_ids
+
+        if missing_ids:
+            return Response(
+                {'error': f'IDs non trouvés: {missing_ids}'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Mise à jour en une seule requête SQL
+        updated_count = taches.update(type_execution=type_execution)
+
+        return Response(
+            {'message': f'{updated_count} tâches mises à jour.'},
+            status=status.HTTP_200_OK
+        )
     def get_queryset(self):
         # Filtrer par l'étape si nécessaire
         query_set = self.queryset
