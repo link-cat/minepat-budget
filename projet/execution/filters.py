@@ -1,5 +1,11 @@
 import django_filters
-from .models import EstExecuteeGCSUB, EstExecuteeGCAUTRES, EstExecuteeOperationFDCDR
+from .models import (
+    Consommation,
+    EstExecuteeGCSUB,
+    EstExecuteeGCAUTRES,
+    EstExecuteeOperationFDCDR,
+    Operation,
+)
 
 
 class EstExecuteeGCSUBFilter(django_filters.FilterSet):
@@ -56,6 +62,8 @@ class EstExecuteeGCAutresFilter(django_filters.FilterSet):
     class Meta:
         model = EstExecuteeGCAUTRES
         fields = ["action", "programme", "activite", "chapitre"]
+
+
 class EstExecuteeOperationFCPFilter(django_filters.FilterSet):
     # Filtrer par titre d'une action
     groupe = django_filters.CharFilter(
@@ -77,3 +85,20 @@ class EstExecuteeOperationFCPFilter(django_filters.FilterSet):
     class Meta:
         model = EstExecuteeOperationFDCDR
         fields = ["groupe", "activite", "chapitre"]
+
+
+class OperationFilter(django_filters.FilterSet):
+    tache = django_filters.CharFilter(field_name="tache__id", lookup_expr="exact")
+    groupe = django_filters.CharFilter(field_name="groupe", lookup_expr="exact")
+
+    class Meta:
+        model = Operation
+        fields = ["tache", "groupe"]
+class ConsommationFilter(django_filters.FilterSet):
+    operation = django_filters.CharFilter(field_name="operation__id", lookup_expr="exact")
+
+    class Meta:
+        model = Consommation
+        fields = [
+            "operation",
+        ]

@@ -19,6 +19,7 @@ from .models import (
     EstProgramme,
     Operation,
     Consommation,
+    Groupe,
 )
 from .serializers import (
     EstExecuteeActionSerializer,
@@ -30,13 +31,16 @@ from .serializers import (
     EstExecuteeOperationFDCDRSerializer,
     EstExecuteeSurSerializer,
     EstProgrammeSerializer,
+    GroupeExecutionSerializer,
     OperationSerializer,
     ConsommationSerializer,
 )
 from .filters import (
+    ConsommationFilter,
     EstExecuteeGCSUBFilter,
     EstExecuteeGCAutresFilter,
     EstExecuteeOperationFCPFilter,
+    OperationFilter
 )
 
 
@@ -155,11 +159,18 @@ class OperationViewSet(BaseModelViewSet):
     queryset = Operation.objects.all()
     serializer_class = OperationSerializer
     permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
+    filterset_class = OperationFilter
 
 
 class ConsommationViewSet(BaseModelViewSet):
     queryset = Consommation.objects.all()
     serializer_class = ConsommationSerializer
+    permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
+    filterset_class = ConsommationFilter
+
+class GroupeViewSet(BaseModelViewSet):
+    queryset = Groupe.objects.all()
+    serializer_class = GroupeExecutionSerializer
     permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
 
 

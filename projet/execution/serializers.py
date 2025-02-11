@@ -15,6 +15,7 @@ from .models import (
     EstExecuteeOperationFDCDR,
     EstExecuteeSur,
     EstProgramme,
+    Groupe,
     Operation,
     Consommation,
 )
@@ -260,4 +261,8 @@ class OperationSerializer(serializers.ModelSerializer):
 class ConsommationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Consommation
+        fields = "__all__"
+class GroupeExecutionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Groupe
         fields = "__all__"

@@ -44,6 +44,7 @@ from execution.views import (
     EstProgrammeViewSet,
     OperationViewSet,
     ConsommationViewSet,
+    GroupeViewSet as ExecutionGroupe,
 )
 
 from contractualisation.views import (
@@ -117,6 +118,7 @@ execution_viewsets = [
     ("est-programme", EstProgrammeViewSet, "est-programme"),
     ("operation", OperationViewSet, "operation"),
     ("consommation", ConsommationViewSet, "consommation"),
+    ("groupe", ExecutionGroupe, "groupe"),
 ]
 router_execution = routers.DefaultRouter()
 for prefix, viewset, basename in execution_viewsets:
