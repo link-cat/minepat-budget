@@ -12,6 +12,7 @@ from .models import (
     EstExecuteeSur,
     EstProgramme,
     Operation,
+    Groupe,
     Consommation,
 )
 
@@ -104,6 +105,11 @@ class EstProgrammeAdmin(SimpleHistoryAdmin):
 class OperationAdmin(SimpleHistoryAdmin):
     list_display = ("tache","montant", "groupe",)
     list_filter = ("tache", "groupe")
+
+@admin.register(Groupe)
+class GroupeAdmin(SimpleHistoryAdmin):
+    list_display = ("type","title_fr", "title_en",)
+    list_filter = ("type",)
 
 @admin.register(Consommation)
 class ConsommationAdmin(SimpleHistoryAdmin):
