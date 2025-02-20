@@ -1,62 +1,64 @@
-from rest_framework.viewsets import ViewSet
+from datetime import datetime
+from django.db.models import Sum, F, OuterRef, Subquery
+from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.decorators import action
-from rest_framework.exceptions import NotFound, ValidationError
-from django.db.models import Count, Q
-
-from contractualisation.models import (
-    EtapeContractualisation,
-    PieceJointeContractualisation,
-)
+from rest_framework import status
+from django.db.models import Sum, Avg, Count, F, Subquery, OuterRef, Max
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 
-class ContractualisationViewSet(ViewSet):
-    """
-    ViewSet pour gérer les fonctionnalités liées aux pièces jointes et aux étapes de contractualisation.
-    """
+from execution.models import Consommation, Operation
+from setting.models import Tache
 
-    @action(detail=False, methods=["get"], url_path="documents-uploades")
-    def documents_uploades(self, request):
-        """
-        Retourne le nombre de documents uploadés pour chaque pièce jointe.
-        """
-        pieces = (
-            PieceJointeContractualisation.objects.values("label")
-            .annotate(nombre_documents=Count("id", filter=~Q(document=None)))
-            .order_by("-nombre_documents")
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def BIPMetricsView(request):
+    data = {}
+
+    # Volume du BIP (Dotation totale)
+    data["total_dotation"] = Tache.objects.aggregate(total=Sum('cout_tot'))['total'] or 0
+
+    # Pourcentage d'exécution physique moyen basé sur la dernière consommation de chaque opération
+    latest_consommations = (
+            Consommation.objects.filter(id=Subquery(
+                Consommation.objects.filter(operation=OuterRef('operation'))
+                .order_by('-date_situation')
+                .values('id')[:1]
+            ))
         )
-        return Response(list(pieces))
+    data["pourcentage_exec_physique"] = latest_consommations.aggregate(moyenne=Avg('pourcentage_exec_physique'))['moyenne'] or 0
 
-    @action(
-        detail=False,
-        methods=["get"],
-        url_path="ecart-entre-etapes/(?P<etape_1_id>[^/.]+)/(?P<etape_2_id>[^/.]+)",
-    )
-    def ecart_entre_etapes(self, request, etape_1_id, etape_2_id):
-        """
-        Calcule l'écart en jours entre deux étapes.
-        """
-        try:
-            etape_1 = EtapeContractualisation.objects.get(pk=etape_1_id)
-            etape_2 = EtapeContractualisation.objects.get(pk=etape_2_id)
+    # Pourcentage d'engagement (montant engagé vs montant prévisionnel)
+    total_montant_previsionnel = Tache.objects.aggregate(total=Sum('montant_previsionnel'))['total'] or 1
+    total_montant_engage = Operation.objects.aggregate(total=Sum('montant_engage'))['total'] or 0
+    data["engagement_pourcentage"] = (total_montant_engage / total_montant_previsionnel) * 100
 
-            # Vérifier si les dates sont valides
-            if not etape_1.date_fin or not etape_2.date_demarrage:
-                raise ValidationError(
-                    {
-                        "error": "Les dates nécessaires ne sont pas définies pour l'une ou les deux étapes."
-                    }
-                )
+    # Évolution du %PHY sur l'année (groupé par mois, dernière consommation valable)
+    data["evolution_phy"] = []
+    current_year = datetime.now().year
 
-            # Calcul de l'écart
-            ecart = (etape_2.date_demarrage - etape_1.date_fin).days
-            return Response(
-                {
-                    "etape_1": etape_1.etape.title,
-                    "etape_2": etape_2.etape.title,
-                    "ecart_jours": ecart,
-                }
-            )
+    for month in range(1, 13):
+        last_valid_consommations = Consommation.objects.filter(
+                date_situation__year=current_year,
+                date_situation__month=month
+            ).order_by('-date_situation')
 
-        except EtapeContractualisation.DoesNotExist:
-            raise NotFound({"error": "L'une des étapes spécifiées n'existe pas."})
+        if not last_valid_consommations.exists():
+            last_valid_consommations = Consommation.objects.filter(
+                    date_situation__year=current_year,
+                    date_situation__month=month - 1 if month > 1 else 12
+                ).order_by('-date_situation')
+
+        avg_phy = last_valid_consommations.aggregate(moyenne=Avg('pourcentage_exec_physique'))['moyenne'] or 0
+        data["evolution_phy"].append({'month': month, 'moyenne': avg_phy})
+
+    # Répartition des tâches en fonction de leur état de forclusion
+    data["forclusions"] = Tache.objects.values('etat_de_forclusion').annotate(count=Count('id'))
+
+    # Informations générales
+    data["total_ecarts"] = Tache.objects.aggregate(total=Sum(F('cout_tot') - F('montant_previsionnel')))['total'] or 0
+    data["total_credits_forclos"] = Operation.objects.aggregate(total=Sum('montant'))['total'] or 0
+
+    return Response(data, status=status.HTTP_200_OK)

@@ -45,6 +45,7 @@ from execution.views import (
     OperationViewSet,
     ConsommationViewSet,
     GroupeViewSet as ExecutionGroupe,
+    PieceJointeConsommationViewSet,
 )
 
 from contractualisation.views import (
@@ -57,7 +58,7 @@ from contractualisation.views import (
     ExcelImportViewSet as ImportEtape,
 )
 
-from statistiques.views import ContractualisationViewSet
+from statistiques.views import BIPMetricsView
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -116,6 +117,11 @@ execution_viewsets = [
     ),
     ("est-executee-sur", EstExecuteeSurViewSet, "est-executee-sur"),
     ("est-programme", EstProgrammeViewSet, "est-programme"),
+    (
+        "pieces-jointe-consommation",
+        PieceJointeConsommationViewSet,
+        "pieces-jointe-consommation",
+    ),
     ("operation", OperationViewSet, "operation"),
     ("consommation", ConsommationViewSet, "consommation"),
     ("groupe", ExecutionGroupe, "groupe"),
@@ -146,23 +152,16 @@ router_contractualisation = routers.DefaultRouter()
 for prefix, viewset, basename in contractualisation_viewsets:
     router_contractualisation.register(rf"{prefix}", viewset, basename=basename)
 
-statistiques_viewsets = [
-    ('contractualisation', ContractualisationViewSet, 'contractualisation'),
-]
-router_statistiques = routers.DefaultRouter()
-for prefix, viewset, basename in statistiques_viewsets:
-    router_statistiques.register(rf"{prefix}", viewset, basename=basename)
-
 # URLs globales
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("setting/", include(router_setting.urls)),
     path("execution/", include(router_execution.urls)),
-    path("statistiques/", include(router_statistiques.urls)),
     path("contractualisation/", include(router_contractualisation.urls)),
     path("api/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/login/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/permissions/", PermissionListView, name="permissions-list"),
+    path("api/metrics/", BIPMetricsView, name="metrics"),
     path("profile/", getProfile, name="profile"),
     path(
         "swagger<format>/", schema_view.without_ui(cache_timeout=0), name="schema-json"

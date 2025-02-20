@@ -18,6 +18,7 @@ from .models import (
     Groupe,
     Operation,
     Consommation,
+    PieceJointeConsommation,
 )
 
 from setting.models import Tache
@@ -250,6 +251,19 @@ class EstProgrammeSerializer(serializers.ModelSerializer):
                 data[key] = 0  # Remplacer par 0 ou une autre valeur par défaut
 
         return data
+    
+from django.utils import timezone
+
+class PieceJointeConsommationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PieceJointeConsommation
+        fields = "__all__"
+        read_only_fields = ["id", "date_upload"]
+
+    def update(self, instance, validated_data):
+        if "document" in validated_data:
+            instance.date_upload = timezone.now()
+        return super().update(instance, validated_data)
 
 
 class OperationSerializer(serializers.ModelSerializer):

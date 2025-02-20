@@ -20,6 +20,7 @@ from .models import (
     Operation,
     Consommation,
     Groupe,
+    PieceJointeConsommation,
 )
 from .serializers import (
     EstExecuteeActionSerializer,
@@ -34,13 +35,14 @@ from .serializers import (
     GroupeExecutionSerializer,
     OperationSerializer,
     ConsommationSerializer,
+    PieceJointeConsommationSerializer,
 )
 from .filters import (
     ConsommationFilter,
     EstExecuteeGCSUBFilter,
     EstExecuteeGCAutresFilter,
     EstExecuteeOperationFCPFilter,
-    OperationFilter
+    OperationFilter,
 )
 
 
@@ -155,6 +157,16 @@ class EstProgrammeViewSet(BaseModelViewSet):
         return EstProgramme.objects.all().order_by("-id")
 
 
+from rest_framework.parsers import FormParser
+
+
+class PieceJointeConsommationViewSet(BaseModelViewSet):
+    queryset = PieceJointeConsommation.objects.all()
+    serializer_class = PieceJointeConsommationSerializer
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+
 class OperationViewSet(BaseModelViewSet):
     queryset = Operation.objects.all()
     serializer_class = OperationSerializer
@@ -168,6 +180,7 @@ class ConsommationViewSet(BaseModelViewSet):
     permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
     filterset_class = ConsommationFilter
 
+
 class GroupeViewSet(BaseModelViewSet):
     queryset = Groupe.objects.all()
     serializer_class = GroupeExecutionSerializer
@@ -175,7 +188,7 @@ class GroupeViewSet(BaseModelViewSet):
 
 
 from rest_framework.decorators import action
-from rest_framework.parsers import MultiPartParser
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework import status
 from django.core.files.storage import default_storage

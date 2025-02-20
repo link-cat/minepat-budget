@@ -267,6 +267,26 @@ from django.db.models.signals import pre_save, post_delete
 from django.dispatch import receiver
 
 
+class PieceJointeConsommation(models.Model):
+    consommation = models.ForeignKey(
+        "Consommation",
+        on_delete=models.CASCADE,
+        related_name="pieces_jointes",
+    )
+    document = models.FileField(
+        upload_to="documents/consommation/",
+        null=True,
+        blank=True,
+        verbose_name="Fichier",
+    )
+    date_upload = models.DateTimeField(
+        auto_now_add=True, null=True, blank=True, verbose_name="Date d'upload"
+    )
+
+    def __str__(self):
+        return f"{self.consommation.tache.title_fr}"
+
+
 class Groupe(models.Model):
     class TypeChoices(models.TextChoices):
         FCPDR = "FCPDR", "Fond de contrepartie depense reelles"
@@ -298,11 +318,6 @@ class Operation(models.Model):
     )
     delai_exec = models.IntegerField(null=True, blank=True)
     montant_engage = models.FloatField(null=True, blank=True)
-    # pourcentage_exec_physique = models.FloatField(null=True, blank=True)
-    # numero_marche = models.CharField(max_length=255, null=True, blank=True)
-    # prestataire = models.CharField(max_length=255, null=True, blank=True)
-    # ingenieur_marche = models.CharField(max_length=255, null=True, blank=True)
-    # chef_service = models.CharField(max_length=255, null=True, blank=True)
     history = HistoricalRecords()
 
     def __str__(self):
@@ -311,12 +326,6 @@ class Operation(models.Model):
 
 class Consommation(models.Model):
     operation = models.ForeignKey(Operation, on_delete=models.CASCADE)
-    document = models.FileField(
-        upload_to="documents/consommations/",
-        null=True,
-        blank=True,
-        verbose_name="Fichier",
-    )
     montant_engage = models.FloatField(null=True, blank=True)
     situation_contract = models.CharField(
         max_length=300, choices=CONTRAT_SITUATION_CHOICES, default="BC:Non executé"
