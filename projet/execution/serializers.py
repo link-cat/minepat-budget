@@ -251,8 +251,10 @@ class EstProgrammeSerializer(serializers.ModelSerializer):
                 data[key] = 0  # Remplacer par 0 ou une autre valeur par défaut
 
         return data
-    
+
+
 from django.utils import timezone
+
 
 class PieceJointeConsommationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -273,9 +275,13 @@ class OperationSerializer(serializers.ModelSerializer):
 
 
 class ConsommationSerializer(serializers.ModelSerializer):
+    pieces_jointes = PieceJointeConsommationSerializer(many=True, read_only=True)
+
     class Meta:
         model = Consommation
         fields = "__all__"
+
+
 class GroupeExecutionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Groupe
