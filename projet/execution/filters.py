@@ -4,6 +4,7 @@ from .models import (
     EstExecuteeGCSUB,
     EstExecuteeGCAUTRES,
     EstExecuteeOperationFDCDR,
+    Groupe,
     Operation,
 )
 
@@ -101,4 +102,12 @@ class ConsommationFilter(django_filters.FilterSet):
         model = Consommation
         fields = [
             "operation",
+        ]
+class GroupeFilter(django_filters.FilterSet):
+    type = django_filters.CharFilter(field_name="type", lookup_expr="exact")
+
+    class Meta:
+        model = Groupe
+        fields = [
+            "type",
         ]

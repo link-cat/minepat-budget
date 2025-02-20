@@ -42,6 +42,7 @@ from .filters import (
     EstExecuteeGCSUBFilter,
     EstExecuteeGCAutresFilter,
     EstExecuteeOperationFCPFilter,
+    GroupeFilter,
     OperationFilter,
 )
 
@@ -185,6 +186,7 @@ class GroupeViewSet(BaseModelViewSet):
     queryset = Groupe.objects.all()
     serializer_class = GroupeExecutionSerializer
     permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
+    filterset_class = GroupeFilter
 
 
 from rest_framework.decorators import action
