@@ -293,8 +293,6 @@ class Groupe(models.Model):
         SUBV = "SUBV", "Transferts et subventions"
     type = models.CharField(
         max_length=50,
-        null=True,
-        blank=True,
         choices=TypeChoices.choices,
         verbose_name="Type d'étape",
     )
