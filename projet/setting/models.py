@@ -161,7 +161,9 @@ class Tache(models.Model):
     class TypeExecutionChoices(models.TextChoices):
         FCPDR = "FCPDR", "Fond de contrepartie depense reelles"
         SUBV = "SUBV", "Transferts et subventions"
-        GC = "GC", "Gestion Centrale"
+        PIISAH = "PIISAH", "Piisah"
+        PLANUS = "PLANUS", "Planus"
+        PLURIANNUEL = "PLURIANNUEL", "Pluriannuel"
 
     class TacheStatus(models.TextChoices):
         EN_COURS = "EN COURS", "En cours d'execution"
