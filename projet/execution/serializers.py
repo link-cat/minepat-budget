@@ -272,6 +272,9 @@ class OperationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Operation
         fields = "__all__"
+        read_only_fields = [
+            "montant_engage",
+        ]
 
 
 class ConsommationSerializer(serializers.ModelSerializer):

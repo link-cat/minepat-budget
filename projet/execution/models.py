@@ -294,7 +294,7 @@ class Groupe(models.Model):
     type = models.CharField(
         max_length=50,
         choices=TypeChoices.choices,
-        verbose_name="Type d'étape",
+        verbose_name="Type de groupes d'operation",
     )
     title_fr = models.CharField(max_length=255)
     title_en = models.CharField(max_length=255)
@@ -361,9 +361,9 @@ def validate_consommation(sender, instance, **kwargs):
     if instance.operation.montant_engage is None:
         instance.operation.montant_engage = 0
         instance.operation.save()
-    instance.operation.montant_engage = instance.operation.montant_engage + instance.montant
+    instance.operation.montant_engage = instance.operation.montant_engage + instance.montant_engage
     instance.operation.save()
-    # montant_possible = instance.operation.montant_engage + instance.montant
+    # montant_possible = instance.operation.montant_engage + instance.montant_engage
     # if montant_possible > instance.operation.montant:
     #     raise ValidationError(
     #         "Impossible d'ajouter une consommation. Montant restant insuffisant pour l'opération."
