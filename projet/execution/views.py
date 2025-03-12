@@ -302,6 +302,8 @@ def generate_table_pdf():
     styles = getSampleStyleSheet()
     style_normal = styles["Normal"]
     style_header = styles["Heading4"]
+    style_normal.alignment = 1
+    style_header.alignment = 1
 
     # En-tête du tableau
     table_data = [
@@ -323,7 +325,7 @@ def generate_table_pdf():
     ]
 
     # Liste pour stocker les commandes SPAN pour les fusions
-    spans = []
+    stylesCustom = []
 
     # Index de la ligne courante (commence après l'en-tête)
     row_index = 1
@@ -334,6 +336,10 @@ def generate_table_pdf():
     for tache in taches:
         # Index de début pour la tâche
         tache_start_row = row_index
+        montant_tache = 0
+        conso_tache = 0
+        taux_physique_tache_tab = []
+        taux_financier_tache_tab = []
 
         # Groupes distincts liés aux opérations de cette tâche
         groupes = Groupe.objects.filter(operation__tache=tache).distinct()
@@ -415,15 +421,57 @@ def generate_table_pdf():
                 ]
             )
             row_index += 1
+            montant_tache += montant
+            conso_tache += total_conso
+            taux_physique_tache_tab.append(
+                round(sum(taux_physique_tab) / len(taux_physique_tab), 2)
+            )
+            taux_financier_tache_tab.append(
+                round(sum(taux_financier_tab) / len(taux_financier_tab), 2)
+            )
 
             # Ajouter la fusion pour le groupe (colonne 2) si au moins une opération existe
             if operations:
-                spans.append(("SPAN", (2, groupe_start_row), (2, row_index - 1)))
+                stylesCustom.append(("SPAN", (2, groupe_start_row), (2, row_index - 1)))
+
+        if groupes.__len__() > 0:
+            table_data.append(
+                [
+                    Paragraph(
+                        f"Total ({tache.title_fr})" or "", style_header
+                    ),  # Structure
+                    "",
+                    "",
+                    "",
+                    Paragraph(f"{montant_tache}", style_header),
+                    Paragraph(str(conso_tache), style_header),
+                    Paragraph(
+                        f"{round(sum(taux_physique_tache_tab) / len(taux_physique_tache_tab), 2) if taux_physique_tache_tab else 0}%",
+                        style_header,
+                    ),
+                    Paragraph(
+                        f"{round(sum(taux_financier_tache_tab) / len(taux_financier_tache_tab), 2) if taux_financier_tache_tab else 0}%",
+                        style_header,
+                    ),
+                    "",
+                    "",
+                ]
+            )
+            row_index += 1
 
         # Ajouter la fusion pour la tâche (colonne 0) si des lignes ont été ajoutées
         if row_index > tache_start_row:
-            spans.append(("SPAN", (0, tache_start_row), (0, row_index - 1)))
-            spans.append(("SPAN", (1, tache_start_row), (1, row_index - 1)))
+            stylesCustom.append(("SPAN", (0, tache_start_row), (0, row_index - 2)))
+            stylesCustom.append(("SPAN", (1, tache_start_row), (1, row_index - 2)))
+            stylesCustom.append(("SPAN", (0, row_index - 1), (3, row_index - 1)))
+            stylesCustom.append(
+                (
+                    "BACKGROUND",
+                    (0, row_index - 1),
+                    (-1, row_index - 1),
+                    colors.lightgrey,
+                )
+            )
 
     # Création du tableau
     table = Table(table_data, colWidths=[80, 60, 80, 100, 80, 70, 70, 100, 100])
@@ -435,13 +483,10 @@ def generate_table_pdf():
                 ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
                 ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
                 ("SPAN", (1, 0), (2, 0)),  # Fusionner les colonnes 1 et 2
-                ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ("ALIGN", (4, 1), (4, -1), "RIGHT"),  # Montants
-                ("ALIGN", (5, 1), (5, -1), "RIGHT"),  # Consommation
-                ("ALIGN", (6, 1), (6, -1), "RIGHT"),  # Taux physique
-                ("ALIGN", (7, 1), (7, -1), "RIGHT"),  # Taux financier
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
             ]
-            + spans  # Ajouter les commandes de fusion
+            + stylesCustom  # Ajouter les commandes de fusion
         )
     )
 
