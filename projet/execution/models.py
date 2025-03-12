@@ -328,6 +328,7 @@ class Consommation(models.Model):
     situation_contract = models.CharField(
         max_length=300, choices=CONTRAT_SITUATION_CHOICES, default="BC:Non executé"
     )
+    report_received = models.BooleanField(default=False)
     date_situation = models.DateField(null=True)
     montant_contrat = models.FloatField(null=True, blank=True)
     delai_exec = models.IntegerField(null=True, blank=True)
@@ -355,19 +356,21 @@ class Consommation(models.Model):
 #         instance.tache.save()
 
 
-# @receiver(pre_save, sender=Consommation)
-# def validate_consommation(sender, instance, **kwargs):
-#     if instance.operation.montant_engage is None:
-#         instance.operation.montant_engage = 0
-#         instance.operation.save()
-#     montant_possible = instance.operation.montant_engage + instance.montant
-#     if montant_possible > instance.operation.montant:
-#         raise ValidationError(
-#             "Impossible d'ajouter une consommation. Montant restant insuffisant pour l'opération."
-#         )
-#     else:
-#         instance.operation.montant_engage = montant_possible
-#         instance.operation.save()
+@receiver(pre_save, sender=Consommation)
+def validate_consommation(sender, instance, **kwargs):
+    if instance.operation.montant_engage is None:
+        instance.operation.montant_engage = 0
+        instance.operation.save()
+    instance.operation.montant_engage = instance.operation.montant_engage + instance.montant
+    instance.operation.save()
+    # montant_possible = instance.operation.montant_engage + instance.montant
+    # if montant_possible > instance.operation.montant:
+    #     raise ValidationError(
+    #         "Impossible d'ajouter une consommation. Montant restant insuffisant pour l'opération."
+    #     )
+    # else:
+    #     instance.operation.montant_engage = montant_possible
+    #     instance.operation.save()
 
 
 # @receiver(post_delete, sender=Operation)
@@ -378,9 +381,9 @@ class Consommation(models.Model):
 #     instance.tache.save()
 
 
-# @receiver(post_delete, sender=Consommation)
-# def restore_operation_montant(sender, instance, **kwargs):
-#     if instance.operation.montant_engage is None:
-#         instance.operation.montant_engage = 0
-#     instance.operation.montant_engage -= instance.montant
-#     instance.operation.save()
+@receiver(post_delete, sender=Consommation)
+def restore_operation_montant(sender, instance, **kwargs):
+    if instance.operation.montant_engage is None:
+        instance.operation.montant_engage = 0
+    instance.operation.montant_engage -= instance.montant
+    instance.operation.save()
