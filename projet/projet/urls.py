@@ -59,7 +59,7 @@ from contractualisation.views import (
 )
 
 from statistiques.views import BIPMetricsView
-from execution.views import AnnexeView
+from execution.views import Annexe1View
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -163,7 +163,8 @@ urlpatterns = [
     path("api/login/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/permissions/", PermissionListView, name="permissions-list"),
     path("api/metrics/", BIPMetricsView, name="metrics"),
-    path("api/annexe/", AnnexeView, name="annexe_1"),
+    path("api/annexe1/", Annexe1View, name="annexe_1"),
+    path("api/annexe2/", Annexe1View, name="annexe_2"),
     path("profile/", getProfile, name="profile"),
     path(
         "swagger<format>/", schema_view.without_ui(cache_timeout=0), name="schema-json"

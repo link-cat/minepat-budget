@@ -268,24 +268,24 @@ from .models import Tache, Operation, Groupe, Consommation  # Vérifie bien l'em
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def AnnexeView(request):
+def Annexe1View(request):
     """
     Vue Django REST Framework qui génère et renvoie le PDF en téléchargement.
     """
-    return generate_table_pdf_response(request)
+    return generate_table_1_pdf_response(request)
 
 
-def generate_table_pdf_response(request):
+def generate_table_1_pdf_response(request):
     """
     Construit et renvoie le PDF en tant que FileResponse (pour téléchargement).
     """
-    pdf_content = generate_table_pdf()  # Appelle la fonction qui construit le PDF
+    pdf_content = generate_table_1_pdf()  # Appelle la fonction qui construit le PDF
     response = FileResponse(io.BytesIO(pdf_content), content_type="application/pdf")
     response["Content-Disposition"] = 'attachment; filename="rapport.pdf"'
     return response
 
 
-def generate_table_pdf():
+def generate_table_1_pdf():
     """
     Génère un PDF contenant un tableau qui reprend :
       - La Tache (en tant que 'Structure')
@@ -332,6 +332,237 @@ def generate_table_pdf():
 
     # Récupérer les tâches
     taches = Tache.objects.filter(type_execution="FCPDR").order_by("id")
+
+    for tache in taches:
+        # Index de début pour la tâche
+        tache_start_row = row_index
+        montant_tache = 0
+        conso_tache = 0
+        taux_physique_tache_tab = []
+        taux_financier_tache_tab = []
+
+        # Groupes distincts liés aux opérations de cette tâche
+        groupes = Groupe.objects.filter(operation__tache=tache).distinct()
+
+        for i, groupe in enumerate(groupes):
+            # Index de début pour le groupe
+            groupe_start_row = row_index
+
+            # Opérations pour ce groupe et cette tâche
+            operations = Operation.objects.filter(tache=tache, groupe=groupe)
+            montant = 0
+            total_conso = 0
+            taux_physique_tab = []
+            taux_financier_tab = []
+
+            for operation in operations:
+                consommations = Consommation.objects.filter(
+                    operation=operation
+                ).order_by("-id")
+                total_consommation = sum(c.montant_engage or 0 for c in consommations)
+                total_conso += total_consommation
+
+                # Taux d'exécution physique
+                taux_physique = (
+                    consommations[0].pourcentage_exec_physique if consommations else 0
+                )
+                taux_physique_tab.append(taux_physique)
+
+                # Taux d'exécution financier
+                montant_op = operation.montant or 0
+                montant += montant_op
+                taux_financier = (
+                    (total_consommation / montant_op * 100) if montant_op != 0 else 0
+                )
+                taux_financier_tab.append(taux_financier)
+
+                # Ajouter la ligne pour l'opération
+                table_data.append(
+                    [
+                        Paragraph(tache.title_fr or "", style_normal),  # Structure
+                        Paragraph(
+                            "Volet dépenses courante", style_normal
+                        ),  # Valeur en dur
+                        Paragraph(groupe.title_fr or "", style_normal),  # Groupe
+                        Paragraph(operation.title_fr or "", style_normal),  # Opération
+                        str(montant_op),
+                        str(total_consommation),
+                        f"{round(taux_physique, 2)}%",
+                        f"{round(taux_financier, 2)}%",
+                        (
+                            Paragraph(
+                                consommations[0].situation_contract or "", style_normal
+                            )
+                            if consommations
+                            else ""
+                        ),
+                        (
+                            Paragraph(consommations[0].observations or "", style_normal)
+                            if consommations
+                            else ""
+                        ),
+                    ]
+                )
+                row_index += 1
+
+            # Ajouter la ligne "SOUS TOTAL"
+            table_data.append(
+                [
+                    Paragraph(tache.title_fr or "", style_normal),  # Structure
+                    Paragraph("Volet dépenses courante", style_normal),  # Valeur en dur
+                    Paragraph(groupe.title_fr or "", style_normal),  # Groupe
+                    Paragraph(f"SOUS TOTAL {i+1}", style_header),
+                    Paragraph(f"{montant}", style_header),
+                    str(total_conso),
+                    f"{round(sum(taux_physique_tab) / len(taux_physique_tab), 2) if taux_physique_tab else 0}%",
+                    f"{round(sum(taux_financier_tab) / len(taux_financier_tab), 2) if taux_financier_tab else 0}%",
+                    "",
+                    "",
+                ]
+            )
+            row_index += 1
+            montant_tache += montant
+            conso_tache += total_conso
+            taux_physique_tache_tab.append(
+                round(sum(taux_physique_tab) / len(taux_physique_tab), 2)
+            )
+            taux_financier_tache_tab.append(
+                round(sum(taux_financier_tab) / len(taux_financier_tab), 2)
+            )
+
+            # Ajouter la fusion pour le groupe (colonne 2) si au moins une opération existe
+            if operations:
+                stylesCustom.append(("SPAN", (2, groupe_start_row), (2, row_index - 1)))
+
+        if groupes.__len__() > 0:
+            table_data.append(
+                [
+                    Paragraph(
+                        f"Total ({tache.title_fr})" or "", style_header
+                    ),  # Structure
+                    "",
+                    "",
+                    "",
+                    Paragraph(f"{montant_tache}", style_header),
+                    Paragraph(str(conso_tache), style_header),
+                    Paragraph(
+                        f"{round(sum(taux_physique_tache_tab) / len(taux_physique_tache_tab), 2) if taux_physique_tache_tab else 0}%",
+                        style_header,
+                    ),
+                    Paragraph(
+                        f"{round(sum(taux_financier_tache_tab) / len(taux_financier_tache_tab), 2) if taux_financier_tache_tab else 0}%",
+                        style_header,
+                    ),
+                    "",
+                    "",
+                ]
+            )
+            row_index += 1
+
+        # Ajouter la fusion pour la tâche (colonne 0) si des lignes ont été ajoutées
+        if row_index > tache_start_row:
+            stylesCustom.append(("SPAN", (0, tache_start_row), (0, row_index - 2)))
+            stylesCustom.append(("SPAN", (1, tache_start_row), (1, row_index - 2)))
+            stylesCustom.append(("SPAN", (0, row_index - 1), (3, row_index - 1)))
+            stylesCustom.append(
+                (
+                    "BACKGROUND",
+                    (0, row_index - 1),
+                    (-1, row_index - 1),
+                    colors.lightgrey,
+                )
+            )
+
+    # Création du tableau
+    table = Table(table_data, colWidths=[80, 60, 80, 100, 80, 70, 70, 100, 100])
+
+    # Appliquer les styles, y compris les fusions
+    table.setStyle(
+        TableStyle(
+            [
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
+                ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
+                ("SPAN", (1, 0), (2, 0)),  # Fusionner les colonnes 1 et 2
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+            ]
+            + stylesCustom  # Ajouter les commandes de fusion
+        )
+    )
+
+    # Construire le PDF
+    doc.build([table])
+
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def Annexe2View(request):
+    """
+    Vue Django REST Framework qui génère et renvoie le PDF en téléchargement.
+    """
+    return generate_table_2_pdf_response(request)
+
+
+def generate_table_2_pdf_response(request):
+    """
+    Construit et renvoie le PDF en tant que FileResponse (pour téléchargement).
+    """
+    pdf_content = generate_table_1_pdf()  # Appelle la fonction qui construit le PDF
+    response = FileResponse(io.BytesIO(pdf_content), content_type="application/pdf")
+    response["Content-Disposition"] = 'attachment; filename="rapport.pdf"'
+    return response
+
+
+def generate_table_2_pdf():
+    """
+    Génère un PDF contenant un tableau qui reprend :
+      - La Tache (en tant que 'Structure')
+      - Le 'Volet dépenses courantes' (en dur)
+      - Les Groupes associés à la Tache
+      - Les Opérations rattachées au Groupe
+      - Quelques colonnes pour Montant, Consommation, etc.
+    Retourne un buffer PDF (en bytes).
+    """
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(A4))
+
+    # Styles
+    styles = getSampleStyleSheet()
+    style_normal = styles["Normal"]
+    style_header = styles["Heading4"]
+    style_normal.alignment = 1
+    style_header.alignment = 1
+
+    # En-tête du tableau
+    table_data = [
+        [
+            Paragraph("Structures", style_header),
+            Paragraph("Mode d'exécution", style_header),
+            Paragraph("", style_header),
+            Paragraph("Détails des opérations<br/>par rubriques", style_header),
+            Paragraph("Montants", style_header),
+            Paragraph("Consommation", style_header),
+            Paragraph("Taux d'exécution<br/>Physique", style_header),
+            Paragraph("Taux d'exécution<br/>Financier", style_header),
+            Paragraph(
+                "Procédure de contractualisation<br/>(en cours / mode de passation)",
+                style_header,
+            ),
+            Paragraph("Difficultés / Observations", style_header),
+        ]
+    ]
+
+    # Liste pour stocker les commandes SPAN pour les fusions
+    stylesCustom = []
+
+    # Index de la ligne courante (commence après l'en-tête)
+    row_index = 1
+
+    # Récupérer les tâches
+    taches = Tache.objects.filter(type_execution="SUBV").order_by("id")
 
     for tache in taches:
         # Index de début pour la tâche
