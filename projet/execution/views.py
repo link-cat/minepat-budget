@@ -256,7 +256,7 @@ class ExcelImportViewSet(viewsets.ViewSet):
 import io
 from django.http import FileResponse
 from reportlab.lib.pagesizes import A4, landscape
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 
@@ -302,6 +302,7 @@ def generate_table_1_pdf():
     styles = getSampleStyleSheet()
     style_normal = styles["Normal"]
     style_header = styles["Heading4"]
+    style_title = styles["Title"]
     style_normal.alignment = 1
     style_header.alignment = 1
 
@@ -489,9 +490,10 @@ def generate_table_1_pdf():
             + stylesCustom  # Ajouter les commandes de fusion
         )
     )
-
+    title = Paragraph("SITUATION DES FONDS DE CONTREPARTIE", style_title)
+    spacer = Spacer(1, 12)
     # Construire le PDF
-    doc.build([table])
+    doc.build([title,spacer,table])
 
     pdf = buffer.getvalue()
     buffer.close()
@@ -510,7 +512,7 @@ def generate_table_2_pdf_response(request):
     """
     Construit et renvoie le PDF en tant que FileResponse (pour téléchargement).
     """
-    pdf_content = generate_table_1_pdf()  # Appelle la fonction qui construit le PDF
+    pdf_content = generate_table_2_pdf()  # Appelle la fonction qui construit le PDF
     response = FileResponse(io.BytesIO(pdf_content), content_type="application/pdf")
     response["Content-Disposition"] = 'attachment; filename="rapport.pdf"'
     return response
@@ -533,6 +535,7 @@ def generate_table_2_pdf():
     styles = getSampleStyleSheet()
     style_normal = styles["Normal"]
     style_header = styles["Heading4"]
+    style_title = styles["Title"]
     style_normal.alignment = 1
     style_header.alignment = 1
 
@@ -721,8 +724,10 @@ def generate_table_2_pdf():
         )
     )
 
+    title = Paragraph("EXECUTION DES TRANSFERTS EN INVESTISSEMENT", style_title)
+    spacer = Spacer(1, 12)
     # Construire le PDF
-    doc.build([table])
+    doc.build([title, spacer, table])
 
     pdf = buffer.getvalue()
     buffer.close()
