@@ -544,7 +544,6 @@ def generate_table_2_pdf():
         [
             Paragraph("Structures", style_header),
             Paragraph("Mode d'exécution", style_header),
-            Paragraph("", style_header),
             Paragraph("Détails des opérations<br/>par rubriques", style_header),
             Paragraph("Montants", style_header),
             Paragraph("Consommation", style_header),
@@ -614,9 +613,6 @@ def generate_table_2_pdf():
                 table_data.append(
                     [
                         Paragraph(tache.title_fr or "", style_normal),  # Structure
-                        Paragraph(
-                            "Volet dépenses courante", style_normal
-                        ),  # Valeur en dur
                         Paragraph(groupe.title_fr or "", style_normal),  # Groupe
                         Paragraph(operation.title_fr or "", style_normal),  # Opération
                         str(montant_op),
@@ -643,7 +639,6 @@ def generate_table_2_pdf():
             table_data.append(
                 [
                     Paragraph(tache.title_fr or "", style_normal),  # Structure
-                    Paragraph("Volet dépenses courante", style_normal),  # Valeur en dur
                     Paragraph(groupe.title_fr or "", style_normal),  # Groupe
                     Paragraph(f"SOUS TOTAL {i+1}", style_header),
                     Paragraph(f"{montant}", style_header),
@@ -676,7 +671,6 @@ def generate_table_2_pdf():
                     ),  # Structure
                     "",
                     "",
-                    "",
                     Paragraph(f"{montant_tache}", style_header),
                     Paragraph(str(conso_tache), style_header),
                     Paragraph(
@@ -696,8 +690,7 @@ def generate_table_2_pdf():
         # Ajouter la fusion pour la tâche (colonne 0) si des lignes ont été ajoutées
         if row_index > tache_start_row:
             stylesCustom.append(("SPAN", (0, tache_start_row), (0, row_index - 2)))
-            stylesCustom.append(("SPAN", (1, tache_start_row), (1, row_index - 2)))
-            stylesCustom.append(("SPAN", (0, row_index - 1), (3, row_index - 1)))
+            stylesCustom.append(("SPAN", (0, row_index - 1), (2, row_index - 1)))
             stylesCustom.append(
                 (
                     "BACKGROUND",
@@ -708,7 +701,7 @@ def generate_table_2_pdf():
             )
 
     # Création du tableau
-    table = Table(table_data, colWidths=[80, 60, 80, 100, 80, 70, 70, 100, 100])
+    table = Table(table_data, colWidths=[80, 80, 100, 80, 70, 70, 100, 100])
 
     # Appliquer les styles, y compris les fusions
     table.setStyle(
@@ -716,7 +709,6 @@ def generate_table_2_pdf():
             [
                 ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
                 ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
-                ("SPAN", (1, 0), (2, 0)),  # Fusionner les colonnes 1 et 2
                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                 ("ALIGN", (0, 0), (-1, -1), "CENTER"),
             ]
