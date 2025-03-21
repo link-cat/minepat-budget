@@ -255,7 +255,7 @@ class ExcelImportViewSet(viewsets.ViewSet):
 
 import io
 from django.http import FileResponse
-from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.pagesizes import A4, A3, landscape
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
@@ -435,7 +435,7 @@ def generate_table_1_pdf():
             if operations:
                 stylesCustom.append(("SPAN", (2, groupe_start_row), (2, row_index - 1)))
 
-        if groupes.__len__() > 0:
+        if groupes:
             table_data.append(
                 [
                     Paragraph(
@@ -493,11 +493,12 @@ def generate_table_1_pdf():
     title = Paragraph("SITUATION DES FONDS DE CONTREPARTIE", style_title)
     spacer = Spacer(1, 12)
     # Construire le PDF
-    doc.build([title,spacer,table])
+    doc.build([title, spacer, table])
 
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
+
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
@@ -663,7 +664,7 @@ def generate_table_2_pdf():
             if operations:
                 stylesCustom.append(("SPAN", (2, groupe_start_row), (2, row_index - 1)))
 
-        if groupes.__len__() > 0:
+        if groupes:
             table_data.append(
                 [
                     Paragraph(
@@ -721,6 +722,266 @@ def generate_table_2_pdf():
     # Construire le PDF
     doc.build([title, spacer, table])
 
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+from reportlab.platypus import Paragraph
+from reportlab.lib.styles import ParagraphStyle
+
+class VerticalParagraph(Paragraph):
+    """Paragraphe imprimé verticalement (rotation de 90 degrés dans le sens antihoraire)"""
+    def __init__(self, text, style):
+        super().__init__(text, style)
+        self.horizontal_position = -self.style.leading
+
+    def draw(self):
+        """Dessiner le texte avec une rotation"""
+        canvas = self.canv
+        canvas.rotate(90)  # Rotation de 90 degrés
+        canvas.translate(1, self.horizontal_position)
+        super().draw()
+
+    def wrap(self, available_width, _):
+        """Ajuster les dimensions pour le texte vertical"""
+        string_width = self.canv.stringWidth(
+            self.getPlainText(),
+            self.style.fontName,
+            self.style.fontSize
+        )
+        self.horizontal_position = - (available_width + self.style.leading) / 2
+        height, _ = super().wrap(availWidth=1 + string_width, availHeight=available_width)
+        return self.style.leading, height
+
+from collections import defaultdict
+from contractualisation.models import Etape, EtapeContractualisation
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def Annexe3View(request):
+    """
+    Vue Django REST Framework qui génère et renvoie le PDF en téléchargement.
+    """
+    return generate_table_3_pdf_response(request)
+
+
+def generate_table_3_pdf_response(request):
+    """
+    Construit et renvoie le PDF en tant que FileResponse (pour téléchargement).
+    """
+    pdf_content = generate_table_3_pdf()  # Appelle la fonction qui construit le PDF
+    response = FileResponse(io.BytesIO(pdf_content), content_type="application/pdf")
+    response["Content-Disposition"] = 'attachment; filename="rapport.pdf"'
+    return response
+
+from reportlab.pdfgen import canvas
+
+def generate_table_3_pdf():
+    """
+    Génère un PDF contenant un tableau avec les tâches, étapes, et données financières.
+    Retourne un buffer PDF (en bytes).
+    """
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer)
+
+    # Styles
+    styles = getSampleStyleSheet()
+    style_normal = styles["Normal"]
+    style_header = styles["Heading4"]
+    style_normal.alignment = 1
+    style_header.alignment = 1
+    # Récupérer les tâches par type
+    grouped_data = defaultdict(list)
+    for tache in Tache.objects.all():
+        grouped_data[tache.type].append(tache)
+    tables1 = []
+    tables2 = []
+
+    for type in grouped_data:
+        if not type:
+            continue
+        list_etapes = Etape.objects.filter(type=type).order_by("rang")
+
+        if len(list_etapes) > 10:
+            c.setPageSize(landscape(A3))
+            page_width, page_height = landscape(A3)
+        else:
+            c.setPageSize(landscape(A4))
+            page_width, page_height = landscape(A4)
+
+        # Créer le titre
+        title_text = f"MISE EN ŒUVRE DU PLAN DE PASSATION DES MARCHES {type}"
+        title = Paragraph(title_text, style_header)
+        title.wrapOn(c, page_width - 200, 50)  # Ajuster la largeur disponible
+        title.drawOn(c, 100, page_height - 100)  # Positionner en haut
+
+        # En-têtes principaux
+        headers = [
+            Paragraph("Désignation et localisation du projet", style_header),
+            *[
+                item
+                for etape in list_etapes
+                for item in [Paragraph(etape.title, style_header), "", ""]
+            ],
+            Paragraph("Montant (FCFA) du Contrat", style_header),
+            "",
+            "",
+            "",
+            Paragraph("Observations", style_header),
+        ]
+        sub_headers = [
+            "",
+            *[
+                item
+                for _ in list_etapes
+                for item in [
+                    VerticalParagraph("Date Prévue", style_header),
+                    VerticalParagraph("Date effective", style_header),
+                    VerticalParagraph("Écart (jours)", style_header),
+                ]
+            ],
+            VerticalParagraph("Prévisionnel", style_header),
+            VerticalParagraph("Réel", style_header),
+            VerticalParagraph("Écart", style_header),
+            VerticalParagraph("Taux de consommation", style_header),
+            "",
+        ]
+
+        # definition du style
+
+        style_columns = [("SPAN", (0, 0), (0, 1)), ("SPAN", (-1, 0), (-1, 1)), ("SPAN", (-5,0), (-2,0))]
+        for (i,_) in enumerate(list_etapes):
+            style_columns.append(("SPAN", (1+(i*3),0), (3+(i*3),0)))
+
+        # Initialiser les données du tableau
+        table_data = [headers, sub_headers]
+
+        # Ajouter les lignes de données pour chaque tâche
+        for tache in grouped_data[type]:
+            row_data = [Paragraph(tache.title_fr, style=style_normal)]
+            montantEtape = None
+            etapes_contractualisations = EtapeContractualisation.objects.filter(
+                tache=tache
+            )
+
+            for etape in list_etapes:
+                contract = etapes_contractualisations.filter(etape=etape)
+                if contract.exists():
+                    contract = contract[0]
+                    if contract.montant_prevu and contract.montant_reel:
+                        montantEtape = contract
+                    # Date prévue
+                    row_data.append(
+                        VerticalParagraph(
+                            (
+                                contract.date_prevue.strftime("%d/%m/%Y")
+                                if contract.date_prevue
+                                else ""
+                            ),
+                            style=style_normal,
+                        )
+                    )
+                    # Date effective ou saisine
+                    if contract.date_saisine:
+                        row_data.append(
+                            VerticalParagraph(
+                                contract.date_saisine.strftime("%d/%m/%Y"),
+                                style=style_normal,
+                            )
+                        )
+                        row_data.append(
+                            VerticalParagraph(
+                                (
+                                    f"{(contract.date_saisine - contract.date_prevue).days} J"
+                                    if contract.date_prevue
+                                    else ""
+                                ),
+                                style=style_normal,
+                            )
+                        )
+                    else:
+                        row_data.append(
+                            VerticalParagraph(
+                                (
+                                    contract.date_effective.strftime("%d/%m/%Y")
+                                    if contract.date_effective
+                                    else ""
+                                ),
+                                style=style_normal,
+                            )
+                        )
+                        row_data.append(
+                            VerticalParagraph(
+                                (
+                                    f"{(contract.date_effective - contract.date_prevue).days} J"
+                                    if contract.date_effective and contract.date_prevue
+                                    else ""
+                                ),
+                                style=style_normal,
+                            )
+                        )
+                else:
+                    # Si pas de contrat, ajouter des cellules vides
+                    row_data.extend(["", "", ""])
+
+            # Ajouter les colonnes de montant
+            row_data.extend(
+                [
+                    VerticalParagraph(
+                        f"{montantEtape.montant_prevu}" if montantEtape else "",
+                        style=style_normal,
+                    ),
+                    VerticalParagraph(
+                        f"{montantEtape.montant_reel}" if montantEtape else "",
+                        style=style_normal,
+                    ),
+                    VerticalParagraph(
+                        f"{montantEtape.ecart_montant}" if montantEtape else "",
+                        style=style_normal,
+                    ),
+                    VerticalParagraph(
+                        f"{montantEtape.taux_consomation}" if montantEtape else "",
+                        style=style_normal,
+                    ),
+                    VerticalParagraph("", style=style_normal),
+                ]
+            )
+
+            # Ajouter la ligne au tableau
+            table_data.append(row_data)
+
+        # Créer le tableau
+        col_widths = [80] + [20] * (len(table_data[0]) - 2) + [80]
+        table = Table(table_data, colWidths=col_widths)  # Ajuster les largeurs
+        table_width = sum(col_widths)
+
+        # Appliquer les styles
+        table.setStyle(
+            TableStyle(
+                [
+                    ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
+                    (
+                        "BACKGROUND",
+                        (0, 0),
+                        (-1, 1),
+                        colors.lightgrey,
+                    ),
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                    ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                ] + style_columns
+            )
+        )
+        x = (page_width - table_width) / 2
+        y = 50
+        table.wrapOn(
+            c, page_width, page_height
+        )
+        table.drawOn(c, x, y)
+        c.showPage()
+
+    # Générer le document
+    c.save()
     pdf = buffer.getvalue()
     buffer.close()
     return pdf

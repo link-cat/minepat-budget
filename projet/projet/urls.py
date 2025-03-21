@@ -33,6 +33,7 @@ from setting.views import (
 
 from execution.views import (
     Annexe2View,
+    Annexe3View,
     ExcelImportViewSet as ImportExecution,
     EstExecuteeActionViewSet,
     EstExecuteeFCPDRViewSet,
@@ -166,6 +167,7 @@ urlpatterns = [
     path("api/metrics/", BIPMetricsView, name="metrics"),
     path("api/annexe1/", Annexe1View, name="annexe_1"),
     path("api/annexe2/", Annexe2View, name="annexe_2"),
+    path("api/annexe3/", Annexe3View, name="annexe_3"),
     path("profile/", getProfile, name="profile"),
     path(
         "swagger<format>/", schema_view.without_ui(cache_timeout=0), name="schema-json"
