@@ -432,7 +432,7 @@ def generate_table_1_pdf():
             )
 
             # Ajouter la fusion pour le groupe (colonne 2) si au moins une opération existe
-            if operations:
+            if len(operations) > 2:
                 stylesCustom.append(("SPAN", (2, groupe_start_row), (2, row_index - 1)))
 
         if groupes:
@@ -461,7 +461,7 @@ def generate_table_1_pdf():
             row_index += 1
 
         # Ajouter la fusion pour la tâche (colonne 0) si des lignes ont été ajoutées
-        if row_index > tache_start_row:
+        if (row_index - tache_start_row) > 0:
             stylesCustom.append(("SPAN", (0, tache_start_row), (0, row_index - 2)))
             stylesCustom.append(("SPAN", (1, tache_start_row), (1, row_index - 2)))
             stylesCustom.append(("SPAN", (0, row_index - 1), (3, row_index - 1)))
@@ -475,9 +475,12 @@ def generate_table_1_pdf():
             )
 
     # Création du tableau
-    table = Table(table_data, colWidths=[80, 60, 80, 100, 80, 70, 70, 100, 100])
+    table = Table(table_data, colWidths=[80, 60, 80, 100, 80, 70, 70, 100, 100],repeatRows=1)
 
     # Appliquer les styles, y compris les fusions
+    print(stylesCustom)
+    stylesCustom = [s for s in stylesCustom if s[0] != "SPAN"]
+
     table.setStyle(
         TableStyle(
             [
@@ -726,11 +729,14 @@ def generate_table_2_pdf():
     buffer.close()
     return pdf
 
+
 from reportlab.platypus import Paragraph
 from reportlab.lib.styles import ParagraphStyle
 
+
 class VerticalParagraph(Paragraph):
     """Paragraphe imprimé verticalement (rotation de 90 degrés dans le sens antihoraire)"""
+
     def __init__(self, text, style):
         super().__init__(text, style)
         self.horizontal_position = -self.style.leading
@@ -745,13 +751,14 @@ class VerticalParagraph(Paragraph):
     def wrap(self, available_width, _):
         """Ajuster les dimensions pour le texte vertical"""
         string_width = self.canv.stringWidth(
-            self.getPlainText(),
-            self.style.fontName,
-            self.style.fontSize
+            self.getPlainText(), self.style.fontName, self.style.fontSize
         )
-        self.horizontal_position = - (available_width + self.style.leading) / 2
-        height, _ = super().wrap(availWidth=1 + string_width, availHeight=available_width)
+        self.horizontal_position = -(available_width + self.style.leading) / 2
+        height, _ = super().wrap(
+            availWidth=1 + string_width, availHeight=available_width
+        )
         return self.style.leading, height
+
 
 from collections import defaultdict
 from contractualisation.models import Etape, EtapeContractualisation
@@ -775,7 +782,9 @@ def generate_table_3_pdf_response(request):
     response["Content-Disposition"] = 'attachment; filename="rapport.pdf"'
     return response
 
+
 from reportlab.pdfgen import canvas
+
 
 def generate_table_3_pdf():
     """
@@ -850,9 +859,13 @@ def generate_table_3_pdf():
 
         # definition du style
 
-        style_columns = [("SPAN", (0, 0), (0, 1)), ("SPAN", (-1, 0), (-1, 1)), ("SPAN", (-5,0), (-2,0))]
-        for (i,_) in enumerate(list_etapes):
-            style_columns.append(("SPAN", (1+(i*3),0), (3+(i*3),0)))
+        style_columns = [
+            ("SPAN", (0, 0), (0, 1)),
+            ("SPAN", (-1, 0), (-1, 1)),
+            ("SPAN", (-5, 0), (-2, 0)),
+        ]
+        for i, _ in enumerate(list_etapes):
+            style_columns.append(("SPAN", (1 + (i * 3), 0), (3 + (i * 3), 0)))
 
         # Initialiser les données du tableau
         table_data = [headers, sub_headers]
@@ -969,14 +982,13 @@ def generate_table_3_pdf():
                     ),
                     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                     ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-                ] + style_columns
+                ]
+                + style_columns
             )
         )
         x = (page_width - table_width) / 2
         y = 50
-        table.wrapOn(
-            c, page_width, page_height
-        )
+        table.wrapOn(c, page_width, page_height)
         table.drawOn(c, x, y)
         c.showPage()
 
