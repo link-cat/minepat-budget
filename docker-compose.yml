@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   db:
     image: postgres:15
@@ -21,9 +19,9 @@ services:
     container_name: django_api
     restart: always
     environment:
-    - DJANGO_SUPERUSER_USERNAME=admin
-    - DJANGO_SUPERUSER_EMAIL=admin@example.com
-    - DJANGO_SUPERUSER_PASSWORD=admin
+      - DJANGO_SUPERUSER_USERNAME=admin
+      - DJANGO_SUPERUSER_EMAIL=admin@example.com
+      - DJANGO_SUPERUSER_PASSWORD=admin
     command: >
       sh -c "python manage.py migrate &&
              python manage.py shell < create_superuser.py &&
@@ -33,6 +31,22 @@ services:
     depends_on:
       - db
 
+  jasperreports:
+    image: docker.io/bitnami/jasperreports:latest
+    ports:
+      - "8001:8080"
+    depends_on:
+      - db
+    environment:
+      - JASPERREPORTS_DATABASE_TYPE=postgresql
+      - JASPERREPORTS_DATABASE_HOST=db
+      - JASPERREPORTS_DATABASE_PORT_NUMBER=5432
+      - JASPERREPORTS_DATABASE_USER=postgres
+      - JASPERREPORTS_DATABASE_PASSWORD=link2024
+      - JASPERREPORTS_DATABASE_NAME=projet
+    volumes:
+      - 'jasperreports_data:/bitnami/jasperreports'
 
 volumes:
   postgres_data:
+  jasperreports_data:
