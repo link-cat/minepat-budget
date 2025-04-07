@@ -2,3 +2,6 @@ env/
 projet/.env
 projet/temp/
 projet/media/temp/
+
+**/__pycache__/
+**/*.pyc
