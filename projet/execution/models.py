@@ -305,15 +305,16 @@ class Groupe(models.Model):
 
 
 class Operation(models.Model):
-    tache = models.ForeignKey(Tache, on_delete=models.CASCADE)
-    groupe = models.ForeignKey(Groupe, null=True, blank=True, on_delete=models.CASCADE)
-    montant = models.FloatField(null=True, blank=True)
     title_fr = models.CharField(max_length=255)
     title_en = models.CharField(
         max_length=255,
         null=True,
         blank=True,
     )
+    tache = models.ForeignKey(Tache, on_delete=models.CASCADE)
+    groupe = models.ForeignKey(Groupe, null=True, blank=True, on_delete=models.CASCADE)
+    montant = models.FloatField(null=True, blank=True)
+    
     delai_exec = models.IntegerField(null=True, blank=True)
     montant_engage = models.FloatField(null=True, blank=True)
     history = HistoricalRecords()

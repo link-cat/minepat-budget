@@ -269,6 +269,15 @@ class PieceJointeConsommationSerializer(serializers.ModelSerializer):
 
 
 class OperationSerializer(serializers.ModelSerializer):
+    tache = serializers.SerializerMethodField()
+    groupe  = serializers.SerializerMethodField()
+
+    def get_tache(self, obj):
+        return obj.tache.title_fr
+
+    def get_groupe(self, obj):
+       return obj.groupe.title_fr
+    
     class Meta:
         model = Operation
         fields = "__all__"

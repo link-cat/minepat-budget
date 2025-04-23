@@ -264,6 +264,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 
 from .models import Tache, Operation, Groupe, Consommation  # Vérifie bien l'emplacement
+from reportlab.lib.styles import ParagraphStyle
+from datetime import datetime
 
 
 @api_view(["GET"])
@@ -284,33 +286,24 @@ def generate_table_1_pdf_response(request):
     response["Content-Disposition"] = 'attachment; filename="rapport.pdf"'
     return response
 
+# Format les montants avec séparateur des milliers
+def format_montant(val):
+    return "{:,.0f}".format(val).replace(',', ' ')
 
 def generate_table_1_pdf():
     """
     Génère un PDF contenant un tableau qui reprend :
-      - La Tâche (en tant que 'Structure')
+      - La Tache (en tant que 'Structure')
       - Le 'Volet dépenses courantes' (en dur)
-      - Les Groupes associés à la Tâche
+      - Les Groupes associés à la Tache
       - Les Opérations rattachées au Groupe
       - Quelques colonnes pour Montant, Consommation, etc.
     Retourne un buffer PDF (en bytes).
     """
-    import io
-    from reportlab.lib import colors
-    from reportlab.lib.pagesizes import A4, landscape
-    from reportlab.platypus import (
-        SimpleDocTemplate,
-        Paragraph,
-        Spacer,
-        Table,
-        TableStyle,
-    )
-    from reportlab.lib.styles import getSampleStyleSheet
-
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=landscape(A4))
 
-    # Définition des styles
+    # Styles
     styles = getSampleStyleSheet()
     style_normal = styles["Normal"]
     style_header = styles["Heading4"]
@@ -327,8 +320,8 @@ def generate_table_1_pdf():
             Paragraph("Détails des opérations<br/>par rubriques", style_header),
             Paragraph("Montants", style_header),
             Paragraph("Consommation", style_header),
-            Paragraph("Taux d'exécution<br/>Physique", style_header),
-            Paragraph("Taux d'exécution<br/>Financier", style_header),
+            Paragraph("Taux d'exécution<br/>Financier", style_header),  # <-- inversé
+            Paragraph("Taux d'exécution<br/>Physique", style_header),   # <-- inversé
             Paragraph(
                 "Procédure de contractualisation<br/>(en cours / mode de passation)",
                 style_header,
@@ -337,14 +330,19 @@ def generate_table_1_pdf():
         ]
     ]
 
-    # Liste pour stocker les commandes de fusion (SPAN)
+    # Liste pour stocker les commandes SPAN pour les fusions
     stylesCustom = []
-    row_index = 1  # Index de la ligne courante après l'en-tête
 
-    # Récupérer les tâches (en s'assurant que les champs utilisés soient non nuls)
+    # Index de la ligne courante (commence après l'en-tête)
+    row_index = 1
+
+    # Récupérer les tâches
     taches = Tache.objects.filter(type_execution="FCPDR").order_by("id")
+
+    NB_LIGNES_PAR_PAGE = 40
+
     for tache in taches:
-        tache_title = tache.title_fr if tache.title_fr is not None else ""
+        # Index de début pour la tâche
         tache_start_row = row_index
         montant_tache = 0
         conso_tache = 0
@@ -353,10 +351,12 @@ def generate_table_1_pdf():
 
         # Groupes distincts liés aux opérations de cette tâche
         groupes = Groupe.objects.filter(operation__tache=tache).distinct()
+
         for i, groupe in enumerate(groupes):
-            groupe_title = groupe.title_fr if groupe.title_fr is not None else ""
+            # Index de début pour le groupe
             groupe_start_row = row_index
 
+            # Opérations pour ce groupe et cette tâche
             operations = Operation.objects.filter(tache=tache, groupe=groupe)
             montant = 0
             total_conso = 0
@@ -364,178 +364,155 @@ def generate_table_1_pdf():
             taux_financier_tab = []
 
             for operation in operations:
-                op_title = operation.title_fr if operation.title_fr is not None else ""
-                montant_op = operation.montant if operation.montant is not None else 0
-
-                # Récupération des consommations en vérifiant qu'il y en ait au moins une
-                consommations = list(
-                    Consommation.objects.filter(operation=operation).order_by("-id")
-                )
-                if consommations:
-                    # Pour chaque consommation, on s'assure que les valeurs utilisées sont définies
-                    total_consommation = sum(
-                        c.montant_engage if c.montant_engage is not None else 0
-                        for c in consommations
-                    )
-                    situation_contract = (
-                        consommations[0].situation_contract
-                        if consommations[0].situation_contract is not None
-                        else ""
-                    )
-                    observations = (
-                        consommations[0].observations
-                        if consommations[0].observations is not None
-                        else ""
-                    )
-                    taux_physique = (
-                        consommations[0].pourcentage_exec_physique
-                        if consommations[0].pourcentage_exec_physique is not None
-                        else 0
-                    )
-                else:
-                    total_consommation = 0
-                    situation_contract = ""
-                    observations = ""
-                    taux_physique = 0
-
+                consommations = Consommation.objects.filter(
+                    operation=operation
+                ).order_by("-id")
+                total_consommation = sum(c.montant_engage or 0 for c in consommations)
                 total_conso += total_consommation
-                taux_physique_tab.append(taux_physique)
-                montant += montant_op
 
-                # Calcul du taux financier en évitant la division par zéro
-                if montant_op != 0:
-                    taux_financier = (total_consommation / montant_op) * 100
-                else:
-                    taux_financier = 0
+                # Taux d'exécution physique
+                taux_physique = (
+                    consommations[0].pourcentage_exec_physique if consommations else 0
+                )
+                taux_physique_tab.append(taux_physique)
+
+                # Taux d'exécution financier
+                montant_op = operation.montant or 0
+                montant += montant_op
+                taux_financier = (
+                    (total_consommation / montant_op * 100) if montant_op != 0 else 0
+                )
                 taux_financier_tab.append(taux_financier)
 
-                # Ajout de la ligne pour l'opération
+                # Ajouter la ligne pour l'opération
                 table_data.append(
                     [
-                        Paragraph(tache_title, style_normal),  # Structure
-                        Paragraph(
-                            "Volet dépenses courante", style_normal
-                        ),  # Valeur en dur
-                        Paragraph(groupe_title, style_normal),  # Groupe
-                        Paragraph(op_title, style_normal),  # Opération
-                        str(montant_op),
-                        str(total_consommation),
-                        Paragraph(f"{round(taux_physique, 2)}%"),
-                        Paragraph(f"{round(taux_financier, 2)}%"),
-                        Paragraph(situation_contract or "", style_normal),
-                        Paragraph(observations or "", style_normal),
+                        Paragraph(tache.title_fr or "", style_normal),  # Structure
+                        Paragraph("Volet dépenses courante", style_normal),  # Valeur en dur
+                        Paragraph(groupe.title_fr or "", style_normal),  # Groupe
+                        Paragraph(operation.title_fr or "", style_normal),  # Opération
+                        format_montant(montant_op),
+                        format_montant(total_consommation),
+                        f"{round(taux_financier, 2)}%",  # <-- Financier avant
+                        f"{round(taux_physique, 2)}%",   # <-- Physique après
+                        (
+                            Paragraph(
+                                consommations[0].situation_contract or "", style_normal
+                            )
+                            if consommations
+                            else ""
+                        ),
+                        (
+                            Paragraph(consommations[0].observations or "", style_normal)
+                            if consommations
+                            else ""
+                        ),
                     ]
                 )
                 row_index += 1
 
-            # Ajout de la ligne "SOUS TOTAL" pour le groupe
-            moy_taux_physique = (
-                round(sum(taux_physique_tab) / len(taux_physique_tab), 2)
-                if taux_physique_tab
-                else 0
-            )
-            moy_taux_financier = (
-                round(sum(taux_financier_tab) / len(taux_financier_tab), 2)
-                if taux_financier_tab
-                else 0
-            )
+            style_bold = ParagraphStyle(name='Bold', parent=styles['Normal'], fontName='Helvetica-Bold')
 
+            # Ajouter la ligne "SOUS TOTAL"
             table_data.append(
                 [
-                    Paragraph(tache_title, style_normal),  # Structure
-                    Paragraph("Volet dépenses courante", style_normal),  # Valeur en dur
-                    Paragraph(groupe_title, style_normal),  # Groupe
-                    Paragraph(f"SOUS TOTAL {i+1}", style_header),
-                    Paragraph(str(montant), style_header),
-                    Paragraph(str(total_conso)),
-                    Paragraph(f"{moy_taux_physique}%"),
-                    Paragraph(f"{moy_taux_financier}%"),
-                    Paragraph(""),
-                    Paragraph(""),
+                    Paragraph(tache.title_fr or "", style_bold),  # Structure
+                    Paragraph("Volet dépenses courante", style_bold),  # Valeur en dur
+                    Paragraph(groupe.title_fr or "", style_bold),  # Groupe
+                    Paragraph(f"SOUS TOTAL {i+1}", style_bold),
+                    Paragraph(format_montant(montant), style_bold),
+                    Paragraph(format_montant(total_conso), style_bold),
+                    Paragraph(  # <-- Financier avant
+                        f"{round(sum(taux_financier_tab) / len(taux_financier_tab), 2) if taux_financier_tab else 0}%", 
+                        style_bold
+                    ),
+                    Paragraph(  # <-- Physique après
+                        f"{round(sum(taux_physique_tab) / len(taux_physique_tab), 2) if taux_physique_tab else 0}%", 
+                        style_bold
+                    ),
+                    Paragraph("", style_bold),
+                    Paragraph("", style_bold),
                 ]
             )
             row_index += 1
             montant_tache += montant
             conso_tache += total_conso
+            taux_physique_tache_tab.append(
+                round(sum(taux_physique_tab) / len(taux_physique_tab), 2)
+            )
+            taux_financier_tache_tab.append(
+                round(sum(taux_financier_tab) / len(taux_financier_tab), 2)
+            )
 
-            # Stockage pour le calcul global de la tâche
-            if taux_physique_tab:
-                taux_physique_tache_tab.append(moy_taux_physique)
-            if taux_financier_tab:
-                taux_financier_tache_tab.append(moy_taux_financier)
 
-            # Fusion pour le groupe (colonne 2) si plus de deux opérations
+            # Fusion groupe (colonne 2) uniquement si toutes les lignes du groupe sont sur la même page
             if len(operations) > 2:
-                stylesCustom.append(("SPAN", (2, groupe_start_row), (2, row_index - 1)))
-
+                start_page = groupe_start_row // NB_LIGNES_PAR_PAGE
+                end_page = (row_index - 1) // NB_LIGNES_PAR_PAGE
+                if start_page == end_page:
+                    stylesCustom.append(("SPAN", (2, groupe_start_row), (2, row_index - 1)))
+        
+        # Ligne TOTAL (par tâche)
         if groupes:
-            moy_taux_physique_tache = (
-                round(sum(taux_physique_tache_tab) / len(taux_physique_tache_tab), 2)
-                if taux_physique_tache_tab
-                else 0
-            )
-            moy_taux_financier_tache = (
-                round(sum(taux_financier_tache_tab) / len(taux_financier_tache_tab), 2)
-                if taux_financier_tache_tab
-                else 0
-            )
             table_data.append(
                 [
-                    Paragraph(f"Total ({tache_title})", style_header),
-                    Paragraph(""),
-                    Paragraph(""),
-                    Paragraph(""),
-                    Paragraph(str(montant_tache), style_header),
-                    Paragraph(str(conso_tache), style_header),
-                    Paragraph(f"{moy_taux_physique_tache}%", style_header),
-                    Paragraph(f"{moy_taux_financier_tache}%", style_header),
-                    Paragraph(""),
-                    Paragraph(""),
+                    Paragraph(
+                        f"Total ({tache.title_fr})" or "", style_header
+                    ),  # Structure
+                    "",
+                    "",
+                    "",
+                    Paragraph(format_montant(montant_tache), style_header),
+                    Paragraph(format_montant(conso_tache), style_header),
+                    Paragraph(
+                        f"{round(sum(taux_financier_tab) / len(taux_financier_tab), 2) if taux_financier_tab else 0}%", 
+                        style_bold
+                    ),
+                    Paragraph(
+                        f"{round(sum(taux_physique_tab) / len(taux_physique_tab), 2) if taux_physique_tab else 0}%", 
+                        style_bold
+                    ),
+                    "",
+                    "",
                 ]
             )
             row_index += 1
 
-        # Fusion pour la tâche (colonnes 0 et 1) si des lignes ont été ajoutées
+        # Ajouter la fusion pour la tâche (colonne 0) si des lignes ont été ajoutées
         if (row_index - tache_start_row) > 0:
             stylesCustom.append(("SPAN", (0, tache_start_row), (0, row_index - 2)))
             stylesCustom.append(("SPAN", (1, tache_start_row), (1, row_index - 2)))
             stylesCustom.append(("SPAN", (0, row_index - 1), (3, row_index - 1)))
             stylesCustom.append(
-                (
-                    "BACKGROUND",
-                    (0, row_index - 1),
-                    (-1, row_index - 1),
-                    colors.lightgrey,
-                )
+                ("BACKGROUND", (0, row_index - 1), (-1, row_index - 1), colors.lightsteelblue)
             )
 
-    # Création du tableau avec des hauteurs de lignes par défaut (ici 20 points par ligne)
-    table = Table(
-        table_data,
-        colWidths=[80, 60, 80, 100, 80, 70, 70, 100, 100],
-        repeatRows=1,
-    )
+    # Création du tableau
+    table = Table(table_data, colWidths=[80, 60, 80, 100, 100, 70, 70, 70, 100],repeatRows=1)
 
-    # Application des styles et des commandes de fusion
-    table_style = TableStyle(
-        [
-            ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
-            ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
-            ("SPAN", (1, 0), (2, 0)),  # Fusionner les colonnes 1 et 2 de l'en-tête
-            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-        ]
-    )
-    # Ajout des styles personnalisés (fusion, couleurs, etc.)
+    # Appliquer les styles, y compris les fusions
     print(stylesCustom)
     stylesCustom = [s for s in stylesCustom if s[0] != "SPAN"]
-    for custom in stylesCustom:
-        table_style.add(*custom)
 
-    table.setStyle(table_style)
+    table.setStyle(
+        TableStyle(
+            [
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
+                ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
+                ("SPAN", (1, 0), (2, 0)),  # Fusionner les colonnes 1 et 2
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+            ]
+            + stylesCustom  # Ajouter les commandes de fusion
+        )
+    )
 
-    title = Paragraph("SITUATION DES FONDS DE CONTREPARTIE", style_title)
+    # Format de la date (exemple : 22 avril 2025)
+    date_du_jour = datetime.now().strftime("%d %B %Y")
+
+    title = Paragraph(f"SITUATION DES FONDS DE CONTREPARTIE – {date_du_jour}", style_title)
     spacer = Spacer(1, 12)
+    # Construire le PDF
     doc.build([title, spacer, table])
 
     pdf = buffer.getvalue()
@@ -591,8 +568,8 @@ def generate_table_2_pdf():
             Paragraph("Détails des opérations<br/>par rubriques", style_header),
             Paragraph("Montants", style_header),
             Paragraph("Consommation", style_header),
-            Paragraph("Taux d'exécution<br/>Physique", style_header),
             Paragraph("Taux d'exécution<br/>Financier", style_header),
+            Paragraph("Taux d'exécution<br/>Physique", style_header),  
             Paragraph(
                 "Procédure de contractualisation<br/>(en cours / mode de passation)",
                 style_header,
@@ -661,8 +638,8 @@ def generate_table_2_pdf():
                         Paragraph(operation.title_fr or "", style_normal),  # Opération
                         str(montant_op),
                         str(total_consommation),
-                        f"{round(taux_physique, 2)}%",
-                        f"{round(taux_financier, 2)}%",
+                        f"{round(taux_financier, 2)}%",  # Financier d'abord
+                        f"{round(taux_physique, 2)}%",   # Puis physique
                         (
                             Paragraph(
                                 consommations[0].situation_contract or "", style_normal
@@ -687,8 +664,14 @@ def generate_table_2_pdf():
                     Paragraph(f"SOUS TOTAL {i+1}", style_header),
                     Paragraph(f"{montant}", style_header),
                     str(total_conso),
-                    f"{round(sum(taux_physique_tab) / len(taux_physique_tab), 2) if taux_physique_tab else 0}%",
-                    f"{round(sum(taux_financier_tab) / len(taux_financier_tab), 2) if taux_financier_tab else 0}%",
+                    Paragraph(
+                    f"{round(sum(taux_financier_tab) / len(taux_financier_tab), 2) if taux_financier_tab else 0}%", 
+                    style_bold
+                    ),
+                    Paragraph(
+                        f"{round(sum(taux_physique_tab) / len(taux_physique_tab), 2) if taux_physique_tab else 0}%", 
+                        style_bold
+                    ),
                     "",
                     "",
                 ]
