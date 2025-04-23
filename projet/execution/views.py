@@ -256,7 +256,14 @@ class ExcelImportViewSet(viewsets.ViewSet):
 import io
 from django.http import FileResponse
 from reportlab.lib.pagesizes import A4, A3, landscape
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Table,
+    LongTable,
+    TableStyle,
+    Paragraph,
+    Spacer,
+)
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 
@@ -264,6 +271,104 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 
 from .models import Tache, Operation, Groupe, Consommation  # Vérifie bien l'emplacement
+
+
+def compute_page_breaks(table_data, colWidths, available_height):
+    """
+    Pour chaque ligne du tableau, calcule la hauteur (en prenant la hauteur maximale
+    des cellules) et retourne un mapping (liste) indiquant le numéro de page auquel
+    la ligne sera placée.
+    """
+    row_page_mapping = [[]]
+    current_page = 0
+    cumulative_height = 0
+
+    for row in table_data:
+        # Calcul de la hauteur de la ligne : prendre la hauteur max des cellules
+        row_height = 0
+        for i, cell in enumerate(row):
+            if hasattr(cell, "wrap"):
+                # Utilisation d'une hauteur max arbitraire (assez grande)
+                _, height = cell.wrap(colWidths[i], 10000)
+                row_height = max(row_height, height+20)
+            else:
+                # Si ce n'est pas un flowable, on peut définir une hauteur par défaut
+                row_height = max(row_height, 15)
+
+        # Déterminer si la ligne peut tenir sur la page actuelle
+        if cumulative_height + row_height > (
+            available_height - 30 if current_page == 0 else available_height
+        ):
+            # On passe à la page suivante
+            current_page += 1
+            row_page_mapping.append([])
+            cumulative_height = row_height
+        else:
+            cumulative_height += row_height
+
+        row_page_mapping[current_page].append(row)
+
+    return row_page_mapping
+
+
+def flatten_row_page_mapping(row_page_mapping):
+    """
+    Transforme le row_page_mapping (liste de listes) en un dictionnaire où la clé est
+    l'indice global de la ligne et la valeur est le numéro de la page (0-indexé).
+    """
+    flat_map = {}
+    global_index = 0
+    for page_index, page_rows in enumerate(row_page_mapping):
+        for _ in page_rows:
+            flat_map[global_index] = page_index
+            global_index += 1
+    return flat_map
+
+
+def apply_page_spans(flat_mapping, custom_styles):
+    """
+    Ajuste les spans contenus dans custom_styles en vérifiant que chaque span vertical ne
+    déborde pas sur plusieurs pages. Si c'est le cas, le span est découpé pour chaque page.
+
+    :param flat_mapping: dict associant indice de ligne global -> numéro de page (0-indexé)
+    :param custom_styles: liste de tuples, par exemple: ("SPAN", (col_start, row_start), (col_end, row_end))
+    :return: nouvelle liste de spans ajustée
+    """
+    adjusted_styles = []
+    for style in custom_styles:
+        if style[0] == "SPAN":
+            (col_start, row_start), (col_end, row_end) = style[1], style[2]
+            # Numéro de page de la ligne de début et fin
+            page_start = flat_mapping.get(row_start, 0)
+            page_end = flat_mapping.get(row_end, 0)
+            # Si le span est contenu sur la même page, on le garde tel quel
+            if page_start == page_end:
+                adjusted_styles.append(style)
+            else:
+                # On découpe le span sur chaque page comprise entre le début et la fin
+                current_page = page_start
+                current_segment_start = row_start
+                for row in range(row_start, row_end + 1):
+                    # Dès qu'on détecte que la ligne courante appartient à une nouvelle page,
+                    # on ajoute le span pour l'ancienne page (de current_segment_start à row-1).
+                    if flat_mapping.get(row, current_page) != current_page:
+                        adjusted_styles.append(
+                            (
+                                "SPAN",
+                                (col_start, current_segment_start),
+                                (col_end, row - 1),
+                            )
+                        )
+                        current_page = flat_mapping[row]
+                        current_segment_start = row
+                # On ajoute le dernier segment qui va de current_segment_start à row_end
+                adjusted_styles.append(
+                    ("SPAN", (col_start, current_segment_start), (col_end, row_end))
+                )
+        else:
+            # Pour d'autres commandes (par exemple BACKGROUND), on peut les ajouter directement
+            adjusted_styles.append(style)
+    return adjusted_styles
 
 
 @api_view(["GET"])
@@ -337,6 +442,8 @@ def generate_table_1_pdf():
         ]
     ]
 
+    page_data = [[]]
+
     # Liste pour stocker les commandes de fusion (SPAN)
     stylesCustom = []
     row_index = 1  # Index de la ligne courante après l'en-tête
@@ -344,7 +451,9 @@ def generate_table_1_pdf():
     # Récupérer les tâches (en s'assurant que les champs utilisés soient non nuls)
     taches = Tache.objects.filter(type_execution="FCPDR").order_by("id")
     for tache in taches:
-        tache_title = tache.title_fr if tache.title_fr is not None else ""
+        tache_title = (
+            tache.title_fr.split(" - ")[1] if tache.title_fr is not None else ""
+        )
         tache_start_row = row_index
         montant_tache = 0
         conso_tache = 0
@@ -418,8 +527,8 @@ def generate_table_1_pdf():
                         ),  # Valeur en dur
                         Paragraph(groupe_title, style_normal),  # Groupe
                         Paragraph(op_title, style_normal),  # Opération
-                        str(montant_op),
-                        str(total_consommation),
+                        "{: ,}".format(int(montant_op)),
+                        "{: ,}".format(int(total_consommation)),
                         Paragraph(f"{round(taux_physique, 2)}%"),
                         Paragraph(f"{round(taux_financier, 2)}%"),
                         Paragraph(situation_contract or "", style_normal),
@@ -446,7 +555,7 @@ def generate_table_1_pdf():
                     Paragraph("Volet dépenses courante", style_normal),  # Valeur en dur
                     Paragraph(groupe_title, style_normal),  # Groupe
                     Paragraph(f"SOUS TOTAL {i+1}", style_header),
-                    Paragraph(str(montant), style_header),
+                    Paragraph("{: ,}".format(int(montant)), style_header),
                     Paragraph(str(total_conso)),
                     Paragraph(f"{moy_taux_physique}%"),
                     Paragraph(f"{moy_taux_financier}%"),
@@ -465,8 +574,9 @@ def generate_table_1_pdf():
                 taux_financier_tache_tab.append(moy_taux_financier)
 
             # Fusion pour le groupe (colonne 2) si plus de deux opérations
-            if len(operations) > 2:
+            if len(operations) > 0:
                 stylesCustom.append(("SPAN", (2, groupe_start_row), (2, row_index - 1)))
+                stylesCustom.append(("BACKGROUND",(3, row_index - 1),(9, row_index - 1),colors.lightgrey))
 
         if groupes:
             moy_taux_physique_tache = (
@@ -485,7 +595,7 @@ def generate_table_1_pdf():
                     Paragraph(""),
                     Paragraph(""),
                     Paragraph(""),
-                    Paragraph(str(montant_tache), style_header),
+                    Paragraph('{: ,}'.format(int(montant_tache)), style_header),
                     Paragraph(str(conso_tache), style_header),
                     Paragraph(f"{moy_taux_physique_tache}%", style_header),
                     Paragraph(f"{moy_taux_financier_tache}%", style_header),
@@ -495,7 +605,6 @@ def generate_table_1_pdf():
             )
             row_index += 1
 
-        # Fusion pour la tâche (colonnes 0 et 1) si des lignes ont été ajoutées
         if (row_index - tache_start_row) > 0:
             stylesCustom.append(("SPAN", (0, tache_start_row), (0, row_index - 2)))
             stylesCustom.append(("SPAN", (1, tache_start_row), (1, row_index - 2)))
@@ -504,16 +613,27 @@ def generate_table_1_pdf():
                 (
                     "BACKGROUND",
                     (0, row_index - 1),
-                    (-1, row_index - 1),
+                    (9, row_index - 1),
                     colors.lightgrey,
                 )
             )
 
     # Création du tableau avec des hauteurs de lignes par défaut (ici 20 points par ligne)
+    colWidths = [100, 50, 90, 100, 70, 70, 50, 50, 100, 100]
+    # Definition hauteurs de pages
+    page_height = landscape(A4)[1]
+    top_margin = doc.topMargin
+    bottom_margin = doc.bottomMargin
+    available_height = page_height - top_margin - bottom_margin
+    row_page_mapping = compute_page_breaks(table_data, colWidths, available_height)
+
+    flat_map = flatten_row_page_mapping(row_page_mapping)
+    # Ajuster les spans pour qu'ils ne débordent pas sur plusieurs pages
+    adjusted_styles = apply_page_spans(flat_map, stylesCustom)
+
     table = Table(
         table_data,
-        colWidths=[80, 60, 80, 100, 80, 70, 70, 100, 100],
-        repeatRows=1,
+        colWidths=colWidths,
     )
 
     # Application des styles et des commandes de fusion
@@ -527,9 +647,7 @@ def generate_table_1_pdf():
         ]
     )
     # Ajout des styles personnalisés (fusion, couleurs, etc.)
-    print(stylesCustom)
-    stylesCustom = [s for s in stylesCustom if s[0] != "SPAN"]
-    for custom in stylesCustom:
+    for custom in adjusted_styles:
         table_style.add(*custom)
 
     table.setStyle(table_style)
