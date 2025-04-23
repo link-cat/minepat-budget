@@ -500,13 +500,13 @@ def generate_table_1_pdf():
                         Paragraph(
                             "Volet dépenses courante", style_normal
                         ),  # Valeur en dur
-                        Paragraph(groupe_title, style_normal),  # Groupe
-                        Paragraph(op_title, style_normal),  # Opération
+                        Paragraph(groupe.title_fr, style_normal),  # Groupe
+                        Paragraph(operation.title_fr, style_normal),  # Opération
                         "{: ,}".format(int(montant_op)),
                         "{: ,}".format(int(total_consommation)),
                         Paragraph(f"{round(taux_physique, 2)}%"),
                         Paragraph(f"{round(taux_financier, 2)}%"),
-                        Paragraph(situation_contract or "", style_normal),
+                        Paragraph(conso or "", style_normal),
                         Paragraph(observations or "", style_normal),
                     ]
                 )
