@@ -254,6 +254,7 @@ class ExcelImportViewSet(viewsets.ViewSet):
 
 
 import io
+from datetime import datetime
 from django.http import FileResponse
 from reportlab.lib.pagesizes import A4, A3, landscape
 from reportlab.platypus import (
@@ -271,8 +272,6 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 
 from .models import Tache, Operation, Groupe, Consommation  # Vérifie bien l'emplacement
-from reportlab.lib.styles import ParagraphStyle
-from datetime import datetime
 
 
 def compute_page_breaks(table_data, colWidths, available_height):
@@ -284,32 +283,50 @@ def compute_page_breaks(table_data, colWidths, available_height):
     row_page_mapping = [[]]
     current_page = 0
     cumulative_height = 0
+    available_height = available_height - 30  # Ajustement pour les marges
+    tache = ""
+    groupe = ""
 
-    for row in table_data:
+    for index, row in enumerate(table_data):
         # Calcul de la hauteur de la ligne : prendre la hauteur max des cellules
         row_height = 0
         for i, cell in enumerate(row):
+            if i == 0:
+                if tache != cell.text:
+                    print("cell",cell.text)
+                    tache = cell.text
+                else:
+                    continue
+            if i == 1:
+                continue
+            if i == 2:
+                if groupe != cell.text:
+                    groupe = cell.text
+                else:
+                    continue
             if hasattr(cell, "wrap"):
                 # Utilisation d'une hauteur max arbitraire (assez grande)
                 _, height = cell.wrap(colWidths[i], 10000)
-                row_height = max(row_height, height+20)
+                row_height = max(row_height, height + 16)
             else:
                 # Si ce n'est pas un flowable, on peut définir une hauteur par défaut
                 row_height = max(row_height, 15)
 
         # Déterminer si la ligne peut tenir sur la page actuelle
-        if cumulative_height + row_height > (
-            available_height - 30 if current_page == 0 else available_height
-        ):
+        if cumulative_height + row_height > available_height:
             # On passe à la page suivante
             current_page += 1
+            if(current_page == 1):
+                available_height = available_height + 30
             row_page_mapping.append([])
+            print(index)
             cumulative_height = row_height
         else:
             cumulative_height += row_height
-
+        print("cumulative_height",cumulative_height)
+        print( "row_height", row_height)
         row_page_mapping[current_page].append(row)
-
+        
     return row_page_mapping
 
 
@@ -324,6 +341,7 @@ def flatten_row_page_mapping(row_page_mapping):
         for _ in page_rows:
             flat_map[global_index] = page_index
             global_index += 1
+
     return flat_map
 
 
@@ -414,7 +432,12 @@ def generate_table_1_pdf():
     style_header = styles["Heading4"]
     style_title = styles["Title"]
     style_normal.alignment = 1
+    style_normal.fontSize = 8
+    style_normal.leading = 8 * 1.2  # Définir explicitement (9.6 points)
+    style_header.fontSize = 8
+    style_header.leading = 8 * 1.2  # Définir explicitement (9.6 points)
     style_header.alignment = 1
+
 
     # En-tête du tableau
     table_data = [
@@ -500,10 +523,12 @@ def generate_table_1_pdf():
                         Paragraph(
                             "Volet dépenses courante", style_normal
                         ),  # Valeur en dur
-                        Paragraph(groupe.title_fr, style_normal),  # Groupe
-                        Paragraph(operation.title_fr, style_normal),  # Opération
-                        "{: ,}".format(int(montant_op)),
-                        "{: ,}".format(int(total_consommation)),
+                        Paragraph(groupe_title, style_normal),  # Groupe
+                        Paragraph(op_title, style_normal),  # Opération
+                        Paragraph("{: ,}".format(int(montant_op)), style_normal),
+                        Paragraph(
+                            "{: ,}".format(int(total_consommation)), style_normal
+                        ),
                         Paragraph(f"{round(taux_physique, 2)}%"),
                         Paragraph(f"{round(taux_financier, 2)}%"),
                         Paragraph(conso or "", style_normal),
@@ -543,16 +568,33 @@ def generate_table_1_pdf():
             # Fusion pour le groupe (colonne 2) si plus de deux opérations
             if len(operations) > 0:
                 stylesCustom.append(("SPAN", (2, groupe_start_row), (2, row_index - 1)))
-                stylesCustom.append(("BACKGROUND",(3, row_index - 1),(9, row_index - 1),colors.lightgrey))
+                stylesCustom.append(
+                    (
+                        "BACKGROUND",
+                        (3, row_index - 1),
+                        (9, row_index - 1),
+                        colors.lightgrey,
+                    )
+                )
 
         if groupes:
+            moy_taux_physique_tache = (
+                round(sum(taux_physique_tache_tab) / len(taux_physique_tache_tab), 2)
+                if taux_physique_tache_tab
+                else 0
+            )
+            moy_taux_financier_tache = (
+                round(sum(taux_financier_tache_tab) / len(taux_financier_tache_tab), 2)
+                if taux_financier_tache_tab
+                else 0
+            )
             table_data.append(
                 [
                     Paragraph(f"Total ({tache_title})", style_header),
                     Paragraph(""),
                     Paragraph(""),
                     Paragraph(""),
-                    Paragraph('{: ,}'.format(int(montant_tache)), style_header),
+                    Paragraph("{: ,}".format(int(montant_tache)), style_header),
                     Paragraph(str(conso_tache), style_header),
                     Paragraph(f"{moy_taux_physique_tache}%", style_header),
                     Paragraph(f"{moy_taux_financier_tache}%", style_header),
@@ -578,10 +620,7 @@ def generate_table_1_pdf():
     # Création du tableau avec des hauteurs de lignes par défaut (ici 20 points par ligne)
     colWidths = [100, 50, 90, 100, 70, 70, 50, 50, 100, 100]
     # Definition hauteurs de pages
-    page_height = landscape(A4)[1]
-    top_margin = doc.topMargin
-    bottom_margin = doc.bottomMargin
-    available_height = page_height - top_margin - bottom_margin
+    available_height = doc.height
     row_page_mapping = compute_page_breaks(table_data, colWidths, available_height)
 
     flat_map = flatten_row_page_mapping(row_page_mapping)
@@ -607,23 +646,9 @@ def generate_table_1_pdf():
     for custom in adjusted_styles:
         table_style.add(*custom)
 
-    table.setStyle(
-        TableStyle(
-            [
-                ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
-                ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
-                ("SPAN", (1, 0), (2, 0)),  # Fusionner les colonnes 1 et 2
-                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-            ]
-            + stylesCustom  # Ajouter les commandes de fusion
-        )
-    )
+    table.setStyle(table_style)
 
-    # Format de la date (exemple : 22 avril 2025)
-    date_du_jour = datetime.now().strftime("%d %B %Y")
-
-    title = Paragraph(f"SITUATION DES FONDS DE CONTREPARTIE – {date_du_jour}", style_title)
+    title = Paragraph(f"SITUATION DES FONDS DE CONTREPARTIE au { datetime.today().strftime('%d/%m/%Y')}", style_title)
     spacer = Spacer(1, 12)
     # Construire le PDF
     doc.build([title, spacer, table])

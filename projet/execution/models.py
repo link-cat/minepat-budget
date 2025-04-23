@@ -388,3 +388,31 @@ def restore_operation_montant(sender, instance, **kwargs):
         instance.operation.montant_engage = 0
     instance.operation.montant_engage -= instance.montant
     instance.operation.save()
+
+
+@receiver(pre_save, sender=Tache)
+def handle_type_execution_change(sender, instance, **kwargs):
+    if not instance.pk:
+        return  # On ignore les créations
+
+    try:
+        previous = Tache.objects.get(pk=instance.pk)
+    except Tache.DoesNotExist:
+        return
+
+    if previous.type_execution != instance.type_execution:
+        if instance.type_execution and instance.type_execution not in [
+            Tache.TypeExecutionChoices.FCPDR,
+            Tache.TypeExecutionChoices.SUBV,
+        ]:
+            # On supprime les anciennes opérations liées à la tâche
+            Operation.objects.filter(tache=instance).delete()
+
+            # On crée une nouvelle opération
+            Operation.objects.create(
+                tache=instance,
+                title_fr=instance.title_fr,
+                title_en=instance.title_en,
+                montant=instance.cout_tot,
+                delai_exec=instance.delais_execution,
+            )
