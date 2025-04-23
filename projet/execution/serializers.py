@@ -269,6 +269,10 @@ class PieceJointeConsommationSerializer(serializers.ModelSerializer):
 
 
 class OperationSerializer(serializers.ModelSerializer):
+    groupe_title = serializers.SerializerMethodField()
+    
+    def get_groupe_title(self, obj):
+        return obj.groupe.title_fr if obj.groupe else None
     class Meta:
         model = Operation
         fields = "__all__"
