@@ -1,4 +1,5 @@
 env/
+venv/
 projet/.env
 projet/temp/
 projet/media/temp/

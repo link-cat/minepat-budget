@@ -438,7 +438,6 @@ def generate_table_1_pdf():
     style_header.leading = 8 * 1.2  # Définir explicitement (9.6 points)
     style_header.alignment = 1
 
-
     # En-tête du tableau
     table_data = [
         [
@@ -523,16 +522,18 @@ def generate_table_1_pdf():
                         Paragraph(
                             "Volet dépenses courante", style_normal
                         ),  # Valeur en dur
-                        Paragraph(groupe_title, style_normal),  # Groupe
-                        Paragraph(op_title, style_normal),  # Opération
+                        Paragraph(groupe.title_fr, style_normal),  # Groupe
+                        Paragraph(operation.title_fritle, style_normal),  # Opération
                         Paragraph("{: ,}".format(int(montant_op)), style_normal),
                         Paragraph(
                             "{: ,}".format(int(total_consommation)), style_normal
                         ),
                         Paragraph(f"{round(taux_physique, 2)}%"),
                         Paragraph(f"{round(taux_financier, 2)}%"),
-                        Paragraph(conso or "", style_normal),
-                        Paragraph(observations or "", style_normal),
+                        Paragraph(
+                            consommations[0].situation_contract or "", style_normal
+                        ),
+                        Paragraph(consommations[0].observations or "", style_normal),
                     ]
                 )
                 row_index += 1
@@ -544,12 +545,18 @@ def generate_table_1_pdf():
                 [
                     Paragraph(tache_title, style_normal),  # Structure
                     Paragraph("Volet dépenses courante", style_normal),  # Valeur en dur
-                    Paragraph(groupe_title, style_normal),  # Groupe
+                    Paragraph(groupe.title_fr, style_normal),  # Groupe
                     Paragraph(f"SOUS TOTAL {i+1}", style_header),
                     Paragraph("{: ,}".format(int(montant)), style_header),
                     Paragraph(str(total_conso)),
-                    Paragraph(f"{moy_taux_physique}%"),
-                    Paragraph(f"{moy_taux_financier}%"),
+                    Paragraph(
+                        f"{round(sum(taux_financier_tab) / len(taux_financier_tab), 2) if taux_financier_tab else 0}%",
+                        style_header,
+                    ),
+                    Paragraph(
+                        f"{round(sum(taux_physique_tab) / len(taux_physique_tab), 2) if taux_physique_tab else 0}%",
+                        style_header,
+                    ),
                     Paragraph(""),
                     Paragraph(""),
                 ]
@@ -563,7 +570,6 @@ def generate_table_1_pdf():
             taux_financier_tache_tab.append(
                 round(sum(taux_financier_tab) / len(taux_financier_tab), 2)
             )
-
 
             # Fusion pour le groupe (colonne 2) si plus de deux opérations
             if len(operations) > 0:
@@ -804,11 +810,11 @@ def generate_table_2_pdf():
                     str(total_conso),
                     Paragraph(
                     f"{round(sum(taux_financier_tab) / len(taux_financier_tab), 2) if taux_financier_tab else 0}%", 
-                    style_bold
+                    style_header
                     ),
                     Paragraph(
                         f"{round(sum(taux_physique_tab) / len(taux_physique_tab), 2) if taux_physique_tab else 0}%", 
-                        style_bold
+                        style_header
                     ),
                     "",
                     "",
