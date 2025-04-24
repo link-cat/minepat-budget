@@ -305,7 +305,7 @@ class Groupe(models.Model):
 
 
 class Operation(models.Model):
-    tache = models.ForeignKey(Tache, on_delete=models.CASCADE)
+    tache = models.ForeignKey(Tache, on_delete=models.CASCADE, related_name='operations')
     groupe = models.ForeignKey(Groupe, null=True, blank=True, on_delete=models.CASCADE)
     montant = models.FloatField(null=True, blank=True)
     title_fr = models.CharField(max_length=255)
