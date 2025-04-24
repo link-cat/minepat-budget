@@ -8,6 +8,8 @@ from drf_yasg import openapi
 from django.db.models import Q
 
 
+from setting.filters import TacheFilter
+from django_filters.rest_framework import DjangoFilterBackend
 from setting.models import (
     TypeRessource,
     NatureDepense,
@@ -133,6 +135,8 @@ class TacheViewSet(BaseModelViewSet):
     queryset = Tache.objects.all()
     serializer_class = TacheSerializer
     permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = TacheFilter
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -162,7 +166,7 @@ class TacheViewSet(BaseModelViewSet):
         )
         serializer = self.serializer_class(tasks, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
     @swagger_auto_schema(
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,

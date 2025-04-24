@@ -4,6 +4,21 @@ from functools import reduce
 from operator import or_
 
 from .models import Tache
+from execution.models import Groupe
+
+
+class TacheFilter(django_filters.FilterSet):
+    groupe = django_filters.ModelChoiceFilter(
+        field_name="operations__groupe",
+        queryset=Groupe.objects.all(),
+        label="Groupe",
+        distinct=True,
+    )
+
+    class Meta:
+        model = Tache
+        fields = ["groupe"]
+
 
 class ExerciceFilter(django_filters.Filter):
     def filter(self, qs, value):
