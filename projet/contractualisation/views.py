@@ -100,9 +100,14 @@ class EtapeContractualisationViewSet(BaseModelViewSet):
         current_step = None
         if hasattr(instance, "tache") and instance.tache:
             current_step = instance.tache.current_step
+            print("current_step", current_step)
 
         response_data = serializer.data
-        response_data["current_step"] = current_step.id
+        if current_step:
+            response_data["current_step"] = current_step.id
+        else:
+            response_data["current_step"] = None
+        # response_data["current_step"] = current_step.id
 
         return Response(response_data, status=status.HTTP_200_OK)
 
