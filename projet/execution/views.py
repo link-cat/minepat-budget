@@ -293,7 +293,7 @@ def compute_page_breaks(table_data, colWidths, available_height):
         for i, cell in enumerate(row):
             if i == 0:
                 if tache != cell.text:
-                    print("cell",cell.text)
+                    print("cell", cell.text)
                     tache = cell.text
                 else:
                     continue
@@ -316,17 +316,17 @@ def compute_page_breaks(table_data, colWidths, available_height):
         if cumulative_height + row_height > available_height:
             # On passe à la page suivante
             current_page += 1
-            if(current_page == 1):
+            if current_page == 1:
                 available_height = available_height + 30
             row_page_mapping.append([])
             print(index)
             cumulative_height = row_height
         else:
             cumulative_height += row_height
-        print("cumulative_height",cumulative_height)
-        print( "row_height", row_height)
+        print("cumulative_height", cumulative_height)
+        print("row_height", row_height)
         row_page_mapping[current_page].append(row)
-        
+
     return row_page_mapping
 
 
@@ -446,7 +446,6 @@ def generate_table_1_pdf():
     style_header.fontSize = 8
     style_header.leading = 8 * 1.2  # Définir explicitement (9.6 points)
     style_header.alignment = 1
-
 
     # En-tête du tableau
     table_data = [
@@ -683,7 +682,10 @@ def generate_table_1_pdf():
 
     table.setStyle(table_style)
 
-    title = Paragraph(f"SITUATION DES FONDS DE CONTREPARTIE au { datetime.today().strftime('%d/%m/%Y')}", style_title)
+    title = Paragraph(
+        f"SITUATION DES FONDS DE CONTREPARTIE au { datetime.today().strftime('%d/%m/%Y')}",
+        style_title,
+    )
     spacer = Spacer(1, 12)
     doc.build([title, spacer, table])
 
@@ -949,10 +951,34 @@ class VerticalParagraph(Paragraph):
         return self.style.leading, height
 
 
-from collections import defaultdict
 from contractualisation.models import Etape, EtapeContractualisation
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+
+# Paramètre de requête attendu
+type_param = openapi.Parameter(
+    "type",
+    openapi.IN_QUERY,
+    description="Type de procedure de contractualisation à filtrer (ex: 'appels d'offres restreint', 'appels d'offres ouverts', etc...)",
+    type=openapi.TYPE_STRING,
+    required=True,
+)
 
 
+@swagger_auto_schema(
+    method="get",
+    manual_parameters=[type_param],
+    operation_summary="Génère un PDF d'annexe 3 filtré par type de tâche",
+    operation_description="""
+Ce point de terminaison permet de générer et télécharger un fichier PDF contenant
+le tableau des tâches filtré par un type spécifique.
+Le PDF contient les données de chaque tâche, étape par étape, ainsi que les montants financiers associés.
+""",
+    responses={
+        200: "PDF généré avec succès",
+        400: 'Paramètre "type" manquant ou invalide',
+    },
+)
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def Annexe3View(request):
@@ -966,223 +992,168 @@ def generate_table_3_pdf_response(request):
     """
     Construit et renvoie le PDF en tant que FileResponse (pour téléchargement).
     """
-    pdf_content = generate_table_3_pdf()  # Appelle la fonction qui construit le PDF
+    type = request.query_params.get("type")
+    pdf_content = generate_table_3_pdf(type)  # Appelle la fonction qui construit le PDF
     response = FileResponse(io.BytesIO(pdf_content), content_type="application/pdf")
     response["Content-Disposition"] = 'attachment; filename="rapport.pdf"'
     return response
 
 
-from reportlab.pdfgen import canvas
-
-
-def generate_table_3_pdf():
+def generate_table_3_pdf(type_selected: str):
     """
-    Génère un PDF contenant un tableau avec les tâches, étapes, et données financières.
+    Génère un PDF contenant un tableau avec les tâches, étapes, et données financières pour un type donné.
     Retourne un buffer PDF (en bytes).
     """
+    pdfmetrics.registerFont(TTFont("DejaVuSans", "fonts/DejaVuSans.ttf"))
     buffer = io.BytesIO()
-    c = canvas.Canvas(buffer)
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(A3))
 
     # Styles
     styles = getSampleStyleSheet()
     style_normal = styles["Normal"]
     style_header = styles["Heading4"]
     style_normal.alignment = 1
+    style_normal.fontName = "DejaVuSans"
     style_header.alignment = 1
-    # Récupérer les tâches par type
-    grouped_data = defaultdict(list)
-    for tache in Tache.objects.all():
-        grouped_data[tache.type].append(tache)
-    tables1 = []
-    tables2 = []
 
-    for type in grouped_data:
-        if not type:
-            continue
-        list_etapes = Etape.objects.filter(type=type).order_by("rang")
+    # Récupérer les tâches et étapes liées au type
+    taches = Tache.objects.filter(type=type_selected)
+    list_etapes = Etape.objects.filter(type=type_selected).order_by("rang")
 
-        if len(list_etapes) > 10:
-            c.setPageSize(landscape(A3))
-            page_width, page_height = landscape(A3)
-        else:
-            c.setPageSize(landscape(A4))
-            page_width, page_height = landscape(A4)
+    if not taches.exists() or not list_etapes.exists():
+        raise ValueError("Aucune donnée disponible pour le type fourni.")
 
-        # Créer le titre
-        title_text = f"MISE EN ŒUVRE DU PLAN DE PASSATION DES MARCHES {type}"
-        title = Paragraph(title_text, style_header)
-        title.wrapOn(c, page_width - 200, 50)  # Ajuster la largeur disponible
-        title.drawOn(c, 100, page_height - 100)  # Positionner en haut
+    # Titre
+    title_text = f"MISE EN ŒUVRE DU PLAN DE PASSATION DES MARCHES {type_selected} au { datetime.today().strftime('%d/%m/%Y')}"
+    title = Paragraph(title_text, style_header)
 
-        # En-têtes principaux
-        headers = [
-            Paragraph("Désignation et localisation du projet", style_header),
-            *[
-                item
-                for etape in list_etapes
-                for item in [Paragraph(etape.title, style_header), "", ""]
-            ],
-            Paragraph("Montant (FCFA) du Contrat", style_header),
-            "",
-            "",
-            "",
-            Paragraph("Observations", style_header),
-        ]
-        sub_headers = [
-            "",
-            *[
-                item
-                for _ in list_etapes
-                for item in [
-                    VerticalParagraph("Date Prévue", style_header),
-                    VerticalParagraph("Date effective", style_header),
-                    VerticalParagraph("Écart (jours)", style_header),
-                ]
-            ],
-            VerticalParagraph("Prévisionnel", style_header),
-            VerticalParagraph("Réel", style_header),
-            VerticalParagraph("Écart", style_header),
-            VerticalParagraph("Taux de consommation", style_header),
-            "",
-        ]
+    # En-têtes
+    headers = [
+        Paragraph("Désignation et localisation du projet", style_header),
+        *[
+            item
+            for etape in list_etapes
+            for item in [Paragraph(etape.title, style_header), "", ""]
+        ],
+        Paragraph("Montant (FCFA) du Contrat", style_header),
+        "",
+        "",
+        "",
+        Paragraph("Observations", style_header),
+    ]
+    sub_headers = [
+        "",
+        *[
+            item
+            for _ in list_etapes
+            for item in [
+                VerticalParagraph("Date Prévue", style_header),
+                VerticalParagraph("Date effective", style_header),
+                VerticalParagraph("Écart (jours)", style_header),
+            ]
+        ],
+        VerticalParagraph("Prévisionnel", style_header),
+        VerticalParagraph("Réel", style_header),
+        VerticalParagraph("Écart", style_header),
+        VerticalParagraph("Taux de consommation", style_header),
+        "",
+    ]
 
-        # definition du style
+    # Styles de colonnes
+    style_columns = [
+        ("SPAN", (0, 0), (0, 1)),
+        ("SPAN", (-1, 0), (-1, 1)),
+        ("SPAN", (-5, 0), (-2, 0)),
+    ]
+    for i, _ in enumerate(list_etapes):
+        style_columns.append(("SPAN", (1 + (i * 3), 0), (3 + (i * 3), 0)))
 
-        style_columns = [
-            ("SPAN", (0, 0), (0, 1)),
-            ("SPAN", (-1, 0), (-1, 1)),
-            ("SPAN", (-5, 0), (-2, 0)),
-        ]
-        for i, _ in enumerate(list_etapes):
-            style_columns.append(("SPAN", (1 + (i * 3), 0), (3 + (i * 3), 0)))
+    table_data = [headers, sub_headers]
 
-        # Initialiser les données du tableau
-        table_data = [headers, sub_headers]
+    for tache in taches:
+        row_data = [Paragraph(tache.title_fr, style=style_normal)]
+        montantEtape = None
+        etapes_contractualisations = EtapeContractualisation.objects.filter(tache=tache)
 
-        # Ajouter les lignes de données pour chaque tâche
-        for tache in grouped_data[type]:
-            row_data = [Paragraph(tache.title_fr, style=style_normal)]
-            montantEtape = None
-            etapes_contractualisations = EtapeContractualisation.objects.filter(
-                tache=tache
-            )
-
-            for etape in list_etapes:
-                contract = etapes_contractualisations.filter(etape=etape)
-                if contract.exists():
-                    contract = contract[0]
-                    if contract.montant_prevu and contract.montant_reel:
-                        montantEtape = contract
-                    # Date prévue
-                    row_data.append(
-                        VerticalParagraph(
-                            (
-                                contract.date_prevue.strftime("%d/%m/%Y")
-                                if contract.date_prevue
-                                else ""
-                            ),
-                            style=style_normal,
-                        )
+        for etape in list_etapes:
+            contract = etapes_contractualisations.filter(etape=etape).first()
+            if contract:
+                if contract.montant_prevu and contract.montant_reel:
+                    montantEtape = contract
+                row_data.append(
+                    VerticalParagraph(
+                        (
+                            contract.date_prevue.strftime("%d/%m/%Y")
+                            if contract.date_prevue
+                            else ""
+                        ),
+                        style=style_normal,
                     )
-                    # Date effective ou saisine
-                    if contract.date_saisine:
-                        row_data.append(
-                            VerticalParagraph(
-                                contract.date_saisine.strftime("%d/%m/%Y"),
-                                style=style_normal,
-                            )
-                        )
-                        row_data.append(
-                            VerticalParagraph(
-                                (
-                                    f"{(contract.date_saisine - contract.date_prevue).days} J"
-                                    if contract.date_prevue
-                                    else ""
-                                ),
-                                style=style_normal,
-                            )
-                        )
-                    else:
-                        row_data.append(
-                            VerticalParagraph(
-                                (
-                                    contract.date_effective.strftime("%d/%m/%Y")
-                                    if contract.date_effective
-                                    else ""
-                                ),
-                                style=style_normal,
-                            )
-                        )
-                        row_data.append(
-                            VerticalParagraph(
-                                (
-                                    f"{(contract.date_effective - contract.date_prevue).days} J"
-                                    if contract.date_effective and contract.date_prevue
-                                    else ""
-                                ),
-                                style=style_normal,
-                            )
-                        )
-                else:
-                    # Si pas de contrat, ajouter des cellules vides
-                    row_data.extend(["", "", ""])
-
-            # Ajouter les colonnes de montant
-            row_data.extend(
-                [
+                )
+                date_effective = contract.date_saisine or contract.date_effective
+                row_data.append(
                     VerticalParagraph(
-                        f"{montantEtape.montant_prevu}" if montantEtape else "",
+                        date_effective.strftime("%d/%m/%Y") if date_effective else "",
                         style=style_normal,
-                    ),
+                    )
+                )
+                ecart = (
+                    (date_effective - contract.date_prevue).days
+                    if date_effective and contract.date_prevue
+                    else ""
+                )
+                row_data.append(
                     VerticalParagraph(
-                        f"{montantEtape.montant_reel}" if montantEtape else "",
+                        (
+                            f"{ecart} J {'❌' if ecart < 0 else '✅'}"
+                            if ecart != ""
+                            else ""
+                        ),
                         style=style_normal,
-                    ),
-                    VerticalParagraph(
-                        f"{montantEtape.ecart_montant}" if montantEtape else "",
-                        style=style_normal,
-                    ),
-                    VerticalParagraph(
-                        f"{montantEtape.taux_consomation}" if montantEtape else "",
-                        style=style_normal,
-                    ),
-                    VerticalParagraph("", style=style_normal),
-                ]
-            )
+                    )
+                )
+            else:
+                row_data.extend(["", "", ""])
 
-            # Ajouter la ligne au tableau
-            table_data.append(row_data)
-
-        # Créer le tableau
-        col_widths = [80] + [20] * (len(table_data[0]) - 2) + [80]
-        table = Table(table_data, colWidths=col_widths)  # Ajuster les largeurs
-        table_width = sum(col_widths)
-
-        # Appliquer les styles
-        table.setStyle(
-            TableStyle(
-                [
-                    ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
-                    (
-                        "BACKGROUND",
-                        (0, 0),
-                        (-1, 1),
-                        colors.lightgrey,
-                    ),
-                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                    ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-                ]
-                + style_columns
-            )
+        row_data.extend(
+            [
+                VerticalParagraph(
+                    f"{montantEtape.montant_prevu}" if montantEtape else "",
+                    style=style_normal,
+                ),
+                VerticalParagraph(
+                    f"{montantEtape.montant_reel}" if montantEtape else "",
+                    style=style_normal,
+                ),
+                VerticalParagraph(
+                    f"{montantEtape.ecart_montant}" if montantEtape else "",
+                    style=style_normal,
+                ),
+                VerticalParagraph(
+                    f"{montantEtape.taux_consomation}" if montantEtape else "",
+                    style=style_normal,
+                ),
+                VerticalParagraph("", style=style_normal),
+            ]
         )
-        x = (page_width - table_width) / 2
-        y = 50
-        table.wrapOn(c, page_width, page_height)
-        table.drawOn(c, x, y)
-        c.showPage()
 
-    # Générer le document
-    c.save()
+        table_data.append(row_data)
+
+    col_widths = [80] + [20] * (len(table_data[0]) - 2) + [80]
+    table = Table(table_data, colWidths=col_widths)
+    table.setStyle(
+        TableStyle(
+            [
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
+                ("BACKGROUND", (0, 0), (-1, 1), colors.lightgrey),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+            ]
+            + style_columns
+        )
+    )
+
+    doc.build([title, Spacer(1, 12), table])
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
