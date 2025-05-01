@@ -160,7 +160,8 @@ class Tache(models.Model):
 
     class TypeExecutionChoices(models.TextChoices):
         FCPDR = "FCPDR", "Fond de contrepartie depense reelles"
-        SUBV = "SUBV", "Transferts et subventions"
+        ETAPUB = "ETAPUB", "Etablissement publiques"
+        STRUCTRAT = "STRUCTRAT", "Structures rattachées"
         PIISAH = "PIISAH", "Piisah"
         PLANUS = "PLANUS", "Planus"
         PLURIANNUEL = "PLURIANNUEL", "Pluriannuel"

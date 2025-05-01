@@ -402,7 +402,8 @@ def handle_type_execution_change(sender, instance, **kwargs):
     if previous.type_execution != instance.type_execution:
         if instance.type_execution and instance.type_execution not in [
             Tache.TypeExecutionChoices.FCPDR,
-            Tache.TypeExecutionChoices.SUBV,
+            Tache.TypeExecutionChoices.ETAPUB,
+            Tache.TypeExecutionChoices.STRUCTRAT,
         ]:
             # On supprime les anciennes opérations liées à la tâche
             Operation.objects.filter(tache=instance).delete()
