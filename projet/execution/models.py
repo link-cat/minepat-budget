@@ -385,7 +385,7 @@ def validate_consommation(sender, instance, **kwargs):
 def restore_operation_montant(sender, instance, **kwargs):
     if instance.operation.montant_engage is None:
         instance.operation.montant_engage = 0
-    instance.operation.montant_engage -= instance.montant
+    instance.operation.montant_engage -= instance.montant_engage
     instance.operation.save()
 
 
