@@ -1,5 +1,6 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from execution.models import Operation
 from projet.permissions import CustomDjangoModelPermissions
 
 from rest_framework.decorators import action
@@ -245,6 +246,23 @@ class TacheViewSet(BaseModelViewSet):
 
         # Vérification que tous les IDs existent
         taches = Tache.objects.filter(id__in=ids)
+        for tache in taches:
+             if tache.type_execution and tache.type_execution not in [
+            Tache.TypeExecutionChoices.FCPDR,
+            Tache.TypeExecutionChoices.ETAPUB,
+            Tache.TypeExecutionChoices.STRUCTRAT,
+            ]:
+                # On supprime les anciennes opérations liées à la tâche
+                Operation.objects.filter(tache=tache).delete()
+
+                # On crée une nouvelle opération
+                Operation.objects.create(
+                    tache=tache,
+                    title_fr=tache.title_fr,
+                    title_en=tache.title_en,
+                    montant=tache.cout_tot,
+                    delai_exec=tache.delais_execution,
+                )
         found_ids = set(taches.values_list('id', flat=True))
         missing_ids = set(ids) - found_ids
 
