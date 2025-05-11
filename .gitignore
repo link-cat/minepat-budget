@@ -2,6 +2,7 @@ env/
 projet/.env
 projet/temp/
 projet/media/temp/
+projet/media/rapports/
 
 **/__pycache__/
 **/*.pyc

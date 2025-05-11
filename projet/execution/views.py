@@ -409,289 +409,83 @@ def generate_table_1_pdf_response(request):
     response["Content-Disposition"] = 'attachment; filename="rapport.pdf"'
     return response
 
+import os
+import jpype
+import jpype.imports
+from jpype.types import *
+import platform
+
+import os
+import platform
+import jpype
 
 def generate_table_1_pdf():
-    """
-    Génère un PDF contenant un tableau qui reprend :
-      - La Tâche (en tant que 'Structure')
-      - Le 'Volet dépenses courantes' (en dur)
-      - Les Groupes associés à la Tâche
-      - Les Opérations rattachées au Groupe
-      - Quelques colonnes pour Montant, Consommation, etc.
-    Retourne un buffer PDF (en bytes).
-    """
-    import io
-    from reportlab.lib import colors
-    from reportlab.lib.pagesizes import A4, landscape
-    from reportlab.platypus import (
-        SimpleDocTemplate,
-        Paragraph,
-        Spacer,
-        Table,
-        TableStyle,
-    )
-    from reportlab.lib.styles import getSampleStyleSheet
+    REPORTS_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'reports')
+    input_file = os.path.join(REPORTS_DIR, 'bin', 'annexe1.jasper')
+    output_dir = os.path.join('media', 'rapports')
+    output_file = os.path.join(output_dir, 'annexe_1.pdf')
+    lib_dir = os.path.join(REPORTS_DIR, 'lib')
 
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=landscape(A4))
+    # Créer le répertoire de sortie s'il n'existe pas
+    os.makedirs(output_dir, exist_ok=True)
 
-    # Définition des styles
-    styles = getSampleStyleSheet()
-    style_normal = styles["Normal"]
-    style_header = styles["Heading4"]
-    style_title = styles["Title"]
-    style_normal.alignment = 1
-    style_normal.fontSize = 8
-    style_normal.leading = 8 * 1.2  # Définir explicitement (9.6 points)
-    style_header.fontSize = 8
-    style_header.leading = 8 * 1.2  # Définir explicitement (9.6 points)
-    style_header.alignment = 1
+    # Construction du classpath
+    separator = ";" if platform.system() == "Windows" else ":"
+    classpath = separator.join([
+        os.path.join(lib_dir, jar)
+        for jar in os.listdir(lib_dir) if jar.endswith(".jar")
+    ])
+    print("Classpath:", classpath)
 
-    # En-tête du tableau
-    table_data = [
-        [
-            Paragraph("Structures", style_header),
-            Paragraph("Mode d'exécution", style_header),
-            Paragraph("", style_header),
-            Paragraph("Détails des opérations<br/>par rubriques", style_header),
-            Paragraph("Montants", style_header),
-            Paragraph("Consommation", style_header),
-            Paragraph("Taux d'exécution<br/>Physique", style_header),
-            Paragraph("Taux d'exécution<br/>Financier", style_header),
-            Paragraph(
-                "Procédure de contractualisation<br/>(en cours / mode de passation)",
-                style_header,
-            ),
-            Paragraph("Difficultés / Observations", style_header),
-        ]
-    ]
+    if not jpype.isJVMStarted():
+        jpype.startJVM(classpath=classpath, convertStrings=True)
+        print("JVM démarrée.")
 
-    page_data = [[]]
+    from java.util import HashMap
+    from java.sql import DriverManager
 
-    # Liste pour stocker les commandes de fusion (SPAN)
-    stylesCustom = []
-    row_index = 1  # Index de la ligne courante après l'en-tête
+    try:
+        from net.sf.jasperreports.engine import JasperFillManager, JasperExportManager
+        print("Classes JasperReports importées avec succès.")
+    except Exception as e:
+        print("Erreur lors de l'import des classes JasperReports:", e)
+        raise
 
-    # Récupérer les tâches (en s'assurant que les champs utilisés soient non nuls)
-    taches = Tache.objects.filter(type_execution="FCPDR").order_by("id")
-    for tache in taches:
-        tache_title = (
-            tache.title_fr.split(" - ")[1] if tache.title_fr is not None else ""
-        )
-        tache_start_row = row_index
-        montant_tache = 0
-        conso_tache = 0
-        taux_physique_tache_tab = []
-        taux_financier_tache_tab = []
+    db_url = "jdbc:postgresql://localhost:5442/projet"
+    db_user = "postgres"
+    db_pass = "link2024"
+    connection = None
 
-        # Groupes distincts liés aux opérations de cette tâche
-        groupes = Groupe.objects.filter(operation__tache=tache).distinct()
-        for i, groupe in enumerate(groupes):
-            groupe_title = groupe.title_fr if groupe.title_fr is not None else ""
-            groupe_start_row = row_index
+    try:
+        connection = DriverManager.getConnection(db_url, db_user, db_pass)
+        print("Connexion à la base de données établie.")
 
-            operations = Operation.objects.filter(tache=tache, groupe=groupe)
-            montant = 0
-            total_conso = 0
-            taux_physique_tab = []
-            taux_financier_tab = []
+        params = HashMap()
 
-            for operation in operations:
-                op_title = operation.title_fr if operation.title_fr is not None else ""
-                montant_op = operation.montant if operation.montant is not None else 0
+        jasperPrint = JasperFillManager.fillReport(input_file, params, connection)
+        print("Rapport rempli avec succès.")
 
-                # Récupération des consommations en vérifiant qu'il y en ait au moins une
-                consommations = list(
-                    Consommation.objects.filter(operation=operation).order_by("-id")
-                )
-                if consommations:
-                    # Pour chaque consommation, on s'assure que les valeurs utilisées sont définies
-                    total_consommation = sum(
-                        c.montant_engage if c.montant_engage is not None else 0
-                        for c in consommations
-                    )
-                    situation_contract = (
-                        consommations[0].situation_contract
-                        if consommations[0].situation_contract is not None
-                        else ""
-                    )
-                    observations = (
-                        consommations[0].observations
-                        if consommations[0].observations is not None
-                        else ""
-                    )
-                    taux_physique = (
-                        consommations[0].pourcentage_exec_physique
-                        if consommations[0].pourcentage_exec_physique is not None
-                        else 0
-                    )
-                else:
-                    total_consommation = 0
-                    situation_contract = ""
-                    observations = ""
-                    taux_physique = 0
+        JasperExportManager.exportReportToPdfFile(jasperPrint, output_file)
+        print(f"PDF généré avec succès : {output_file}")
 
-                total_conso += total_consommation
-                taux_physique_tab.append(taux_physique)
-                montant += montant_op
+        # Lire le PDF et retourner son contenu binaire
+        with open(output_file, 'rb') as f:
+            pdf_content = f.read()
 
-                # Calcul du taux financier en évitant la division par zéro
-                if montant_op != 0:
-                    taux_financier = (total_consommation / montant_op) * 100
-                else:
-                    taux_financier = 0
-                taux_financier_tab.append(taux_financier)
+        return pdf_content
 
-                # Ajout de la ligne pour l'opération
-                table_data.append(
-                    [
-                        Paragraph(tache_title, style_normal),  # Structure
-                        Paragraph(
-                            "Volet dépenses courante", style_normal
-                        ),  # Valeur en dur
-                        Paragraph(groupe_title, style_normal),  # Groupe
-                        Paragraph(op_title, style_normal),  # Opération
-                        Paragraph("{: ,}".format(int(montant_op)), style_normal),
-                        Paragraph(
-                            "{: ,}".format(int(total_consommation)), style_normal
-                        ),
-                        Paragraph(f"{round(taux_physique, 2)}%"),
-                        Paragraph(f"{round(taux_financier, 2)}%"),
-                        Paragraph(situation_contract or "", style_normal),
-                        Paragraph(observations or "", style_normal),
-                    ]
-                )
-                row_index += 1
+    except Exception as e:
+        print("Erreur lors du remplissage ou de l'export :", e)
+        e.printStackTrace()
+        raise
 
-            # Ajout de la ligne "SOUS TOTAL" pour le groupe
-            moy_taux_physique = (
-                round(sum(taux_physique_tab) / len(taux_physique_tab), 2)
-                if taux_physique_tab
-                else 0
-            )
-            moy_taux_financier = (
-                round(sum(taux_financier_tab) / len(taux_financier_tab), 2)
-                if taux_financier_tab
-                else 0
-            )
-
-            table_data.append(
-                [
-                    Paragraph(tache_title, style_normal),  # Structure
-                    Paragraph("Volet dépenses courante", style_normal),  # Valeur en dur
-                    Paragraph(groupe_title, style_normal),  # Groupe
-                    Paragraph(f"SOUS TOTAL {i+1}", style_header),
-                    Paragraph("{: ,}".format(int(montant)), style_header),
-                    Paragraph(str(total_conso)),
-                    Paragraph(f"{moy_taux_physique}%"),
-                    Paragraph(f"{moy_taux_financier}%"),
-                    Paragraph(""),
-                    Paragraph(""),
-                ]
-            )
-            row_index += 1
-            montant_tache += montant
-            conso_tache += total_conso
-
-            # Stockage pour le calcul global de la tâche
-            if taux_physique_tab:
-                taux_physique_tache_tab.append(moy_taux_physique)
-            if taux_financier_tab:
-                taux_financier_tache_tab.append(moy_taux_financier)
-
-            # Fusion pour le groupe (colonne 2) si plus de deux opérations
-            if len(operations) > 0:
-                stylesCustom.append(("SPAN", (2, groupe_start_row), (2, row_index - 1)))
-                stylesCustom.append(
-                    (
-                        "BACKGROUND",
-                        (3, row_index - 1),
-                        (9, row_index - 1),
-                        colors.lightgrey,
-                    )
-                )
-
-        if groupes:
-            moy_taux_physique_tache = (
-                round(sum(taux_physique_tache_tab) / len(taux_physique_tache_tab), 2)
-                if taux_physique_tache_tab
-                else 0
-            )
-            moy_taux_financier_tache = (
-                round(sum(taux_financier_tache_tab) / len(taux_financier_tache_tab), 2)
-                if taux_financier_tache_tab
-                else 0
-            )
-            table_data.append(
-                [
-                    Paragraph(f"Total ({tache_title})", style_header),
-                    Paragraph(""),
-                    Paragraph(""),
-                    Paragraph(""),
-                    Paragraph("{: ,}".format(int(montant_tache)), style_header),
-                    Paragraph(str(conso_tache), style_header),
-                    Paragraph(f"{moy_taux_physique_tache}%", style_header),
-                    Paragraph(f"{moy_taux_financier_tache}%", style_header),
-                    Paragraph(""),
-                    Paragraph(""),
-                ]
-            )
-            row_index += 1
-
-        if (row_index - tache_start_row) > 0:
-            stylesCustom.append(("SPAN", (0, tache_start_row), (0, row_index - 2)))
-            stylesCustom.append(("SPAN", (1, tache_start_row), (1, row_index - 2)))
-            stylesCustom.append(("SPAN", (0, row_index - 1), (3, row_index - 1)))
-            stylesCustom.append(
-                (
-                    "BACKGROUND",
-                    (0, row_index - 1),
-                    (9, row_index - 1),
-                    colors.lightgrey,
-                )
-            )
-
-    # Création du tableau avec des hauteurs de lignes par défaut (ici 20 points par ligne)
-    colWidths = [100, 50, 90, 100, 70, 70, 50, 50, 100, 100]
-    # Definition hauteurs de pages
-    available_height = doc.height
-    row_page_mapping = compute_page_breaks(table_data, colWidths, available_height)
-
-    flat_map = flatten_row_page_mapping(row_page_mapping)
-    # Ajuster les spans pour qu'ils ne débordent pas sur plusieurs pages
-    adjusted_styles = apply_page_spans(flat_map, stylesCustom)
-
-    table = Table(
-        table_data,
-        colWidths=colWidths,
-    )
-
-    # Application des styles et des commandes de fusion
-    table_style = TableStyle(
-        [
-            ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
-            ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
-            ("SPAN", (1, 0), (2, 0)),  # Fusionner les colonnes 1 et 2 de l'en-tête
-            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-        ]
-    )
-    # Ajout des styles personnalisés (fusion, couleurs, etc.)
-    for custom in adjusted_styles:
-        table_style.add(*custom)
-
-    table.setStyle(table_style)
-
-    title = Paragraph(
-        f"SITUATION DES FONDS DE CONTREPARTIE au { datetime.today().strftime('%d/%m/%Y')}",
-        style_title,
-    )
-    spacer = Spacer(1, 12)
-    doc.build([title, spacer, table])
-
-    pdf = buffer.getvalue()
-    buffer.close()
-    return pdf
+    finally:
+        if connection:
+            try:
+                connection.close()
+                print("Connexion à la base de données fermée.")
+            except Exception as e:
+                print("Erreur lors de la fermeture de la connexion :", e)
 
 
 @api_view(["GET"])
@@ -714,211 +508,72 @@ def generate_table_2_pdf_response(request):
 
 
 def generate_table_2_pdf():
-    """
-    Génère un PDF contenant un tableau qui reprend :
-      - La Tache (en tant que 'Structure')
-      - Le 'Volet dépenses courantes' (en dur)
-      - Les Groupes associés à la Tache
-      - Les Opérations rattachées au Groupe
-      - Quelques colonnes pour Montant, Consommation, etc.
-    Retourne un buffer PDF (en bytes).
-    """
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=landscape(A4))
+    REPORTS_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'reports')
+    input_file = os.path.join(REPORTS_DIR, 'bin', 'annexe2.jasper')
+    output_dir = os.path.join('media', 'rapports')
+    output_file = os.path.join(output_dir, 'annexe_2.pdf')
+    lib_dir = os.path.join(REPORTS_DIR, 'lib')
 
-    # Styles
-    styles = getSampleStyleSheet()
-    style_normal = styles["Normal"]
-    style_header = styles["Heading4"]
-    style_title = styles["Title"]
-    style_normal.alignment = 1
-    style_header.alignment = 1
+    # Créer le répertoire de sortie s'il n'existe pas
+    os.makedirs(output_dir, exist_ok=True)
 
-    # En-tête du tableau
-    table_data = [
-        [
-            Paragraph("Structures", style_header),
-            Paragraph("Mode d'exécution", style_header),
-            Paragraph("Détails des opérations<br/>par rubriques", style_header),
-            Paragraph("Montants", style_header),
-            Paragraph("Consommation", style_header),
-            Paragraph("Taux d'exécution<br/>Physique", style_header),
-            Paragraph("Taux d'exécution<br/>Financier", style_header),
-            Paragraph(
-                "Procédure de contractualisation<br/>(en cours / mode de passation)",
-                style_header,
-            ),
-            Paragraph("Difficultés / Observations", style_header),
-        ]
-    ]
+    # Construction du classpath
+    separator = ";" if platform.system() == "Windows" else ":"
+    classpath = separator.join([
+        os.path.join(lib_dir, jar)
+        for jar in os.listdir(lib_dir) if jar.endswith(".jar")
+    ])
+    print("Classpath:", classpath)
 
-    # Liste pour stocker les commandes SPAN pour les fusions
-    stylesCustom = []
+    if not jpype.isJVMStarted():
+        jpype.startJVM(classpath=classpath, convertStrings=True)
+        print("JVM démarrée.")
 
-    # Index de la ligne courante (commence après l'en-tête)
-    row_index = 1
+    from java.util import HashMap
+    from java.sql import DriverManager
 
-    # Récupérer les tâches
-    taches = Tache.objects.filter(type_execution="SUBV").order_by("id")
+    try:
+        from net.sf.jasperreports.engine import JasperFillManager, JasperExportManager
+        print("Classes JasperReports importées avec succès.")
+    except Exception as e:
+        print("Erreur lors de l'import des classes JasperReports:", e)
+        raise
 
-    for tache in taches:
-        # Index de début pour la tâche
-        tache_start_row = row_index
-        montant_tache = 0
-        conso_tache = 0
-        taux_physique_tache_tab = []
-        taux_financier_tache_tab = []
+    db_url = "jdbc:postgresql://localhost:5442/projet"
+    db_user = "postgres"
+    db_pass = "link2024"
+    connection = None
 
-        # Groupes distincts liés aux opérations de cette tâche
-        groupes = Groupe.objects.filter(operation__tache=tache).distinct()
+    try:
+        connection = DriverManager.getConnection(db_url, db_user, db_pass)
+        print("Connexion à la base de données établie.")
 
-        for i, groupe in enumerate(groupes):
-            # Index de début pour le groupe
-            groupe_start_row = row_index
+        params = HashMap()
 
-            # Opérations pour ce groupe et cette tâche
-            operations = Operation.objects.filter(tache=tache, groupe=groupe)
-            montant = 0
-            total_conso = 0
-            taux_physique_tab = []
-            taux_financier_tab = []
+        jasperPrint = JasperFillManager.fillReport(input_file, params, connection)
+        print("Rapport rempli avec succès.")
 
-            for operation in operations:
-                consommations = Consommation.objects.filter(
-                    operation=operation
-                ).order_by("-id")
-                total_consommation = sum(c.montant_engage or 0 for c in consommations)
-                total_conso += total_consommation
+        JasperExportManager.exportReportToPdfFile(jasperPrint, output_file)
+        print(f"PDF généré avec succès : {output_file}")
 
-                # Taux d'exécution physique
-                taux_physique = (
-                    consommations[0].pourcentage_exec_physique if consommations else 0
-                )
-                taux_physique_tab.append(taux_physique)
+        # Lire le PDF et retourner son contenu binaire
+        with open(output_file, 'rb') as f:
+            pdf_content = f.read()
 
-                # Taux d'exécution financier
-                montant_op = operation.montant or 0
-                montant += montant_op
-                taux_financier = (
-                    (total_consommation / montant_op * 100) if montant_op != 0 else 0
-                )
-                taux_financier_tab.append(taux_financier)
+        return pdf_content
 
-                # Ajouter la ligne pour l'opération
-                table_data.append(
-                    [
-                        Paragraph(tache.title_fr or "", style_normal),  # Structure
-                        Paragraph(groupe.title_fr or "", style_normal),  # Groupe
-                        Paragraph(operation.title_fr or "", style_normal),  # Opération
-                        str(montant_op),
-                        str(total_consommation),
-                        f"{round(taux_physique, 2)}%",
-                        f"{round(taux_financier, 2)}%",
-                        (
-                            Paragraph(
-                                consommations[0].situation_contract or "", style_normal
-                            )
-                            if consommations
-                            else ""
-                        ),
-                        (
-                            Paragraph(consommations[0].observations or "", style_normal)
-                            if consommations
-                            else ""
-                        ),
-                    ]
-                )
-                row_index += 1
+    except Exception as e:
+        print("Erreur lors du remplissage ou de l'export :", e)
+        e.printStackTrace()
+        raise
 
-            # Ajouter la ligne "SOUS TOTAL"
-            table_data.append(
-                [
-                    Paragraph(tache.title_fr or "", style_normal),  # Structure
-                    Paragraph(groupe.title_fr or "", style_normal),  # Groupe
-                    Paragraph(f"SOUS TOTAL {i+1}", style_header),
-                    Paragraph(f"{montant}", style_header),
-                    str(total_conso),
-                    f"{round(sum(taux_physique_tab) / len(taux_physique_tab), 2) if taux_physique_tab else 0}%",
-                    f"{round(sum(taux_financier_tab) / len(taux_financier_tab), 2) if taux_financier_tab else 0}%",
-                    "",
-                    "",
-                ]
-            )
-            row_index += 1
-            montant_tache += montant
-            conso_tache += total_conso
-            taux_physique_tache_tab.append(
-                round(sum(taux_physique_tab) / len(taux_physique_tab), 2)
-            )
-            taux_financier_tache_tab.append(
-                round(sum(taux_financier_tab) / len(taux_financier_tab), 2)
-            )
-
-            # Ajouter la fusion pour le groupe (colonne 2) si au moins une opération existe
-            if operations:
-                stylesCustom.append(("SPAN", (2, groupe_start_row), (2, row_index - 1)))
-
-        if groupes:
-            table_data.append(
-                [
-                    Paragraph(
-                        f"Total ({tache.title_fr})" or "", style_header
-                    ),  # Structure
-                    "",
-                    "",
-                    Paragraph(f"{montant_tache}", style_header),
-                    Paragraph(str(conso_tache), style_header),
-                    Paragraph(
-                        f"{round(sum(taux_physique_tache_tab) / len(taux_physique_tache_tab), 2) if taux_physique_tache_tab else 0}%",
-                        style_header,
-                    ),
-                    Paragraph(
-                        f"{round(sum(taux_financier_tache_tab) / len(taux_financier_tache_tab), 2) if taux_financier_tache_tab else 0}%",
-                        style_header,
-                    ),
-                    "",
-                    "",
-                ]
-            )
-            row_index += 1
-
-        # Ajouter la fusion pour la tâche (colonne 0) si des lignes ont été ajoutées
-        if row_index > tache_start_row:
-            stylesCustom.append(("SPAN", (0, tache_start_row), (0, row_index - 2)))
-            stylesCustom.append(("SPAN", (0, row_index - 1), (2, row_index - 1)))
-            stylesCustom.append(
-                (
-                    "BACKGROUND",
-                    (0, row_index - 1),
-                    (-1, row_index - 1),
-                    colors.lightgrey,
-                )
-            )
-
-    # Création du tableau
-    table = Table(table_data, colWidths=[80, 80, 100, 80, 70, 70, 100, 100])
-
-    # Appliquer les styles, y compris les fusions
-    table.setStyle(
-        TableStyle(
-            [
-                ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
-                ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
-                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-            ]
-            + stylesCustom  # Ajouter les commandes de fusion
-        )
-    )
-
-    title = Paragraph("EXECUTION DES TRANSFERTS EN INVESTISSEMENT", style_title)
-    spacer = Spacer(1, 12)
-    # Construire le PDF
-    doc.build([title, spacer, table])
-
-    pdf = buffer.getvalue()
-    buffer.close()
-    return pdf
+    finally:
+        if connection:
+            try:
+                connection.close()
+                print("Connexion à la base de données fermée.")
+            except Exception as e:
+                print("Erreur lors de la fermeture de la connexion :", e)
 
 
 from reportlab.platypus import Paragraph
@@ -952,8 +607,6 @@ class VerticalParagraph(Paragraph):
 
 
 from contractualisation.models import Etape, EtapeContractualisation
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
 
 # Paramètre de requête attendu
 type_param = openapi.Parameter(
@@ -1004,7 +657,6 @@ def generate_table_3_pdf(type_selected: str):
     Génère un PDF contenant un tableau avec les tâches, étapes, et données financières pour un type donné.
     Retourne un buffer PDF (en bytes).
     """
-    pdfmetrics.registerFont(TTFont("DejaVuSans", "fonts/DejaVuSans.ttf"))
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=landscape(A3))
 
