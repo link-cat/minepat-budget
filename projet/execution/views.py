@@ -539,9 +539,9 @@ def generate_table_2_pdf():
         print("Erreur lors de l'import des classes JasperReports:", e)
         raise
 
-    db_url = "jdbc:postgresql://localhost:5442/projet"
-    db_user = "postgres"
-    db_pass = "link2024"
+    db_url = f"jdbc:postgresql://{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
+    db_user = os.getenv("DB_USER")
+    db_pass = os.getenv("DB_USER_PASSWORD")
     connection = None
 
     try:
