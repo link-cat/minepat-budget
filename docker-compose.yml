@@ -31,22 +31,6 @@ services:
     depends_on:
       - db
 
-  jasperreports:
-    image: docker.io/bitnami/jasperreports:latest
-    ports:
-      - "8001:8080"
-    depends_on:
-      - db
-    environment:
-      - JASPERREPORTS_DATABASE_TYPE=postgresql
-      - JASPERREPORTS_DATABASE_HOST=db
-      - JASPERREPORTS_DATABASE_PORT_NUMBER=5432
-      - JASPERREPORTS_DATABASE_USER=postgres
-      - JASPERREPORTS_DATABASE_PASSWORD=link2024
-      - JASPERREPORTS_DATABASE_NAME=projet
-    volumes:
-      - 'jasperreports_data:/bitnami/jasperreports'
-
 volumes:
   postgres_data:
   jasperreports_data:
