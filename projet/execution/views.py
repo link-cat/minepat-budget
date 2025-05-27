@@ -487,7 +487,28 @@ def generate_table_1_pdf():
             except Exception as e:
                 print("Erreur lors de la fermeture de la connexion :", e)
 
+type_param = openapi.Parameter(
+    "type",
+    openapi.IN_QUERY,
+    description="Type de projets etablissements publiques et structures rattache)",
+    type=openapi.TYPE_STRING,
+    required=True,
+)
 
+@swagger_auto_schema(
+    method="get",
+    manual_parameters=[type_param],
+    operation_summary="Génère un PDF d'annexe 2 filtré par type de tâche",
+    operation_description="""
+Ce point de terminaison permet de générer et télécharger un fichier PDF contenant
+le tableau des tâches filtré par un type spécifique.
+Le PDF contient les données de chaque tâche, étape par étape, ainsi que les montants financiers associés.
+""",
+    responses={
+        200: "PDF généré avec succès",
+        400: 'Paramètre "type" manquant ou invalide',
+    },
+)
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def Annexe2View(request):
