@@ -665,7 +665,6 @@ def generate_table_3_pdf(type_selected: str):
     style_normal = styles["Normal"]
     style_header = styles["Heading4"]
     style_normal.alignment = 1
-    style_normal.fontName = "DejaVuSans"
     style_header.alignment = 1
 
     # Récupérer les tâches et étapes liées au type
