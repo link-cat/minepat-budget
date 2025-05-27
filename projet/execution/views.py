@@ -501,15 +501,16 @@ def generate_table_2_pdf_response(request):
     """
     Construit et renvoie le PDF en tant que FileResponse (pour téléchargement).
     """
-    pdf_content = generate_table_2_pdf()  # Appelle la fonction qui construit le PDF
+    pdf_content = generate_table_2_pdf(request)  # Appelle la fonction qui construit le PDF
     response = FileResponse(io.BytesIO(pdf_content), content_type="application/pdf")
     response["Content-Disposition"] = 'attachment; filename="rapport.pdf"'
     return response
 
 
-def generate_table_2_pdf():
+def generate_table_2_pdf(request):
+    type = request.query_params.get("type")
     REPORTS_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'reports')
-    input_file = os.path.join(REPORTS_DIR, 'bin', 'annexe2.jasper')
+    input_file = os.path.join(REPORTS_DIR, 'bin', 'annexe2a.jasper' if type == "ETAPUB" else 'annexe2b.jasper')
     output_dir = os.path.join('media', 'rapports')
     output_file = os.path.join(output_dir, 'annexe_2.pdf')
     lib_dir = os.path.join(REPORTS_DIR, 'lib')
