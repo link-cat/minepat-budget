@@ -757,6 +757,7 @@ def import_bip(sheet_data):
                 "montant_reel": row["Dotation CP"],
                 "adjudicataire": row["Bénéficiaire"],
                 "numero_notification": row["Num Carton"],
+                "arrondissement": arrondissement,
             },
         )
         tache.exercices.add(exercice)

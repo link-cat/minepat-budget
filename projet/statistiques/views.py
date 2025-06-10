@@ -60,5 +60,13 @@ def BIPMetricsView(request):
     # Informations générales
     data["total_ecarts"] = Tache.objects.aggregate(total=Sum(F('cout_tot') - F('montant_previsionnel')))['total'] or 0
     data["total_credits_forclos"] = Operation.objects.aggregate(total=Sum('montant'))['total'] or 0
+    taches_par_region = (
+        Tache.objects
+        .filter(arrondissement__departement__region__isnull=False)
+        .values(region_id=F('arrondissement__departement__region__id'),
+                region_nom=F('arrondissement__departement__region__name_fr'))
+        .annotate(nombre_taches=Count('id'))
+    )
+    data["taches_par_region"] = list(taches_par_region)
 
     return Response(data, status=status.HTTP_200_OK)

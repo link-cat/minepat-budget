@@ -186,6 +186,9 @@ class Tache(models.Model):
     objectif = models.TextField(null=True, blank=True)
     cout_tot = models.FloatField()
     activite = models.ForeignKey(Activite, on_delete=models.CASCADE)
+    arrondissement = models.ForeignKey(
+        Arrondissement, on_delete=models.CASCADE, null=True, blank=True
+    )
     numero_marche = models.CharField(max_length=255, null=True, blank=True)
     montant_previsionnel = models.FloatField(null=True, blank=True)
     adjudicataire = models.CharField(max_length=255, null=True, blank=True)
