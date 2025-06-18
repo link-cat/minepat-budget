@@ -360,17 +360,17 @@ def validate_operation(sender, instance, **kwargs):
 def validate_consommation(sender, instance, **kwargs):
     if instance.operation.montant_engage is None:
         instance.operation.montant_engage = 0
-        instance.operation.save()
-    instance.operation.montant_engage = instance.operation.montant_engage + instance.montant_engage
-    instance.operation.save()
+
     montant_possible = instance.operation.montant_engage + instance.montant_engage
+
     if montant_possible > instance.operation.montant:
         raise ValidationError(
             "Impossible d'ajouter une consommation. Montant restant insuffisant pour l'opération."
         )
-    else:
-        instance.operation.montant_engage = montant_possible
-        instance.operation.save()
+
+    # On applique le nouveau montant *seulement après validation*
+    instance.operation.montant_engage = montant_possible
+    instance.operation.save()
 
 
 @receiver(post_delete, sender=Operation)
