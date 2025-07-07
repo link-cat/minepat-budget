@@ -4,6 +4,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 
+from django.core.exceptions import ValidationError
+
+from django.db import transaction
+from django.db.models import Sum
+
+
 from projet.permissions import CustomDjangoModelPermissions
 from setting.models import Tache
 
@@ -175,12 +181,129 @@ class OperationViewSet(BaseModelViewSet):
     permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
     filterset_class = OperationFilter
 
+    def _check_montant_restant(self, tache: Tache, new_amount: float, old_amount: float = 0):
+        """
+        Valide que, après retrait de l'ancien montant et ajout du nouveau,
+        la somme totale des opérations pour cette tâche ne dépasse pas son montant réel.
+        """
+        total_existants = Operation.objects.filter(tache=tache).aggregate(
+            total=Sum('montant')
+        )['total'] or 0
+
+        total_simule = total_existants - old_amount + new_amount
+        reste = tache.montant_reel - total_simule
+
+        if reste < 0:
+            disponible = tache.montant_reel
+            raise ValidationError({
+                "montant": (
+                    f"Impossible d’enregistrer cette opération. "
+                    f"Montant restant insuffisant pour la tâche « {tache.title_fr} » "
+                    f"({disponible:.2f} FCFA disponibles)."
+                )
+            })
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        tache: Tache = serializer.validated_data['tache']
+        montant_new = serializer.validated_data['montant']
+
+        # initialisation si jamais None
+        if tache.montant_operation_restant is None:
+            tache.montant_operation_restant = tache.montant_reel
+            tache.save()
+
+        # validation métier
+        self._check_montant_restant(tache, montant_new)
+
+        with transaction.atomic():
+            instance = serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance: Operation = self.get_object()
+        old_amount = instance.montant or 0
+
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+
+        new_amount = serializer.validated_data.get('montant', old_amount)
+        tache: Tache = instance.tache
+
+        # initialisation si jamais None
+        if tache.montant_operation_restant is None:
+            tache.montant_operation_restant = tache.montant_reel
+            tache.save()
+
+        # validation métier
+        self._check_montant_restant(tache, new_amount, old_amount)
+
+        with transaction.atomic():
+            instance = serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class ConsommationViewSet(BaseModelViewSet):
     queryset = Consommation.objects.all()
     serializer_class = ConsommationSerializer
     permission_classes = [IsAuthenticated, CustomDjangoModelPermissions]
     filterset_class = ConsommationFilter
+
+    def _check_montant_restant(self, operation, new_amount, old_amount=0):
+        """
+        Vérifie si le nouveau montant peut être engagé sans dépasser le montant total de l'opération.
+        """
+        total_engage = Consommation.objects.filter(operation=operation).aggregate(
+            total=Sum('montant_engage')
+        )['total'] or 0
+
+        total_simule = total_engage - old_amount + new_amount
+        reste = operation.montant - total_simule
+
+        if reste < 0:
+            raise ValidationError({
+                "montant_engage": (
+                    f"Impossible d’enregistrer cette consommation. "
+                    f"Montant restant insuffisant ({reste} FCFA)."
+                )
+            })
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        operation = serializer.validated_data['operation']
+        new_amount = serializer.validated_data['montant_engage']
+
+        self._check_montant_restant(operation, new_amount)
+
+        with transaction.atomic():
+            instance = serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance: Consommation = self.get_object()
+        old_amount = instance.montant_engage or 0
+
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+
+        new_amount = serializer.validated_data.get('montant_engage', old_amount)
+        operation = instance.operation
+
+        self._check_montant_restant(operation, new_amount, old_amount)
+
+        with transaction.atomic():
+            instance = serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class GroupeViewSet(BaseModelViewSet):

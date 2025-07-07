@@ -341,36 +341,46 @@ class Consommation(models.Model):
     history = HistoricalRecords()
 
 
-@receiver(pre_save, sender=Operation)
-def validate_operation(sender, instance, **kwargs):
-    if instance.tache.montant_operation_restant is None:
-        instance.tache.montant_operation_restant = instance.tache.montant_reel
-        instance.tache.save()
-    montant_restant = instance.tache.montant_operation_restant - instance.montant
-    if montant_restant < 0:
-        raise ValidationError(
-            f"Impossible d'ajouter une opération. Montant restant insuffisant pour la tâche {instance.tache.title_fr}."
-        )
-    else:
-        instance.tache.montant_operation_restant = montant_restant
-        instance.tache.save()
+# @receiver(pre_save, sender=Operation)
+# def validate_operation(sender, instance, **kwargs):
+#     if instance.tache.montant_operation_restant is None:
+#         instance.tache.montant_operation_restant = instance.tache.montant_reel
+#         instance.tache.save()
+#     montant_restant = instance.tache.montant_operation_restant - instance.montant
+#     if montant_restant < 0:
+#         raise ValidationError(
+#             f"Impossible d'ajouter une opération. Montant restant insuffisant pour la tâche {instance.tache.title_fr}."
+#         )
+#     else:
+#         instance.tache.montant_operation_restant = montant_restant
+#         instance.tache.save()
 
 
-@receiver(pre_save, sender=Consommation)
-def validate_consommation(sender, instance, **kwargs):
-    if instance.operation.montant_engage is None:
-        instance.operation.montant_engage = 0
+# @receiver(pre_save, sender=Consommation)
+# def validate_consommation(sender, instance, **kwargs):
+#     montant_possible = 0
+#     idOperation = instance.operation.id 
+#     if instance.operation.montant_engage is None:
+#         instance.operation.montant_engage = 0
 
-    montant_possible = instance.operation.montant_engage + instance.montant_engage
+#     # if instance.montant_engage > 0:
+#     #     montant_possible = instance.operation.montant_engage - ins
 
-    if montant_possible > instance.operation.montant:
-        raise ValidationError(
-            "Impossible d'ajouter une consommation. Montant restant insuffisant pour l'opération."
-        )
+#     montant_possible = instance.operation.montant_engage + instance.montant_engage
 
-    # On applique le nouveau montant *seulement après validation*
-    instance.operation.montant_engage = montant_possible
-    instance.operation.save()
+#     # print("idOperation :", Consommation)
+#     # print("operation.montant_engage :", instance.operation.montant_engage)
+#     # print("montant_possible :", montant_possible)
+#     # print("Last instance.montant_engage :", instance.montant_engage)
+
+#     if montant_possible > instance.operation.montant:
+#         raise ValidationError(
+#             "Impossible d'ajouter une consommation. Montant restant insuffisant pour l'opération."
+#         )
+
+#     # On applique le nouveau montant *seulement après validation*
+#     instance.operation.montant_engage = montant_possible
+#     instance.operation.save()
 
 
 @receiver(post_delete, sender=Operation)
