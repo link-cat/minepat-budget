@@ -22,6 +22,7 @@ from .models import (
 )
 
 from setting.models import Tache
+from django.db.models import Sum
 
 
 class EstExecuteeActionSerializer(serializers.ModelSerializer):
@@ -270,9 +271,16 @@ class PieceJointeConsommationSerializer(serializers.ModelSerializer):
 
 class OperationSerializer(serializers.ModelSerializer):
     groupe_title = serializers.SerializerMethodField()
+    montant_restant = serializers.SerializerMethodField(read_only=True)
     
     def get_groupe_title(self, obj):
         return obj.groupe.title_fr if obj.groupe else None
+    
+    def get_montant_restant(self, obj):
+        total_montant_engage = Consommation.objects.filter(operation=obj).aggregate(total=Sum('montant_engage'))['total'] or 0
+        reste = obj.montant - total_montant_engage
+        return reste if reste >= 0 else 0
+    
     class Meta:
         model = Operation
         fields = "__all__"
