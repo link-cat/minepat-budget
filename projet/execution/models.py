@@ -37,7 +37,7 @@ CONTRAT_SITUATION_CHOICES = [
     ("Marché:OS Dem. trav. notifié", "Marché:OS Dem. trav. notifié"),
     ("Marché:OS Susp. trav. notifié", "Marché:OS Susp. trav. notifié"),
     ("Marché:Avenant en cours", "Marché:Avenant en cours"),
-    ("Marché:receptionné", "Marché:receptionné"),
+    ("Marché:réceptionné", "Marché:réceptionné"),
     ("Marché pluriannuel signé avant 2024", "Marché pluriannuel signé avant 2024"),
     ("Marché:chantier abandonné", "Marché:chantier abandonné"),
     ("Marché:résilié", "Marché:résilié"),
