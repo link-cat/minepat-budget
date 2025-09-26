@@ -60,6 +60,8 @@ from contractualisation.views import (
     ExcelImportViewSet as ImportEtape,
 )
 
+from reporting.views import ConcertationDocumentViewSet, DocumentSectionViewSet, DocumentImageViewSet
+
 from statistiques.views import BIPMetricsView
 from execution.views import Annexe1View
 
@@ -151,9 +153,19 @@ contractualisation_viewsets = [
     ("load-etape", ImportEtape, "load-etape"),
     ("maturation", MaturationViewSet, "maturation"),
 ]
+
 router_contractualisation = routers.DefaultRouter()
 for prefix, viewset, basename in contractualisation_viewsets:
     router_contractualisation.register(rf"{prefix}", viewset, basename=basename)
+  
+reporting_viewsets = [
+    ("concertation-documents", ConcertationDocumentViewSet, "concertation-documents"),
+    ("document-sections", DocumentSectionViewSet, "document-sections"),
+    ("images", DocumentImageViewSet, "images"),
+]
+router_reporting = routers.DefaultRouter()
+for prefix, viewset, basename in reporting_viewsets:
+    router_reporting.register(rf"{prefix}", viewset, basename=basename)
 
 # URLs globales
 urlpatterns = [
@@ -161,6 +173,7 @@ urlpatterns = [
     path("setting/", include(router_setting.urls)),
     path("execution/", include(router_execution.urls)),
     path("contractualisation/", include(router_contractualisation.urls)),
+    path("reporting/", include(router_reporting.urls)),
     path("api/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/login/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/permissions/", PermissionListView, name="permissions-list"),
@@ -177,6 +190,8 @@ urlpatterns = [
         schema_view.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
     ),
+    path('api/upload-image/', DocumentImageViewSet.as_view({'post': 'upload_for_tinymce'}), 
+         name='tinymce-upload'),
     # path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
 ]
 

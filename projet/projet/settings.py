@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "setting",
     "execution",
     "contractualisation",
+    "reporting",
     "simple_history",
 ]
 
@@ -165,7 +166,6 @@ REST_FRAMEWORK = {
 }
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:4200",
     "http://localhost:3000",
 ]
 
