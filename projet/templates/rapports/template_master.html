@@ -17,7 +17,7 @@
       }
       
       /* Page de Couverture : Pas de numéro de page */
-      @page:first {
+      @page: first {
         margin: 0;
         @top-center {
           content: none;
@@ -28,11 +28,11 @@
       }
       
       body {
-        font-family: "Times New Roman", serif;
+        font-family: 'Times New Roman', serif;
         font-size: 10pt;
         line-height: 1.5;
       }
-
+      
       .page-header {
         position: running(header-banner);
         width: 100%;
@@ -44,22 +44,22 @@
         font-size: 8pt;
         font-weight: bold;
       }
-
-      h1{
+      
+      h1 {
         color: black;
         background: #85d6e1;
         font-size: 14pt;
         width: 100%;
         margin: 0;
       }
-
-      h2{
+      
+      h2 {
         color: black;
         background: #85d6e1;
         font-size: 12pt;
       }
-
-      img{
+      
+      img {
         width: 100%;
         margin: auto;
       }
@@ -82,7 +82,7 @@
         margin-left: 5px;
         font-weight: bold;
       }
-
+      
       .figure-entry {
         display: flex;
         align-items: flex-start;
@@ -174,7 +174,7 @@
       }
       
       .title-main {
-        font-family: "Times New Roman", Times, serif;
+        font-family: 'Times New Roman', Times, serif;
         font-size: 14pt;
         font-style: italic;
         font-weight: 600; /* légèrement bold pour imiter le rendu institutionnel */
@@ -201,7 +201,6 @@
     </style>
   </head>
   <body>
-
     <div class="page-header">
       <div>CADRE DE CONCERTATION POUR LE SUIVI DU BIP DU MINEPAT</div>
       <div class="page-header-subtitle">{{ rapport.mois }} {{ rapport.annee }}</div>
@@ -258,22 +257,22 @@
                 <strong>MINISTRY OF THE ECONOMY, PLANNING AND REGIONAL DEVELOPMENT</strong>
               </div>
               <div>**************</div>
-                <div>
+              <div>
                 <strong>GENERAL SECRETARIAT</strong>
-                </div>
-                <div>**************</div>
-                <div>
+              </div>
+              <div>**************</div>
+              <div>
                 <strong>DEPARTMENT OF GENERAL AFFAIRS</strong>
-                </div>
-                <div>**************</div>
-                <div>
+              </div>
+              <div>**************</div>
+              <div>
                 <strong>SUB-DEPARTMENT OF THE BUDGET</strong>
-                </div>
-                <div>**************</div>
-                <div>
+              </div>
+              <div>**************</div>
+              <div>
                 <strong>BUDGET SERVICE</strong>
-                </div>
-                <div>**************</div>
+              </div>
+              <div>**************</div>
             </td>
           </tr>
         </table>
@@ -305,16 +304,15 @@
     </div>
 
     {% if figures %}
-    <div class="page-break">
-      <h1 style="text-align: center;">Liste des Figures</h1>
-      {% for figure in figures %}
-        <div class="figure-entry">
-          <a href="#{{ figure.id }}">{{ figure.caption }}</a>
-        </div>
-      {% endfor %}
-    </div>
+      <div class="page-break">
+        <h1 style="text-align: center;">Liste des Figures</h1>
+        {% for figure in figures %}
+          <div class="figure-entry">
+            <a href="#{{ figure.id }}">{{ figure.caption }}</a>
+          </div>
+        {% endfor %}
+      </div>
     {% endif %}
-
 
     <div class="page-break">
       <h1 style="text-align: center;">Liste des Tableaux</h1>

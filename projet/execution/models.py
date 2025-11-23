@@ -388,7 +388,9 @@ def restore_tache_montant(sender, instance, **kwargs):
     if instance.tache.montant_operation_restant is None:
         instance.tache.montant_operation_restant = instance.tache.montant_reel
     instance.tache.montant_operation_restant += instance.montant
+    instance.tache._skip_type_execution_signal = True
     instance.tache.save()
+    delattr(instance.tache, "_skip_type_execution_signal")
 
 
 @receiver(post_delete, sender=Consommation)
@@ -407,6 +409,8 @@ def handle_type_execution_change(sender, instance, **kwargs):
     try:
         previous = Tache.objects.get(pk=instance.pk)
     except Tache.DoesNotExist:
+        return
+    if previous.type_execution == instance.type_execution:
         return
 
     if previous.type_execution != instance.type_execution:

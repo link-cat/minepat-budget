@@ -1,0 +1,171 @@
+<style>
+    .table-synthese-container {
+        margin: 20px 0;
+    }
+    
+    .table-synthese-title {
+        font-size: 9pt;
+        font-weight: bold;
+        margin-bottom: 10px;
+        font-style: italic;
+    }
+    
+    .table-synthese {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 6pt;
+        margin-bottom: 10px;
+    }
+    
+    .table-synthese th,
+    .table-synthese td {
+        border: 1px solid #333;
+        padding: 3px 2px;
+        text-align: center;
+        vertical-align: middle;
+    }
+    
+    /* En-tête principal - bleu foncé */
+    .table-synthese thead tr:first-child th {
+        background-color: #4a5f7f;
+        color: white;
+        font-weight: bold;
+        font-size: 7pt;
+    }
+    
+    /* Sous-en-têtes - bleu plus clair */
+    .table-synthese thead tr:nth-child(2) th {
+        background-color: #7a95b5;
+        color: white;
+        font-weight: normal;
+        font-size: 5.5pt;
+    }
+    
+    /* Première colonne (noms des composantes) */
+    .table-synthese td:first-child {
+        text-align: left;
+        font-weight: normal;
+        background-color: #f5f5f5;
+    }
+    
+    /* Lignes de données */
+    .table-synthese tbody tr:not(.total-row) td {
+        background-color: white;
+    }
+    
+    /* Ligne de total */
+    .table-synthese .total-row {
+        font-weight: bold;
+        background-color: #e8e8e8;
+    }
+    
+    .table-synthese .total-row td:first-child {
+        background-color: #d0d0d0;
+    }
+    
+    /* Cellules avec pourcentages et variations */
+    .variation-positive {
+        color: #006400;
+        font-weight: bold;
+    }
+    
+    .variation-negative {
+        color: #8B0000;
+        font-weight: bold;
+    }
+    
+    .variation-neutral {
+        color: #666;
+    }
+    
+    /* Symboles de tendance */
+    .trend-up::before {
+        content: "▲ + ";
+    }
+    
+    .trend-down::before {
+        content: "▼ ";
+    }
+    
+    /* Formatage des nombres */
+    .number-cell {
+        font-family: 'Courier New', monospace;
+        text-align: right;
+    }
+    
+    /* Source */
+    .table-source {
+        font-size: 7pt;
+        font-style: italic;
+        color: #666;
+        margin-top: 5px;
+    }
+</style>
+  <div class="table-synthese-container">
+    <div class="table-synthese-title">
+        Tableau 2 : Situation au 05 juillet 2025 de l’exécution physico-financière de la SNI, du PIISAH, du PLANUT et des Projet Pluriannuels.
+    </div>
+    
+    <table class="table-synthese">
+        <thead>
+            <tr>
+                <th rowspan="2" style="width: 180px;">Composantes du BIP<br/>(hors Finex, CD et FCP en TDD)</th>
+                <th rowspan="2" style="width: 90px;">Provision inscrite<br/>dans la PTA 2025</th>
+                <th colspan="4">Taux d'exécution physique</th>
+                <th colspan="4">Taux d'engagement</th>
+            </tr>
+            <tr>
+                <!-- Taux d'exécution physique -->
+                <th style="width: 50px;">% Phy<br/>Juin 2025</th>
+                <th style="width: 50px;">% Phy<br/>Juillet<br/>2025</th>
+                <th style="width: 70px;">Performance<br/>en juillet 2025<br/>par rapport à<br/>Juin 2025</th>
+                <th style="width: 50px;">% Phy<br/>Juillet<br/>2024</th>
+                <!-- Taux d'engagement -->
+                <th style="width: 50px;">% Eng<br/>Juin<br/>2025</th>
+                <th style="width: 50px;">% Eng<br/>Juillet<br/>2025</th>
+                <th style="width: 70px;">Performance<br/>en juillet 2025<br/>par rapport à<br/>Juin 2025</th>
+                <th style="width: 50px;">% Eng<br/>Juillet 2024</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ligne in data.lignes %}
+            <tr {% if ligne.is_total %}class="total-row"{% endif %}>
+                <td>{{ ligne.nom }}</td>
+                <td class="number-cell">{{ ligne.provision|default:"-" }}</td>
+                
+                <!-- Taux d'exécution physique -->
+                <td>{{ ligne.phy_juin_2025|default:"-" }}</td>
+                <td>{{ ligne.phy_juillet_2025|default:"-" }}</td>
+                <td>
+                    {% if ligne.perf_phy_vs_juin %}
+                        <span class="{% if ligne.perf_phy_vs_juin_trend == 'up' %}variation-positive trend-up{% elif ligne.perf_phy_vs_juin_trend == 'down' %}variation-negative trend-down{% else %}variation-neutral{% endif %}">
+                            {{ ligne.perf_phy_vs_juin }}
+                        </span>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>{{ ligne.phy_juillet_2024|default:"-" }}</td>
+                
+                <!-- Taux d'engagement colonnes manquantes -->
+                <td>{{ ligne.eng_juin_2025|default:"-" }}</td>
+                <td>{{ ligne.eng_juillet_2025|default:"-" }}</td>
+                <td>
+                    {% if ligne.perf_eng_vs_juin %}
+                        <span class="{% if ligne.perf_eng_vs_juin_trend == 'up' %}variation-positive trend-up{% elif ligne.perf_eng_vs_juin_trend == 'down' %}variation-negative trend-down{% else %}variation-neutral{% endif %}">
+                            {{ ligne.perf_eng_vs_juin }}
+                        </span>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>{{ ligne.eng_juillet_2024|default:"-" }}</td>
+                            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div class="table-source">
+        Source : Service du Budget (2025), données des Projets/Programmes et Structures
+    </div>
+</div>

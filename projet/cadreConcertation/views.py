@@ -4,6 +4,8 @@ from rest_framework import status
 from django.template.loader import render_to_string
 from django.http import HttpResponse
 from weasyprint import HTML, CSS
+
+from .services import process_dynamic_html
 from .models import Rapport
 from .serializers import RapportSerializer
 from rest_framework.permissions import IsAuthenticated
@@ -144,6 +146,9 @@ class RapportViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
         # Extraire le sommaire et les figures
         extracted_data = self._extract_toc_and_figures(rapport)
+        
+        extracted_data['sections'][0]["processed_content"] = process_dynamic_html(rapport.resume_analytique)
+        extracted_data['sections'][1]["processed_content"] = process_dynamic_html(rapport.introduction)
             
             # Contexte pour le template
         context = {
