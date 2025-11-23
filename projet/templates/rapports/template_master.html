@@ -7,14 +7,21 @@
       @page {
         size: A4;
         margin: 2cm;
+        @top-center {
+          content: element(header-banner);
+          width: 100%;
+        }
         @bottom-right {
           content: counter(page);
         }
       }
       
       /* Page de Couverture : Pas de numéro de page */
-      @page: first {
+      @page:first {
         margin: 0;
+        @top-center {
+          content: none;
+        }
         @bottom-right {
           content: '';
         }
@@ -26,16 +33,30 @@
         line-height: 1.5;
       }
 
+      .page-header {
+        position: running(header-banner);
+        width: 100%;
+        background: #1a5a8e;
+        color: white;
+        display: flex;
+        padding: 10px;
+        justify-content: space-between;
+        font-size: 8pt;
+        font-weight: bold;
+      }
+
       h1{
         color: black;
         background: #85d6e1;
-        font-size: 16pt;
+        font-size: 14pt;
+        width: 100%;
+        margin: 0;
       }
 
       h2{
         color: black;
         background: #85d6e1;
-        font-size: 14pt;
+        font-size: 12pt;
       }
 
       img{
@@ -57,6 +78,25 @@
       }
       /* Les points ..... entre le titre et le numéro */
       .toc-entry a::after {
+        content: leader('.') target-counter(attr(href), page);
+        margin-left: 5px;
+        font-weight: bold;
+      }
+
+      .figure-entry {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 8px;
+      }
+      
+      .figure-entry a {
+        text-decoration: none;
+        color: black;
+        width: 100%;
+        display: flex;
+      }
+      
+      .figure-entry a::after {
         content: leader('.') target-counter(attr(href), page);
         margin-left: 5px;
         font-weight: bold;
@@ -161,6 +201,12 @@
     </style>
   </head>
   <body>
+
+    <div class="page-header">
+      <div>CADRE DE CONCERTATION POUR LE SUIVI DU BIP DU MINEPAT</div>
+      <div class="page-header-subtitle">{{ rapport.mois }} {{ rapport.annee }}</div>
+    </div>
+
     <div class="cover-page">
       <div class="header-section">
         <table style="width: 100%; text-align: center; margin-bottom: 20px; font-family: 'Arial', sans-serif;">
@@ -244,27 +290,31 @@
       <div class="report-date">{{ rapport.mois }} {{ rapport.annee }}</div>
     </div>
 
-    <div class="page-break"></div>
-
     <div class="page-break">
       <h1 style="text-align: center;">Sommaire</h1>
-
-      <div class="toc-entry">
-        <a href="#resume">Résumé Analytique</a>
-      </div>
-      <div class="toc-entry">
-        <a href="#intro">Introduction</a>
-      </div>
-      <div class="toc-entry">
-        <a href="#etat">Etat de mise en œuvre des recommandations et résolutions du Cadre de Concertation</a>
-      </div>
-      <div class="toc-entry">
-        <a href="#presentation">Présentation du Budget d’Investissement Public 2025 du MINEPAT (Hors FINEX, crédits délégués et fonds de Contrepartie en taxes et droits de douane)</a>
-      </div>
-      <div class="toc-entry">
-        <a href="#situation">Situation au 05 juillet 2025 des composantes du BIP 2025 du MINEPAT</a>
-      </div>
+      {% for section in toc %}
+        <div class="toc-entry main-section">
+          <a href="#{{ section.id }}">{{ section.title }}</a>
+        </div>
+        {% for subsection in section.subsections %}
+          <div class="toc-entry subsection">
+            <a href="#{{ subsection.id }}">{{ subsection.title }}</a>
+          </div>
+        {% endfor %}
+      {% endfor %}
     </div>
+
+    {% if figures %}
+    <div class="page-break">
+      <h1 style="text-align: center;">Liste des Figures</h1>
+      {% for figure in figures %}
+        <div class="figure-entry">
+          <a href="#{{ figure.id }}">{{ figure.caption }}</a>
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
 
     <div class="page-break">
       <h1 style="text-align: center;">Liste des Tableaux</h1>
@@ -273,14 +323,13 @@
       </p>
     </div>
 
-    <div class="page-break" id="resume">
-      <h1>Résumé Analytique</h1>
-      {{ rapport.resume_analytique|safe }}
-    </div>
-
-    <div class="page-break" id="intro">
-      <h1>Introduction</h1>
-      {{ rapport.introduction|safe }}
-    </div>
+    {% for section in sections %}
+      {% if section.processed_content %}
+        <div class="page-break" id="{{ section.id }}">
+          <h1>{{ section.title }}</h1>
+          {{ section.processed_content|safe }}
+        </div>
+      {% endif %}
+    {% endfor %}
   </body>
 </html>

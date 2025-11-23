@@ -1,13 +1,17 @@
-# Utilise une image Python légère
-FROM python:3.11-slim
+# Utilise une image Python légère basée sur Debian Bookworm (stable)
+FROM python:3.11-slim-bookworm
 
-# Variables d'environnement pour Java
+# Variables d'environnement
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 ENV PATH="$JAVA_HOME/bin:$PATH"
+ENV DEBIAN_FRONTEND=noninteractive
+ENV ACCEPT_EULA=Y
 
-# Installer Java, outils de compilation, PostgreSQL, et polices Arial (via ttf-mscorefonts-installer)
+# Répertoire de travail
+WORKDIR /app
+
+# Installer les dépendances système + OpenJDK 17 + polices (alternative à Arial)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    openjdk-17-jdk \
     curl \
     unzip \
     build-essential \
@@ -16,21 +20,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     gnupg \
     ca-certificates \
-    && echo "deb http://ftp.debian.org/debian buster main contrib non-free" >> /etc/apt/sources.list \
-    && echo "deb http://security.debian.org buster/updates main contrib non-free" >> /etc/apt/sources.list \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends \
-    ttf-mscorefonts-installer \
-    && fc-cache -f -v \
-    && apt-get clean \
+    openjdk-17-jdk-headless \
     && rm -rf /var/lib/apt/lists/*
 
-# Accepter la licence Microsoft (évite les erreurs non-interactives)
-ENV ACCEPT_EULA=Y
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Répertoire de travail
-WORKDIR /app
+# Alternative à ttf-mscorefonts-installer (Arial, etc.)
+# Télécharge les polices Microsoft Core Fonts depuis un miroir tiers
+RUN echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" | debconf-set-selections \
+    && wget -qO- https://github.com/velitasali/ttf-mscorefonts-installer/raw/master/ttf-mscorefonts-installer_3.8_all.deb -O /tmp/mscorefonts.deb \
+    && dpkg -i /tmp/mscorefonts.deb || apt-get install -f -y \
+    && rm /tmp/mscorefonts.deb \
+    && fc-cache -f -v
 
 # Copier les dépendances Python
 COPY requirements.txt .
@@ -38,13 +37,13 @@ COPY requirements.txt .
 # Installer les dépendances Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copier le dossier du projet
+# Copier le projet
 COPY projet/ ./projet
 
-# Exposer le port utilisé par l'application
+# Exposer le port
 EXPOSE 8000
 
-# Définir le répertoire de travail comme celui contenant manage.py
+# Changer de répertoire
 WORKDIR /app/projet
 
 # Commande par défaut
