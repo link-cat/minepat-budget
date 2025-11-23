@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "execution",
     "contractualisation",
     "reporting",
+    "cadreConcertation",
     "simple_history",
 ]
 

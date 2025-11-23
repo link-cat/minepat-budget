@@ -8,6 +8,7 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
+from cadreConcertation.views import RapportViewSet
 from setting.views import (
     ExcelImportViewSet,
     TacheViewSet,
@@ -166,6 +167,8 @@ reporting_viewsets = [
 router_reporting = routers.DefaultRouter()
 for prefix, viewset, basename in reporting_viewsets:
     router_reporting.register(rf"{prefix}", viewset, basename=basename)
+router_cadre = routers.DefaultRouter()
+router_cadre.register(rf"api/rapports", RapportViewSet, basename="rapports")
 
 # URLs globales
 urlpatterns = [
@@ -194,6 +197,8 @@ urlpatterns = [
          name='tinymce-upload'),
     # path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
 ]
+
+urlpatterns+=router_cadre.urls
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

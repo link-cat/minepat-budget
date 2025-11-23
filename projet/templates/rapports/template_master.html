@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      /* Configuration de la Page A4 */
+      @page {
+        size: A4;
+        margin: 2cm;
+        @bottom-right {
+          content: counter(page);
+        }
+      }
+      
+      /* Page de Couverture : Pas de numéro de page */
+      @page: first {
+        margin: 0;
+        @bottom-right {
+          content: '';
+        }
+      }
+      
+      body {
+        font-family: "Times New Roman", serif;
+        font-size: 10pt;
+        line-height: 1.5;
+      }
+
+      h1{
+        color: black;
+        background: #85d6e1;
+        font-size: 16pt;
+      }
+
+      h2{
+        color: black;
+        background: #85d6e1;
+        font-size: 14pt;
+      }
+
+      img{
+        width: 100%;
+        margin: auto;
+      }
+      
+      /* --- STYLES DU SOMMAIRE AUTOMATIQUE --- */
+      .toc-entry {
+        display: flex;
+        align-items: flex-end;
+        margin-bottom: 5px;
+      }
+      .toc-entry a {
+        text-decoration: none;
+        color: black;
+        width: 100%;
+        display: flex;
+      }
+      /* Les points ..... entre le titre et le numéro */
+      .toc-entry a::after {
+        content: leader('.') target-counter(attr(href), page);
+        margin-left: 5px;
+        font-weight: bold;
+      }
+      
+      /* Sauts de page obligatoires */
+      .page-break {
+        break-before: always;
+      }
+      /* --- STYLE DE LA COUVERTURE --- */
+      @page: first {
+        margin: 1cm; /* Marges plus petites pour la couverture */
+        background-image: url('/static/images/fond_filigrane.png'); /* Optionnel: si vous avez un fond */
+        background-size: cover;
+        @bottom-right {
+          content: '';
+        } /* Pas de numéro de page */
+      }
+      
+      .cover-page {
+        font-family: 'Arial', sans-serif;
+        color: #000;
+        text-align: center;
+      }
+      
+      /* En-tête Administratif (3 colonnes) */
+      .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+        font-size: 10px; /* Police petite pour l'admin */
+      }
+      
+      .header-left {
+        text-align: center;
+      }
+      .header-right {
+        text-align: center;
+      }
+      .header-center {
+        text-align: center;
+      }
+      
+      .ministry-title {
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-top: 5px;
+      }
+      
+      /* Le Logo des Armoiries */
+      .armoiries-img {
+        width: 100px; /* Ajustez selon la qualité de votre image */
+        height: auto;
+      }
+      
+      /* L'illustration centrale (Le graphique Budget) */
+      .main-illustration {
+        margin: 40px auto;
+        width: 80%;
+        text-align: center;
+      }
+      .main-illustration img {
+        max-width: 100%;
+        object-fit: cover;
+      }
+      
+      /* Le Bloc Titre Principal */
+      .title-box {
+        border: 3px solid #2e74b5; /* Cadre bleu comme souvent au MINEPAT */
+        padding: 20px;
+        margin: 20px auto;
+        width: 90%;
+        background-color: rgba(255, 255, 255, 0.9);
+      }
+      
+      .title-main {
+        font-family: "Times New Roman", Times, serif;
+        font-size: 14pt;
+        font-style: italic;
+        font-weight: 600; /* légèrement bold pour imiter le rendu institutionnel */
+        color: black;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: -0.5px; /* reproduction fidèle du léger serrage */
+        line-height: 1.1;
+        margin: 20px 40px;
+      }
+      
+      .title-sub {
+        font-size: 14pt;
+        font-weight: bold;
+        color: #333;
+      }
+      
+      .report-date {
+        margin-top: 50px;
+        font-size: 16pt;
+        font-weight: bold;
+        color: #e36c0a; /* Une couleur d'accentuation (orange/rouge) */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="cover-page">
+      <div class="header-section">
+        <table style="width: 100%; text-align: center; margin-bottom: 20px; font-family: 'Arial', sans-serif;">
+          <tr>
+            <!-- Bloc gauche -->
+            <td style="width: 42%; vertical-align: top; text-transform: uppercase;">
+              <div>
+                <strong>RÉPUBLIQUE DU CAMEROUN</strong>
+              </div>
+              <div>
+                <i>Paix – Travail – Patrie</i>
+              </div>
+              <div>**************</div>
+              <div>
+                <strong>MINISTÈRE DE L’ÉCONOMIE, DE LA PLANIFICATION ET DE L’AMÉNAGEMENT DU TERRITOIRE</strong>
+              </div>
+              <div>**************</div>
+              <div>
+                <strong>SECRÉTARIAT GÉNÉRAL</strong>
+              </div>
+              <div>**************</div>
+              <div>
+                <strong>DIRECTION DES AFFAIRES GENERALES</strong>
+              </div>
+              <div>**************</div>
+              <div>
+                <strong>SOUS-DIRECTION DU BUDGET</strong>
+              </div>
+              <div>**************</div>
+              <div>
+                <strong>SERVICE DU BUDGET</strong>
+              </div>
+              <div>**************</div>
+            </td>
+
+            <td style="width: 16%; vertical-align: top;">
+              <img src="{{ base_url }}media/images/armoiries_cameroun.png" style="width: 80px; margin: 0 auto;" alt="Armoiries du Cameroun" />
+            </td>
+
+            <td style="width: 42%; vertical-align: top; text-transform: uppercase;">
+              <div>
+                <strong>REPUBLIC OF CAMEROON</strong>
+              </div>
+              <div>
+                <i>Peace – Work – Fatherland</i>
+              </div>
+              <div>**************</div>
+              <div>
+                <strong>MINISTRY OF THE ECONOMY, PLANNING AND REGIONAL DEVELOPMENT</strong>
+              </div>
+              <div>**************</div>
+                <div>
+                <strong>GENERAL SECRETARIAT</strong>
+                </div>
+                <div>**************</div>
+                <div>
+                <strong>DEPARTMENT OF GENERAL AFFAIRS</strong>
+                </div>
+                <div>**************</div>
+                <div>
+                <strong>SUB-DEPARTMENT OF THE BUDGET</strong>
+                </div>
+                <div>**************</div>
+                <div>
+                <strong>BUDGET SERVICE</strong>
+                </div>
+                <div>**************</div>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="title-box">
+        <div class="title-main">{{ rapport.titre }}</div>
+      </div>
+
+      <div class="main-illustration">
+        <img src="/media/images/budget.jpg" alt="Illustration Budget" />
+      </div>
+
+      <div class="report-date">{{ rapport.mois }} {{ rapport.annee }}</div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <div class="page-break">
+      <h1 style="text-align: center;">Sommaire</h1>
+
+      <div class="toc-entry">
+        <a href="#resume">Résumé Analytique</a>
+      </div>
+      <div class="toc-entry">
+        <a href="#intro">Introduction</a>
+      </div>
+      <div class="toc-entry">
+        <a href="#etat">Etat de mise en œuvre des recommandations et résolutions du Cadre de Concertation</a>
+      </div>
+      <div class="toc-entry">
+        <a href="#presentation">Présentation du Budget d’Investissement Public 2025 du MINEPAT (Hors FINEX, crédits délégués et fonds de Contrepartie en taxes et droits de douane)</a>
+      </div>
+      <div class="toc-entry">
+        <a href="#situation">Situation au 05 juillet 2025 des composantes du BIP 2025 du MINEPAT</a>
+      </div>
+    </div>
+
+    <div class="page-break">
+      <h1 style="text-align: center;">Liste des Tableaux</h1>
+      <p>
+        <i>(Sera généré automatiquement via une boucle similaire au sommaire)</i>
+      </p>
+    </div>
+
+    <div class="page-break" id="resume">
+      <h1>Résumé Analytique</h1>
+      {{ rapport.resume_analytique|safe }}
+    </div>
+
+    <div class="page-break" id="intro">
+      <h1>Introduction</h1>
+      {{ rapport.introduction|safe }}
+    </div>
+  </body>
+</html>
