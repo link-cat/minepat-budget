@@ -163,7 +163,7 @@ class Tache(models.Model):
         ETAPUB = "ETAPUB", "Etablissement publiques"
         STRUCTRAT = "STRUCTRAT", "Structures rattachées"
         PIISAH = "PIISAH", "Piisah"
-        PLANUS = "PLANUS", "Planus"
+        PLANUT = "PLANUT", "Planut"
         PLURIANNUEL = "PLURIANNUEL", "Pluriannuel"
 
     class TacheStatus(models.TextChoices):

@@ -6,5 +6,5 @@ class ExecutionConfig(AppConfig):
     name = 'execution'
 
     def ready(self):
-        import execution.signals  # À adapter avec le nom de ton app
+        import execution.signals  
 

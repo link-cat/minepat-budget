@@ -13,11 +13,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='historicaltache',
             name='type_execution',
-            field=models.CharField(blank=True, choices=[('FCPDR', 'Fond de contrepartie depense reelles'), ('SUBV', 'Transferts et subventions'), ('PIISAH', 'Piisah'), ('PLANUS', 'Planus'), ('PLURIANNUEL', 'Pluriannuel')], max_length=50, null=True, verbose_name="Type d'execution"),
+            field=models.CharField(blank=True, choices=[('FCPDR', 'Fond de contrepartie depense reelles'), ('SUBV', 'Transferts et subventions'), ('PIISAH', 'Piisah'), ('PLANUT', 'Planut'), ('PLURIANNUEL', 'Pluriannuel')], max_length=50, null=True, verbose_name="Type d'execution"),
         ),
         migrations.AlterField(
             model_name='tache',
             name='type_execution',
-            field=models.CharField(blank=True, choices=[('FCPDR', 'Fond de contrepartie depense reelles'), ('SUBV', 'Transferts et subventions'), ('PIISAH', 'Piisah'), ('PLANUS', 'Planus'), ('PLURIANNUEL', 'Pluriannuel')], max_length=50, null=True, verbose_name="Type d'execution"),
+            field=models.CharField(blank=True, choices=[('FCPDR', 'Fond de contrepartie depense reelles'), ('SUBV', 'Transferts et subventions'), ('PIISAH', 'Piisah'), ('PLANUT', 'Planut'), ('PLURIANNUEL', 'Pluriannuel')], max_length=50, null=True, verbose_name="Type d'execution"),
         ),
     ]

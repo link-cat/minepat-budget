@@ -141,7 +141,7 @@ TYPE_EXECUTION_LABELS = {
     Tache.TypeExecutionChoices.ETAPUB: "Établissements publics",
     Tache.TypeExecutionChoices.STRUCTRAT: "Structures rattachées",
     Tache.TypeExecutionChoices.PIISAH: "PIISAH",
-    Tache.TypeExecutionChoices.PLANUS: "PLANUT",  # ou PLANUS si tu veux rester strict
+    Tache.TypeExecutionChoices.PLANUT: "PLANUT",  # ou PLANUT si tu veux rester strict
     Tache.TypeExecutionChoices.PLURIANNUEL: "Projets Pluriannuels",
     # tu peux étendre selon tes besoins
 }
