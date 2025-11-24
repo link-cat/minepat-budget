@@ -1,0 +1,289 @@
+<style>
+  /* ---------- TABLEAU DU HAUT : MATRICE PAR GROUPES ---------- */
+
+  .table-matrice {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 7pt;
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+
+  .table-matrice th,
+  .table-matrice td {
+    border: 1px solid #333;
+    padding: 4px 2px;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .mat-header {
+    background-color: #4a5f7f;
+    color: #fff;
+    font-weight: bold;
+  }
+
+  .mat-total-row {
+    background-color: #e8e8e8;
+    font-weight: bold;
+  }
+
+  .mat-number-cell {
+    font-family: "Courier New", monospace;
+    text-align: right;
+  }
+
+  /* ---------- TABLEAU DU BAS : DETAIL FCPDR ---------- */
+
+  .table-synthese-fcpdr {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 6pt;
+    margin-top: 10px;
+  }
+
+  .table-synthese-fcpdr th,
+  .table-synthese-fcpdr td {
+    border: 1px solid #333;
+    padding: 3px 2px;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .table-synthese-fcpdr thead tr:first-child th {
+    background-color: #4a5f7f;
+    color: white;
+    font-weight: bold;
+    font-size: 7pt;
+  }
+
+  .table-synthese-fcpdr thead tr:nth-child(2) th {
+    background-color: #7a95b5;
+    color: white;
+    font-weight: normal;
+    font-size: 5.5pt;
+  }
+
+  .table-synthese-fcpdr td:first-child {
+    text-align: left;
+    background-color: #f5f5f5;
+  }
+
+  .ts-number-cell {
+    font-family: "Courier New", monospace;
+    text-align: right;
+  }
+
+  .variation-positive {
+    color: #006400;
+    font-weight: bold;
+  }
+
+  .variation-negative {
+    color: #8b0000;
+    font-weight: bold;
+  }
+
+  .variation-neutral {
+    color: #666;
+  }
+
+  .trend-up::before {
+    content: "▲ + ";
+  }
+
+  .trend-down::before {
+    content: "▼ ";
+  }
+
+  .table-source {
+    font-size: 7pt;
+    font-style: italic;
+    color: #666;
+    margin-top: 3px;
+  }
+</style>
+
+<!-- ================= TABLEAU DU HAUT : MATRICE ================= -->
+
+<table class="table-matrice">
+  <thead>
+    <tr class="mat-header">
+      <th>Nature de la procédure d'engagement</th>
+      <th>Type de groupe</th>
+      <th>Dotation (FCFA)</th>
+      <th>%Physique</th>
+      <th>%Engagement</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- Provisionnel -->
+    <tr>
+      <td rowspan="2">Provisionnel</td>
+      <td>Groupe 1</td>
+      <td class="mat-number-cell">
+        {{ matrice.g1.dotation|default:"-"|stringformat:"d" }}
+      </td>
+      <td>{{ matrice.g1.phy|default:"-" }}{% if matrice.g1.phy %}%{% endif %}</td>
+      <td>{{ matrice.g1.eng|default:"-" }}{% if matrice.g1.eng %}%{% endif %}</td>
+    </tr>
+    <tr class="mat-total-row">
+      <td>Total 1</td>
+      <td class="mat-number-cell">
+        {{ matrice.t1.dotation|default:"-"|stringformat:"d" }}
+      </td>
+      <td>{{ matrice.t1.phy|default:"-" }}{% if matrice.t1.phy %}%{% endif %}</td>
+      <td>{{ matrice.t1.eng|default:"-" }}{% if matrice.t1.eng %}%{% endif %}</td>
+    </tr>
+
+    <!-- Normale -->
+    <tr>
+      <td rowspan="3">Normale</td>
+      <td>Groupe 2</td>
+      <td class="mat-number-cell">
+        {{ matrice.g2.dotation|default:"-"|stringformat:"d" }}
+      </td>
+      <td>{{ matrice.g2.phy|default:"-" }}{% if matrice.g2.phy %}%{% endif %}</td>
+      <td>{{ matrice.g2.eng|default:"-" }}{% if matrice.g2.eng %}%{% endif %}</td>
+    </tr>
+    <tr>
+      <td>Groupe 3</td>
+      <td class="mat-number-cell">
+        {{ matrice.g3.dotation|default:"-"|stringformat:"d" }}
+      </td>
+      <td>{{ matrice.g3.phy|default:"-" }}{% if matrice.g3.phy %}%{% endif %}</td>
+      <td>{{ matrice.g3.eng|default:"-" }}{% if matrice.g3.eng %}%{% endif %}</td>
+    </tr>
+    <tr class="mat-total-row">
+      <td>Total 2</td>
+      <td class="mat-number-cell">
+        {{ matrice.t2.dotation|default:"-"|stringformat:"d" }}
+      </td>
+      <td>{{ matrice.t2.phy|default:"-" }}{% if matrice.t2.phy %}%{% endif %}</td>
+      <td>{{ matrice.t2.eng|default:"-" }}{% if matrice.t2.eng %}%{% endif %}</td>
+    </tr>
+
+    <!-- Total (1+2) -->
+    <tr class="mat-total-row">
+      <td colspan="2">Total (1+2)</td>
+      <td class="mat-number-cell">
+        {{ matrice.tf.dotation|default:"-"|stringformat:"d" }}
+      </td>
+      <td>{{ matrice.tf.phy|default:"-" }}{% if matrice.tf.phy %}%{% endif %}</td>
+      <td>{{ matrice.tf.eng|default:"-" }}{% if matrice.tf.eng %}%{% endif %}</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="table-source">
+  Source : Service du Budget ({{ annee }}), données des Projets/Programmes et
+  Structures
+</div>
+
+<!-- ================= TABLEAU DU BAS : FCPDR DETAIL ================= -->
+
+<table class="table-synthese-fcpdr">
+  <thead>
+    <tr>
+      <th rowspan="2" style="width: 180px;">
+        Composantes du BIP<br />(hors Finex, CD et FCP en TDD)
+      </th>
+      <th rowspan="2" style="width: 90px;">
+        Provision inscrite<br />dans la PTA {{ annee }}
+      </th>
+      <th colspan="5">Taux d'exécution physique</th>
+      <th colspan="5">Taux d'engagement</th>
+    </tr>
+    <tr>
+      <!-- Physique -->
+      <th style="width: 40px;">% Phy<br />Juin {{ annee }}</th>
+      <th style="width: 40px;">% Phy<br />Juillet<br />{{ annee }}</th>
+      <th style="width: 60px;">
+        Performance<br />en juillet {{ annee }}<br />par rapport à<br />Juin
+        {{ annee }}
+      </th>
+      <th style="width: 40px;">% Phy<br />Juillet<br />{{ annee|add:"-1" }}</th>
+      <th style="width: 60px;">
+        Performance<br />en juillet {{ annee }}<br />par rapport à<br />Juillet
+        {{ annee|add:"-1" }}
+      </th>
+      <!-- Engagement -->
+      <th style="width: 40px;">% Eng<br />Juin<br />{{ annee }}</th>
+      <th style="width: 40px;">% Eng<br />Juillet<br />{{ annee }}</th>
+      <th style="width: 60px;">
+        Performance<br />en juillet {{ annee }}<br />par rapport à<br />Juin
+        {{ annee }}
+      </th>
+      <th style="width: 40px;">% Eng<br />Juillet {{ annee|add:"-1" }}</th>
+      <th style="width: 60px;">
+        Performance<br />en juillet {{ annee }}<br />par rapport à<br />Juillet
+        {{ annee|add:"-1" }}
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>{{ fcpdr.nom }}</td>
+      <td class="ts-number-cell">{{ fcpdr.provision }}</td>
+
+      <!-- Physique -->
+      <td>{{ fcpdr.phy_juin_2025|default:"-" }}</td>
+      <td>{{ fcpdr.phy_juillet_2025|default:"-" }}</td>
+      <td>
+        {% if fcpdr.perf_phy_vs_juin %}
+          <span
+            class="{% if fcpdr.perf_phy_vs_juin_trend == 'up' %}variation-positive trend-up{% elif fcpdr.perf_phy_vs_juin_trend == 'down' %}variation-negative trend-down{% else %}variation-neutral{% endif %}"
+          >
+            {{ fcpdr.perf_phy_vs_juin }}
+          </span>
+        {% else %}
+          -
+        {% endif %}
+      </td>
+      <td>{{ fcpdr.phy_juillet_2024|default:"-" }}</td>
+      <td>
+        {% if fcpdr.perf_phy_vs_2024 %}
+          <span
+            class="{% if fcpdr.perf_phy_vs_2024_trend == 'up' %}variation-positive trend-up{% elif fcpdr.perf_phy_vs_2024_trend == 'down' %}variation-negative trend-down{% else %}variation-neutral{% endif %}"
+          >
+            {{ fcpdr.perf_phy_vs_2024 }}
+          </span>
+        {% else %}
+          -
+        {% endif %}
+      </td>
+
+      <!-- Engagement -->
+      <td>{{ fcpdr.eng_juin_2025|default:"-" }}</td>
+      <td>{{ fcpdr.eng_juillet_2025|default:"-" }}</td>
+      <td>
+        {% if fcpdr.perf_eng_vs_juin %}
+          <span
+            class="{% if fcpdr.perf_eng_vs_juin_trend == 'up' %}variation-positive trend-up{% elif fcpdr.perf_eng_vs_juin_trend == 'down' %}variation-negative trend-down{% else %}variation-neutral{% endif %}"
+          >
+            {{ fcpdr.perf_eng_vs_juin }}
+          </span>
+        {% else %}
+          -
+        {% endif %}
+      </td>
+      <td>{{ fcpdr.eng_juillet_2024|default:"-" }}</td>
+      <td>
+        {% if fcpdr.perf_eng_vs_2024 %}
+          <span
+            class="{% if fcpdr.perf_eng_vs_2024_trend == 'up' %}variation-positive trend-up{% elif fcpdr.perf_eng_vs_2024_trend == 'down' %}variation-negative trend-down{% else %}variation-neutral{% endif %}"
+          >
+            {{ fcpdr.perf_eng_vs_2024 }}
+          </span>
+        {% else %}
+          -
+        {% endif %}
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="table-source">
+  Source : Service du Budget ({{ annee }}), données des Projets/Programmes et
+  Structures
+</div>

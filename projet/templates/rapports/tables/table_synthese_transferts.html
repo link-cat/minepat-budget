@@ -1,0 +1,312 @@
+<style>
+  /* --------- TABLEAU DU HAUT (TRANSFERTS PAR PROCÉDURE) --------- */
+
+  .table-transferts-top {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 7pt;
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+
+  .table-transferts-top th,
+  .table-transferts-top td {
+    border: 1px solid #333;
+    padding: 4px 2px;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .tr-header-main {
+    background-color: #4a5f7f;
+    color: #fff;
+    font-weight: bold;
+  }
+
+  .tr-header-sub {
+    background-color: #7a95b5;
+    color: #fff;
+    font-weight: bold;
+  }
+
+  .tr-total-row {
+    background-color: #e8e8e8;
+    font-weight: bold;
+  }
+
+  .tr-number-cell {
+    font-family: "Courier New", monospace;
+    text-align: right;
+  }
+
+  /* --------- TABLEAU DU BAS (LIGNE TRANSFERTS) --------- */
+
+  .table-transferts-bottom {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 6pt;
+    margin-top: 10px;
+  }
+
+  .table-transferts-bottom th,
+  .table-transferts-bottom td {
+    border: 1px solid #333;
+    padding: 3px 2px;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .table-transferts-bottom thead tr:first-child th {
+    background-color: #4a5f7f;
+    color: white;
+    font-weight: bold;
+    font-size: 7pt;
+  }
+
+  .table-transferts-bottom thead tr:nth-child(2) th {
+    background-color: #7a95b5;
+    color: white;
+    font-weight: normal;
+    font-size: 5.5pt;
+  }
+
+  .table-transferts-bottom td:first-child {
+    text-align: left;
+    background-color: #f5f5f5;
+  }
+
+  .ts-number-cell {
+    font-family: "Courier New", monospace;
+    text-align: right;
+  }
+
+  .variation-positive {
+    color: #006400;
+    font-weight: bold;
+  }
+
+  .variation-negative {
+    color: #8b0000;
+    font-weight: bold;
+  }
+
+  .variation-neutral {
+    color: #666;
+  }
+
+  .trend-up::before {
+    content: "▲ + ";
+  }
+
+  .trend-down::before {
+    content: "▼ ";
+  }
+
+  .table-source {
+    font-size: 7pt;
+    font-style: italic;
+    color: #666;
+    margin-top: 3px;
+  }
+</style>
+
+<!-- ================== TABLEAU DU HAUT : TRANSFERTS ================== -->
+
+<table class="table-transferts-top">
+  <thead>
+    <tr class="tr-header-main">
+      <th colspan="5">Transferts</th>
+    </tr>
+    <tr class="tr-header-sub">
+      <th> </th>
+      <th>Dotation (FCFA)</th>
+      <th>Montant attribué</th>
+      <th>%Physique</th>
+      <th>%Engagement</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Procédure ordinaire</td>
+      <td class="tr-number-cell">
+        {{ top.ordinaire.dotation_fmt|default:"-" }}
+      </td>
+      <td class="tr-number-cell">
+        {{ top.ordinaire.attribue_fmt|default:"-" }}
+      </td>
+      <td>
+        {% if top.ordinaire.phy is not None %}
+          {{ top.ordinaire.phy }}%
+        {% else %}
+          -
+        {% endif %}
+      </td>
+      <td>
+        {% if top.ordinaire.eng is not None %}
+          {{ top.ordinaire.eng }}%
+        {% else %}
+          -
+        {% endif %}
+      </td>
+    </tr>
+    <tr>
+      <td>Procédure dérogatoire</td>
+      <td class="tr-number-cell">
+        {{ top.derogatoire.dotation_fmt|default:"-" }}
+      </td>
+      <td class="tr-number-cell">
+        {{ top.derogatoire.attribue_fmt|default:"-" }}
+      </td>
+      <td>
+        {% if top.derogatoire.phy is not None %}
+          {{ top.derogatoire.phy }}%
+        {% else %}
+          -
+        {% endif %}
+      </td>
+      <td>
+        {% if top.derogatoire.eng is not None %}
+          {{ top.derogatoire.eng }}%
+        {% else %}
+          -
+        {% endif %}
+      </td>
+    </tr>
+    <tr class="tr-total-row">
+      <td>Total</td>
+      <td class="tr-number-cell">
+        {{ top.total.dotation_fmt|default:"-" }}
+      </td>
+      <td class="tr-number-cell">
+        {{ top.total.attribue_fmt|default:"-" }}
+      </td>
+      <td>
+        {% if top.total.phy is not None %}
+          {{ top.total.phy }}%
+        {% else %}
+          -
+        {% endif %}
+      </td>
+      <td>
+        {% if top.total.eng is not None %}
+          {{ top.total.eng }}%
+        {% else %}
+          -
+        {% endif %}
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="table-source">
+  Source : Service du Budget ({{ annee }}), données des Projets/Programmes et
+  Structures
+</div>
+
+<!-- ================== TABLEAU DU BAS : TRANSFERTS (SYNTHÈSE) ================== -->
+
+<table class="table-transferts-bottom">
+  <thead>
+    <tr>
+      <th rowspan="2" style="width: 180px;">
+        Composantes du BIP<br />(hors Finex, CD et FCP en TDD)
+      </th>
+      <th rowspan="2" style="width: 90px;">
+        Provision inscrite<br />dans la PTA {{ annee }}
+      </th>
+      <th colspan="5">Taux d'exécution physique</th>
+      <th colspan="5">Taux d'engagement</th>
+    </tr>
+    <tr>
+      <!-- Physique -->
+      <th style="width: 40px;">% Phy<br />Juin {{ annee }}</th>
+      <th style="width: 40px;">% Phy<br />Juillet<br />{{ annee }}</th>
+      <th style="width: 60px;">
+        Performance<br />en juillet {{ annee }}<br />par rapport à<br />Juin
+        {{ annee }}
+      </th>
+      <th style="width: 40px;">% Phy<br />Juillet<br />{{ annee|add:"-1" }}</th>
+      <th style="width: 60px;">
+        Performance<br />en juillet {{ annee }}<br />par rapport à<br />Juillet
+        {{ annee|add:"-1" }}
+      </th>
+      <!-- Engagement -->
+      <th style="width: 40px;">% Eng<br />Juin<br />{{ annee }}</th>
+      <th style="width: 40px;">% Eng<br />Juillet<br />{{ annee }}</th>
+      <th style="width: 60px;">
+        Performance<br />en juillet {{ annee }}<br />par rapport à<br />Juin
+        {{ annee }}
+      </th>
+      <th style="width: 40px;">% Eng<br />Juillet {{ annee|add:"-1" }}</th>
+      <th style="width: 60px;">
+        Performance<br />en juillet {{ annee }}<br />par rapport à<br />Juillet
+        {{ annee|add:"-1" }}
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>{{ bottom.nom }}</td>
+      <td class="ts-number-cell">{{ bottom.provision }}</td>
+
+      <!-- Physique -->
+      <td>{{ bottom.phy_juin_2025|default:"-" }}</td>
+      <td>{{ bottom.phy_juillet_2025|default:"-" }}</td>
+      <td>
+        {% if bottom.perf_phy_vs_juin %}
+          <span
+            class="{% if bottom.perf_phy_vs_juin_trend == 'up' %}variation-positive trend-up{% elif bottom.perf_phy_vs_juin_trend == 'down' %}variation-negative trend-down{% else %}variation-neutral{% endif %}"
+          >
+            {{ bottom.perf_phy_vs_juin }}
+          </span>
+        {% else %}
+          -
+        {% endif %}
+      </td>
+      <td>{{ bottom.phy_juillet_2024|default:"-" }}</td>
+      <td>
+        {% if bottom.perf_phy_vs_2024 %}
+          <span
+            class="{% if bottom.perf_phy_vs_2024_trend == 'up' %}variation-positive trend-up{% elif bottom.perf_phy_vs_2024_trend == 'down' %}variation-negative trend-down{% else %}variation-neutral{% endif %}"
+          >
+            {{ bottom.perf_phy_vs_2024 }}
+          </span>
+        {% else %}
+          -
+        {% endif %}
+      </td>
+
+      <!-- Engagement -->
+      <td>{{ bottom.eng_juin_2025|default:"-" }}</td>
+      <td>{{ bottom.eng_juillet_2025|default:"-" }}</td>
+      <td>
+        {% if bottom.perf_eng_vs_juin %}
+          <span
+            class="{% if bottom.perf_eng_vs_juin_trend == 'up' %}variation-positive trend-up{% elif bottom.perf_eng_vs_juin_trend == 'down' %}variation-negative trend-down{% else %}variation-neutral{% endif %}"
+          >
+            {{ bottom.perf_eng_vs_juin }}
+          </span>
+        {% else %}
+          -
+        {% endif %}
+      </td>
+      <td>{{ bottom.eng_juillet_2024|default:"-" }}</td>
+      <td>
+        {% if bottom.perf_eng_vs_2024 %}
+          <span
+            class="{% if bottom.perf_eng_vs_2024_trend == 'up' %}variation-positive trend-up{% elif bottom.perf_eng_vs_2024_trend == 'down' %}variation-negative trend-down{% else %}variation-neutral{% endif %}"
+          >
+            {{ bottom.perf_eng_vs_2024 }}
+          </span>
+        {% else %}
+          -
+        {% endif %}
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="table-source">
+  Source : Service du Budget ({{ annee }}), données des Projets/Programmes et
+  Structures
+</div>

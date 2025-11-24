@@ -4,7 +4,7 @@ from datetime import date
 import calendar
 from django.db.models import Sum, Avg, OuterRef, Subquery, FloatField
 from setting.models import Tache
-from execution.models import Operation, Consommation
+from execution.models import Groupe, Operation, Consommation
 
 
 def last_day_of_month(year: int, month: int) -> date:
@@ -449,6 +449,554 @@ def generer_tableau_situation(annee_courante=2025):
 
     return render_to_string("rapports/tables/table_situation.html", context)
 
+def generer_tableau_matrice_operation(annee_courante=2025, mois_courant=7):
+    """
+    Génère la matrice des opérations du Groupe 3 (FCPDR) pour un mois donné.
+    - Colonnes : Projet/Programme, Opérations, Dotation, %Phy, %Eng, Observations
+    - %Phy et %Eng calculés sur la dernière consommation de chaque opération
+      dont date_situation <= fin du mois.
+    """
+
+    end_of_month = last_day_of_month(annee_courante, mois_courant)
+
+    # On cible uniquement le groupe "groupe 3" et les tâches FCPDR
+    ops_qs = (
+        Operation.objects
+        .filter(
+            tache__type_execution=Tache.TypeExecutionChoices.FCPDR,
+            groupe__title_fr__iexact="groupe 3",
+        )
+        .select_related("tache", "groupe", "tache__activite")
+    )
+
+    if not ops_qs.exists():
+        # Rien à afficher, on renvoie un tableau vide "propre"
+        context = {
+            "data": {
+                "annee": annee_courante,
+                "groupes": [],
+                "total": {
+                    "dotation": format_montant(0),
+                    "phy": None,
+                    "eng": None,
+                },
+            },
+            "force_landscape": True,
+        }
+        return render_to_string(
+            "rapports/tables/table_matrice_operations.html", context
+        )
+
+    # Sous-requête : dernière consommation de chaque opération
+    latest_conso_subquery = (
+        Consommation.objects
+        .filter(
+            operation=OuterRef("pk"),
+            date_situation__lte=end_of_month,
+        )
+        .order_by("-date_situation", "-pk")
+    )
+
+    ops_qs = ops_qs.annotate(
+        last_phy=Subquery(
+            latest_conso_subquery.values("pourcentage_exec_physique")[:1]
+        ),
+        last_engage=Subquery(
+            latest_conso_subquery.values("montant_engage")[:1]
+        ),
+        last_obs=Subquery(
+            latest_conso_subquery.values("observations")[:1]
+        ),
+    )
+
+    # Regroupement par "Projet / Programme"
+    grouped = {}
+    total_dotation = 0
+    phy_values = []  # pour moyenne globale
+    total_engage_global = 0
+    total_montant_global = 0
+
+    for op in ops_qs:
+        # Libellé du projet / programme
+        projet_label = getattr(getattr(op.tache, "activite", None), "title_fr", None)
+        if not projet_label:
+            projet_label = op.tache.title_fr
+
+        dotation = op.montant or 0
+        total_dotation += dotation
+        total_montant_global += dotation
+
+        # %Phy
+        phy = op.last_phy  # float ou None
+        if phy is not None:
+            phy_values.append(phy)
+
+        # %Eng
+        if dotation > 0 and op.last_engage is not None:
+            eng_percent = (op.last_engage / dotation) * 100.0
+            total_engage_global += op.last_engage or 0
+        else:
+            eng_percent = None
+
+        row = {
+            "operation": op.title_fr,
+            "dotation": format_montant(dotation),
+            "phy": safe_percent(phy),
+            "eng": safe_percent(eng_percent),
+            "observation": op.last_obs,
+        }
+
+        grouped.setdefault(projet_label, []).append(row)
+
+    # Construction de la liste ordonnée pour le template
+    groupes_list = []
+    for projet, rows in grouped.items():
+        groupes_list.append(
+            {
+                "projet": projet,
+                "rows": rows,
+            }
+        )
+
+    # On peut trier les projets par ordre alpha si tu veux un rendu stable
+    groupes_list.sort(key=lambda g: g["projet"])
+
+    # Totaux
+    if phy_values:
+        avg_phy_global = sum(phy_values) / len(phy_values)
+    else:
+        avg_phy_global = None
+
+    if total_montant_global > 0 and total_engage_global > 0:
+        eng_global = (total_engage_global / total_montant_global) * 100.0
+    else:
+        eng_global = None
+
+    context = {
+        "data": {
+            "annee": annee_courante,
+            "groupes": groupes_list,
+            "total": {
+                "dotation": format_montant(total_dotation),
+                "phy": safe_percent(avg_phy_global),
+                "eng": safe_percent(eng_global),
+            },
+        },
+        "force_landscape": True,
+    }
+
+    return render_to_string(
+        "rapports/tables/table_matrice_operations.html", context
+    )
+    
+def generate_tableau_synthese_fcpdr(annee_courante=2025):
+    """
+    Génère la matrice du tableau FCPDR par groupe :
+        - Provisonnel : Groupe 1
+        - Normale : Groupe 2 + Groupe 3
+    """
+    from execution.models import Operation, Groupe
+    from setting.models import Tache
+    from django.db.models import Sum, Avg
+
+    # --- Étape 1 : récupérer les groupes utiles ---
+    groupes = {
+        "Groupe 1": None,
+        "Groupe 2": None,
+        "Groupe 3": None,
+    }
+
+    all_groupes = Groupe.objects.filter(type="FCPDR")
+    for g in all_groupes:
+        if g.title_fr.lower() in ["groupe 1", "groupe 2", "groupe 3"]:
+            groupes[g.title_fr] = g.id
+
+    # --- Étape 2 : filtrer les opérations liées aux tâches FCPDR ---
+    taches_fcpdr = Tache.objects.filter(type_execution=Tache.TypeExecutionChoices.FCPDR)
+
+    operations = Operation.objects.filter(tache__in=taches_fcpdr)
+
+    # --- Étape 3 : agrégation par groupe ---
+    def compute_for_group(group_id):
+        qs = operations.filter(groupe_id=group_id)
+        if not qs.exists():
+            return {
+                "dotation": 0,
+                "phy": None,
+                "eng": None,
+            }
+
+        # Dernière consommation par opération
+        latest_conso = Consommation.objects.filter(
+            operation=OuterRef("pk")
+        ).order_by("-date_situation", "-pk")
+
+        qs = qs.annotate(
+            last_phy=Subquery(latest_conso.values("pourcentage_exec_physique")[:1]),
+            last_eng=Subquery(latest_conso.values("montant_engage")[:1]),
+        )
+
+        agg = qs.aggregate(
+            dotation=Sum("montant"),
+            phy=Avg("last_phy"),
+            total_eng=Sum("last_eng"),
+            total_planned=Sum("montant"),
+        )
+
+        # Défensive: convertir les agrégats None en 0 pour éviter les divisions par None
+        total_eng = agg.get("total_eng") or 0
+        total_planned = agg.get("total_planned") or 0
+        avg_phy = agg.get("phy")
+
+        eng_percent = None
+        if total_planned > 0:
+            eng_percent = (total_eng / total_planned) * 100.0
+
+        # Ne pas forcer 0 pour phy/eng si la valeur est réellement inconnue (None)
+        phy_value = round(avg_phy) if avg_phy is not None else None
+        eng_value = round(eng_percent) if eng_percent is not None else None
+
+        return {
+            "dotation": agg.get("dotation") or 0,
+            "phy": phy_value,
+            "eng": eng_value,
+        }
+
+    g1 = compute_for_group(groupes["Groupe 1"])
+    g2 = compute_for_group(groupes["Groupe 2"])
+    g3 = compute_for_group(groupes["Groupe 3"])
+
+    # --- Étape 4 : Totaux ---
+    total1 = {
+        "dotation": g1["dotation"],
+        "phy": g1["phy"],
+        "eng": g1["eng"],
+    }
+
+    total2 = {
+        "dotation": g2["dotation"] + g3["dotation"],
+        "phy": round(((g2["phy"] or 0) + (g3["phy"] or 0)) / 2) if (g2["phy"] is not None or g3["phy"] is not None) else None,
+        "eng": round(((g2["eng"] or 0) + (g3["eng"] or 0)) / 2) if (g2["eng"] is not None or g3["eng"] is not None) else None,
+    }
+
+    total_final = {
+        "dotation": total1["dotation"] + total2["dotation"],
+        "phy": round(((total1["phy"] or 0) + (total2["phy"] or 0)) / 2),
+        "eng": round(((total1["eng"] or 0) + (total2["eng"] or 0)) / 2),
+    }
+    
+    year_current = annee_courante
+    year_previous = annee_courante - 1
+    mois_juin = 6
+    mois_juillet = 7
+
+    snap_juin = get_month_snapshot_for_type(
+        Tache.TypeExecutionChoices.FCPDR, year_current, mois_juin
+    )
+    snap_juillet = get_month_snapshot_for_type(
+        Tache.TypeExecutionChoices.FCPDR, year_current, mois_juillet
+    )
+    snap_juillet_prev = get_month_snapshot_for_type(
+        Tache.TypeExecutionChoices.FCPDR, year_previous, mois_juillet
+    )
+
+    provision = snap_juin["provision"] or 0
+
+    phy_juin = snap_juin["phy_percent"]
+    phy_juillet = snap_juillet["phy_percent"]
+    phy_juillet_prev = snap_juillet_prev["phy_percent"]
+
+    eng_juin = snap_juin["eng_percent"]
+    eng_juillet = snap_juillet["eng_percent"]
+    eng_juillet_prev = snap_juillet_prev["eng_percent"]
+
+    # Perf physiques
+    perf_phy_vs_juin_str, perf_phy_vs_juin_trend = compute_perf(
+        phy_juillet, phy_juin
+    )
+    perf_phy_vs_2024_str, perf_phy_vs_2024_trend = compute_perf(
+        phy_juillet, phy_juillet_prev
+    )
+
+    # Perf engagement
+    perf_eng_vs_juin_str, perf_eng_vs_juin_trend = compute_perf(
+        eng_juillet, eng_juin
+    )
+    perf_eng_vs_2024_str, perf_eng_vs_2024_trend = compute_perf(
+        eng_juillet, eng_juillet_prev
+    )
+
+    fcpdr_data = {
+        "nom": "Fonds de Contrepartie en DR",
+        "provision": format_montant(provision),
+
+        "phy_juin_2025": safe_percent(phy_juin),
+        "phy_juillet_2025": safe_percent(phy_juillet),
+        "perf_phy_vs_juin": perf_phy_vs_juin_str,
+        "perf_phy_vs_juin_trend": perf_phy_vs_juin_trend,
+        "phy_juillet_2024": safe_percent(phy_juillet_prev),
+        "perf_phy_vs_2024": perf_phy_vs_2024_str,
+        "perf_phy_vs_2024_trend": perf_phy_vs_2024_trend,
+
+        "eng_juin_2025": safe_percent(eng_juin),
+        "eng_juillet_2025": safe_percent(eng_juillet),
+        "perf_eng_vs_juin": perf_eng_vs_juin_str,
+        "perf_eng_vs_juin_trend": perf_eng_vs_juin_trend,
+        "eng_juillet_2024": safe_percent(eng_juillet_prev),
+        "perf_eng_vs_2024": perf_eng_vs_2024_str,
+        "perf_eng_vs_2024_trend": perf_eng_vs_2024_trend,
+    }
+
+    # ------------- CONTEXTE GLOBAL POUR LE TEMPLATE -------------
+
+    context = {
+        "matrice": {
+            "g1": g1,
+            "g2": g2,
+            "g3": g3,
+            "t1": total1,
+            "t2": total2,
+            "tf": total_final,
+        },
+        "fcpdr": fcpdr_data,
+        "annee": annee_courante,
+    }
+
+    return render_to_string("rapports/tables/table_synthese_fcpdr.html", context)
+  
+  
+def get_month_snapshot_for_transferts(year: int, month: int):
+    """
+    Snapshot mensuel pour les TRANSFERTS :
+    - on prend toutes les opérations dont le groupe est de type SUBV (Transferts/Subventions)
+    - provision = somme des montants prévisionnels des tâches liées
+    - phy_percent = moyenne des % physiques de la dernière conso par opération
+    - eng_percent = total montants engagés / total montants opérations
+    """
+    end_of_month = last_day_of_month(year, month)
+
+    ops_qs = Operation.objects.filter(
+        groupe__type=Groupe.TypeChoices.SUBV
+    )
+
+    if not ops_qs.exists():
+        return {
+            "provision": 0,
+            "phy_percent": None,
+            "eng_percent": None,
+        }
+
+    # Provision = somme des montants prévisionnels des tâches impliquées
+    tache_ids = ops_qs.values_list("tache_id", flat=True).distinct()
+    provision_total = (
+        Tache.objects.filter(id__in=tache_ids)
+        .aggregate(total=Sum("montant_previsionnel"))["total"]
+        or 0
+    )
+
+    latest_conso = Consommation.objects.filter(
+        operation=OuterRef("pk"),
+        date_situation__lte=end_of_month,
+    ).order_by("-date_situation", "-pk")
+
+    ops_annotated = ops_qs.annotate(
+        last_phy=Subquery(latest_conso.values("pourcentage_exec_physique")[:1]),
+        last_eng=Subquery(latest_conso.values("montant_engage")[:1]),
+    )
+
+    agg = ops_annotated.aggregate(
+        avg_phy=Avg("last_phy"),
+        total_eng=Sum("last_eng"),
+        total_planned=Sum("montant"),
+    )
+
+    avg_phy = agg["avg_phy"]
+    total_eng = agg["total_eng"] or 0
+    total_planned = agg["total_planned"] or 0
+
+    phy_percent = avg_phy if avg_phy is not None else None
+    eng_percent = (total_eng / total_planned) * 100.0 if total_planned > 0 else None
+
+    return {
+        "provision": provision_total,
+        "phy_percent": phy_percent,
+        "eng_percent": eng_percent,
+    }
+
+
+def generate_tableau_synthese_transferts(annee_courante=2025):
+    """
+    Génère le double tableau 'Transferts' :
+
+    1) Tableau du haut :
+        - Procédure ordinaire
+        - Procédure dérogatoire
+        + Total
+
+       Basé sur les opérations dont groupe.type = SUBV.
+
+    2) Tableau du bas :
+        - Ligne 'Transferts' équivalente au tableau de synthèse
+          (comme la ligne FCPDR, mais ici pour les transferts).
+    """
+
+    # --------- TABLEAU DU HAUT : PROCÉDURE ORDINAIRE / DÉROGATOIRE ---------
+
+    # On récupère les groupes SUBV utiles
+    groupes_ids = {
+        "Procédure ordinaire": None,
+        "Procédure dérogatoire": None,
+    }
+
+    for g in Groupe.objects.filter(type=Groupe.TypeChoices.SUBV):
+        title = g.title_fr.strip().lower()
+        if title == "procédure ordinaire":
+            groupes_ids["Procédure ordinaire"] = g.id
+        elif title == "procédure dérogatoire":
+            groupes_ids["Procédure dérogatoire"] = g.id
+
+    ops_qs = Operation.objects.filter(
+        groupe__type=Groupe.TypeChoices.SUBV
+    )
+
+    def compute_for_group(group_id):
+        qs = ops_qs.filter(groupe_id=group_id)
+        if not qs.exists():
+            return {
+                "dotation": 0,
+                "attribue": 0,
+                "phy": None,
+                "eng": None,
+            }
+
+        latest_conso = Consommation.objects.filter(
+            operation=OuterRef("pk")
+        ).order_by("-date_situation", "-pk")
+
+        qs = qs.annotate(
+            last_phy=Subquery(
+                latest_conso.values("pourcentage_exec_physique")[:1]
+            ),
+            last_eng=Subquery(
+                latest_conso.values("montant_engage")[:1]
+            ),
+            last_contrat=Subquery(
+                latest_conso.values("montant_contrat")[:1]
+            ),
+        )
+
+        agg = qs.aggregate(
+            dotation=Sum("montant"),
+            attribue=Sum("last_contrat"),
+            avg_phy=Avg("last_phy"),
+            total_eng=Sum("last_eng"),
+            total_planned=Sum("montant"),
+        )
+
+        dotation = agg["dotation"] or 0
+        attribue = agg["attribue"] or 0
+        phy = agg["avg_phy"]
+        total_eng = agg["total_eng"] or 0
+        total_planned = agg["total_planned"] or 0
+
+        eng_percent = (total_eng / total_planned) * 100.0 if total_planned > 0 else None
+
+        return {
+            "dotation": dotation,
+            "attribue": attribue,
+            "phy": round(phy) if phy is not None else None,
+            "eng": round(eng_percent) if eng_percent is not None else None,
+        }
+
+    ord_data = compute_for_group(groupes_ids["Procédure ordinaire"])
+    dero_data = compute_for_group(groupes_ids["Procédure dérogatoire"])
+
+    def add_or_zero(a, b):
+        return (a or 0) + (b or 0)
+
+    def avg_or_none(*vals):
+        vals = [v for v in vals if v is not None]
+        return round(sum(vals) / len(vals)) if vals else None
+
+    total_data = {
+        "dotation": add_or_zero(ord_data["dotation"], dero_data["dotation"]),
+        "attribue": add_or_zero(ord_data["attribue"], dero_data["attribue"]),
+        "phy": avg_or_none(ord_data["phy"], dero_data["phy"]),
+        "eng": avg_or_none(ord_data["eng"], dero_data["eng"]),
+    }
+
+    # Formatage montants pour le template
+    for d in (ord_data, dero_data, total_data):
+        d["dotation_fmt"] = format_montant(d["dotation"])
+        d["attribue_fmt"] = format_montant(d["attribue"])
+
+    year_current = annee_courante
+    year_previous = annee_courante - 1
+    mois_juin = 6
+    mois_juillet = 7
+
+    snap_juin = get_month_snapshot_for_transferts(year_current, mois_juin)
+    snap_juillet = get_month_snapshot_for_transferts(year_current, mois_juillet)
+    snap_juillet_prev = get_month_snapshot_for_transferts(year_previous, mois_juillet)
+
+    provision = snap_juin["provision"] or 0
+    phy_juin = snap_juin["phy_percent"]
+    phy_juillet = snap_juillet["phy_percent"]
+    phy_juillet_prev = snap_juillet_prev["phy_percent"]
+
+    eng_juin = snap_juin["eng_percent"]
+    eng_juillet = snap_juillet["eng_percent"]
+    eng_juillet_prev = snap_juillet_prev["eng_percent"]
+
+    # Perf physiques
+    perf_phy_vs_juin_str, perf_phy_vs_juin_trend = compute_perf(
+        phy_juillet, phy_juin
+    )
+    perf_phy_vs_2024_str, perf_phy_vs_2024_trend = compute_perf(
+        phy_juillet, phy_juillet_prev
+    )
+
+    # Perf engagement
+    perf_eng_vs_juin_str, perf_eng_vs_juin_trend = compute_perf(
+        eng_juillet, eng_juin
+    )
+    perf_eng_vs_2024_str, perf_eng_vs_2024_trend = compute_perf(
+        eng_juillet, eng_juillet_prev
+    )
+
+    transferts_data = {
+        "nom": "Transferts",
+        "provision": format_montant(provision),
+        "phy_juin_2025": safe_percent(phy_juin),
+        "phy_juillet_2025": safe_percent(phy_juillet),
+        "perf_phy_vs_juin": perf_phy_vs_juin_str,
+        "perf_phy_vs_juin_trend": perf_phy_vs_juin_trend,
+        "phy_juillet_2024": safe_percent(phy_juillet_prev),
+        "perf_phy_vs_2024": perf_phy_vs_2024_str,
+        "perf_phy_vs_2024_trend": perf_phy_vs_2024_trend,
+        "eng_juin_2025": safe_percent(eng_juin),
+        "eng_juillet_2025": safe_percent(eng_juillet),
+        "perf_eng_vs_juin": perf_eng_vs_juin_str,
+        "perf_eng_vs_juin_trend": perf_eng_vs_juin_trend,
+        "eng_juillet_2024": safe_percent(eng_juillet_prev),
+        "perf_eng_vs_2024": perf_eng_vs_2024_str,
+        "perf_eng_vs_2024_trend": perf_eng_vs_2024_trend,
+    }
+
+    context = {
+        "top": {
+            "ordinaire": ord_data,
+            "derogatoire": dero_data,
+            "total": total_data,
+        },
+        "bottom": transferts_data,
+        "annee": annee_courante,
+    }
+
+    return render_to_string(
+        "rapports/tables/table_synthese_transferts.html", context
+    )
+  
 def generer_tableau_avancement():
     """Génère le tableau d'avancement - À implémenter"""
     # TODO: Implémenter selon vos besoins
@@ -473,8 +1021,14 @@ def process_dynamic_html(html_content):
         
         if code == "TABLEAU_SYNTHESE":
             new_content = generer_tableau_synthese()
-        if code == "TABLEAU_SITUATION":
+        elif code == "TABLEAU_SITUATION":
             new_content = generer_tableau_situation()
+        elif code == "TABLEAU_MATRICE_OPERATIONS":
+            new_content = generer_tableau_matrice_operation()
+        elif code == "TABLEAU_SYNTHESE_FCPDR":
+            new_content = generate_tableau_synthese_fcpdr()
+        elif code == "TABLEAU_TRANSFERTS":
+          new_content = generate_tableau_synthese_transferts()
         elif code == "TABLEAU_AVANCEMENT":
             new_content = generer_tableau_avancement()
         elif code == "LISTE_RETARDS":

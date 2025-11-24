@@ -1,0 +1,112 @@
+<style>
+  .matrice-ops-container {
+    margin: 20px 0;
+  }
+
+  .matrice-ops-title {
+    font-size: 9pt;
+    font-weight: bold;
+    margin-bottom: 10px;
+    font-style: italic;
+  }
+
+  .matrice-ops {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8pt;
+  }
+
+  .matrice-ops th,
+  .matrice-ops td {
+    border: 1px solid #333;
+    padding: 4px 3px;
+    vertical-align: top;
+  }
+
+  /* En-tête bleu foncé */
+  .matrice-ops thead th {
+    background-color: #004a72;
+    color: #ffffff;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  /* Première colonne : Projet / Programme */
+  .matrice-ops td.projet-cell {
+    font-weight: bold;
+    text-align: center;
+  }
+
+  /* Cellule nombree (montants) */
+  .matrice-ops .number-cell {
+    font-family: "Courier New", monospace;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  /* Observations */
+  .matrice-ops td.observation-cell {
+    font-style: italic;
+  }
+
+  /* Ligne de total */
+  .matrice-ops tr.total-row td {
+    background-color: #004a72;
+    color: #ffffff;
+    font-weight: bold;
+  }
+
+  .matrice-ops tr.total-row td.number-cell {
+    background-color: #004a72;
+  }
+</style>
+
+<div class="matrice-ops-container">
+  <div class="matrice-ops-title">
+    Matrice des opérations du Groupe 3 (FCPDR)
+  </div>
+
+  <table class="matrice-ops">
+    <thead>
+      <tr>
+        <th style="width: 10%;">Projet/ Programme</th>
+        <th style="width: 40%">Opérations</th>
+        <th style="width: 10%;">
+          Dotation inscrite en {{ data.annee }} (Fcfa)
+        </th>
+        <th style="width: 5%;">%Phy</th>
+        <th style="width: 5%;">%Eng</th>
+        <th style="width: 20%;">Observations</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for groupe in data.groupes %}
+        {% for row in groupe.rows %}
+          <tr>
+            {% if forloop.first %}
+              <td class="projet-cell" rowspan="{{ groupe.rows|length }}">
+                {{ groupe.projet }}
+              </td>
+            {% endif %}
+            <td>{{ row.operation }}</td>
+            <td class="number-cell">{{ row.dotation }}</td>
+            <td>{{ row.phy|default:"0%" }}</td>
+            <td>{{ row.eng|default:"0%" }}</td>
+            <td class="observation-cell">
+              {{ row.observation|default:"//" }}
+            </td>
+          </tr>
+        {% endfor %}
+      {% endfor %}
+
+      <tr class="total-row">
+        <td>Total</td>
+        <td></td>
+        <td class="number-cell">{{ data.total.dotation }}</td>
+        <td>{{ data.total.phy|default:"-" }}</td>
+        <td>{{ data.total.eng|default:"-" }}</td>
+        <td>//</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
